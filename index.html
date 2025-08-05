@@ -7,10 +7,19 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     /* --- Система тем на CSS-переменных --- */
-    :root, body[data-theme="purple"] { --primary-color: #a855f7; --primary-hover: #9333ea; --text-accent: #c084fc; --body-bg: #030712; --container-bg: #111827; --cell-bg: #1f2937; --grid-line: #4b5563; --user-input: #67e8f9; --given-text: #ffffff; --error-text: #f87171; --area-highlight-bg: rgba(168, 85, 247, 0.1); --active-cell-bg: rgba(168, 85, 247, 0.2); --highlight-bg: var(--primary-color); --highlight-text: var(--given-text); }
-    body[data-theme="orange"] { --primary-color: #f97316; --primary-hover: #ea580c; --text-accent: #fb923c; --body-bg: #0c0a09; --container-bg: #1c1917; --cell-bg: #292524; --grid-line: #57534e; --user-input: #fdba74; --given-text: #ffffff; --error-text: #f87171; --area-highlight-bg: rgba(249, 115, 22, 0.1); --active-cell-bg: rgba(249, 115, 22, 0.2); --highlight-bg: var(--primary-color); --highlight-text: var(--given-text); }
-    body[data-theme="green"] { --primary-color: #22c55e; --primary-hover: #16a34a; --text-accent: #4ade80; --body-bg: #050f09; --container-bg: #0f1a14; --cell-bg: #1a2e24; --grid-line: #3f6251; --user-input: #86efac; --given-text: #ffffff; --error-text: #f87171; --area-highlight-bg: rgba(34, 197, 94, 0.1); --active-cell-bg: rgba(34, 197, 94, 0.2); --highlight-bg: var(--primary-color); --highlight-text: var(--given-text); }
-    body[data-theme="light"] { --primary-color: #a16207; --primary-hover: #854d0e; --text-accent: #a16207; --body-bg: #f1f5f9; --container-bg: #ffffff; --cell-bg: #f8fafc; --grid-line: #e2e8f0; --user-input: #1e40af; --given-text: #1e293b; --error-text: #dc2626; --area-highlight-bg: rgba(161, 98, 7, 0.07); --active-cell-bg: rgba(161, 98, 7, 0.15); --highlight-bg: #fde047; --highlight-text: var(--primary-hover); }
+    /* ИЗМЕНЕНИЕ: Уменьшена непрозрачность подсветки области */
+    :root, body[data-theme="purple"] { --primary-color: #a855f7; --primary-hover: #9333ea; --text-accent: #c084fc; --body-bg: #030712; --container-bg: #111827; --cell-bg: #1f2937; --grid-line: #4b5563; --user-input: #67e8f9; --given-text: #ffffff; --error-text: #f87171; --highlight-bg: var(--primary-color); --highlight-text: var(--given-text);
+      --area-highlight-bg: rgba(168, 85, 247, 0.06); --active-cell-bg: rgba(168, 85, 247, 0.12);
+    }
+    body[data-theme="orange"] { --primary-color: #f97316; --primary-hover: #ea580c; --text-accent: #fb923c; --body-bg: #0c0a09; --container-bg: #1c1917; --cell-bg: #292524; --grid-line: #57534e; --user-input: #fdba74; --given-text: #ffffff; --error-text: #f87171; --highlight-bg: var(--primary-color); --highlight-text: var(--given-text);
+      --area-highlight-bg: rgba(249, 115, 22, 0.06); --active-cell-bg: rgba(249, 115, 22, 0.12);
+    }
+    body[data-theme="green"] { --primary-color: #22c55e; --primary-hover: #16a34a; --text-accent: #4ade80; --body-bg: #050f09; --container-bg: #0f1a14; --cell-bg: #1a2e24; --grid-line: #3f6251; --user-input: #86efac; --given-text: #ffffff; --error-text: #f87171; --highlight-bg: var(--primary-color); --highlight-text: var(--given-text);
+      --area-highlight-bg: rgba(34, 197, 94, 0.06); --active-cell-bg: rgba(34, 197, 94, 0.12);
+    }
+    body[data-theme="light"] { --primary-color: #a16207; --primary-hover: #854d0e; --text-accent: #a16207; --body-bg: #f1f5f9; --container-bg: #ffffff; --cell-bg: #f8fafc; --grid-line: #e2e8f0; --user-input: #1e40af; --given-text: #1e293b; --error-text: #dc2626; --highlight-bg: #fde047; --highlight-text: var(--primary-hover);
+      --area-highlight-bg: rgba(161, 98, 7, 0.05); --active-cell-bg: rgba(161, 98, 7, 0.1);
+    }
 
     /* --- Общие стили --- */
     body { background-color: var(--body-bg); color: var(--text-accent); transition: background-color 0.3s; }
@@ -43,15 +52,12 @@
 </head>
 <body class="flex flex-col items-center justify-center min-h-screen p-2 sm:p-4">
   <div id="game-container" class="rounded-2xl p-4 glow">
-    <h1 class="title-text text-2xl font-bold text-center mb-4">Судоку для Любимой Поли</h1>
+    <h1 class="title-text text-2xl font-bold text-center mb-4">Судоку</h1>
     <div class="mb-4 flex justify-between items-center">
       <select id="difficulty" class="select-box rounded-lg p-2 glow text-sm">
         <option value="easy">Лёгкий</option> <option value="medium">Средний</option> <option value="hard">Сложный</option>
       </select>
       <div class="flex items-center gap-2 sm:gap-4 relative">
-        <!-- ВОССТАНОВЛЕННЫЕ КНОПКИ -->
-        <button id="clear-button" class="control-button p-2 rounded-lg glow transition-colors" title="Очистить введённые ячейки"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0011.664 0l3.181-3.183m-4.991-2.695v-2.695A8.25 8.25 0 005.67 6.75v2.695m12.663 0V6.75a8.25 8.25 0 00-11.664 0v2.695" /></svg></button>
-        <button id="fullscreen-button" class="control-button p-2 rounded-lg glow transition-colors" title="Полный экран"><svg id="icon-expand" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" /></svg><svg id="icon-compress" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 hidden"><path stroke-linecap="round" stroke-linejoin="round" d="M9 9V4.5M9 9H4.5M9 9L3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5M15 15l5.25 5.25" /></svg></button>
         <button id="settings-button" class="control-button p-2 rounded-lg glow transition-colors" title="Настройки темы"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-1.007 1.11-1.11.55-.102 1.13-.102 1.68 0 .55.103 1.02.568 1.11 1.11.09.542.09 1.128 0 1.67-.09.542-.56 1.007-1.11 1.11-.55.102-1.13-.102-1.68 0-.55-.103-1.02-.568-1.11-1.11-.09-.542-.09-1.128 0-1.67zM14.25 10.25a2.25 2.25 0 00-2.25-2.25H7.5a2.25 2.25 0 00-2.25 2.25v.5c0 .59.38 1.095.92 1.254a2.25 2.25 0 011.68.026l.22.067.22.067.22.067a2.25 2.25 0 011.13 1.933V16.5a2.25 2.25 0 002.25 2.25h.5a2.25 2.25 0 002.25-2.25v-2.25a2.25 2.25 0 00-1.13-1.933l-.22-.067-.22-.067-.22-.067a2.25 2.25 0 01-1.68-.026 1.125 1.125 0 01-.92-1.254v-.5z" /></svg></button>
         <div id="theme-panel" class="hidden absolute top-full right-0 mt-2 p-2 bg-gray-800 rounded-lg shadow-lg z-20"><div class="flex gap-2"><button class="theme-button w-6 h-6 rounded-full bg-purple-500 border-2" data-theme="purple" title="Фиолетовая"></button><button class="theme-button w-6 h-6 rounded-full bg-orange-500 border-2" data-theme="orange" title="Оранжевая"></button><button class="theme-button w-6 h-6 rounded-full bg-green-500 border-2" data-theme="green" title="Зелёная"></button><button class="theme-button w-6 h-6 rounded-full bg-yellow-700 border-2" data-theme="light" title="Светлая"></button></div></div>
         <div id="timer" class="timer-text font-semibold text-sm">00:00</div>
@@ -68,7 +74,7 @@
   </div>
 
   <script>
-    const elements = { body: document.body, gameContainer: document.getElementById('game-container'), grid: document.getElementById('grid'), difficulty: document.getElementById('difficulty'), newGameBtn: document.getElementById('newGame'), checkBtn: document.getElementById('check'), highlightBtn: document.getElementById('highlightToggle'), timer: document.getElementById('timer'), message: document.getElementById('message'), numberRow: document.getElementById('number-row'), clearBtn: document.getElementById('clear-button'), fullscreenBtn: document.getElementById('fullscreen-button'), settingsBtn: document.getElementById('settings-button'), themePanel: document.getElementById('theme-panel'), iconExpand: document.getElementById('icon-expand'), iconCompress: document.getElementById('icon-compress') };
+    const elements = { body: document.body, gameContainer: document.getElementById('game-container'), grid: document.getElementById('grid'), difficulty: document.getElementById('difficulty'), newGameBtn: document.getElementById('newGame'), checkBtn: document.getElementById('check'), highlightBtn: document.getElementById('highlightToggle'), timer: document.getElementById('timer'), message: document.getElementById('message'), numberRow: document.getElementById('number-row'), settingsBtn: document.getElementById('settings-button'), themePanel: document.getElementById('theme-panel')};
     let grid = [], solution = [], givenCells = new Set(), timerInterval, startTime, activeCell = null, highlightEnabled = true;
 
     function createGrid() { elements.grid.innerHTML='<div class="grid-separator v-sep-1"></div><div class="grid-separator v-sep-2"></div><div class="grid-separator h-sep-1"></div><div class="grid-separator h-sep-2"></div>';grid=Array(9).fill().map(()=>Array(9).fill(0));givenCells.clear();for(let i=0;i<9;i++)for(let j=0;j<9;j++){const e=document.createElement("div");e.className="cell";const t=document.createElement("div");t.className="cell-content";e.appendChild(t),e.addEventListener("click",()=>selectCell(i,j)),elements.grid.appendChild(e)}}
@@ -98,42 +104,72 @@
         cells[row * 9 + col].classList.add('active-cell');
         if (highlightEnabled && grid[row][col] !== 0) highlightSimilarNumbers(grid[row][col]);
     }
+    
     function performAction(action) {
         if (!activeCell) return;
-        const [row, col] = activeCell, value = action === 'erase' ? 0 : action;
-        if (givenCells.has(`${row},${col}`) || grid[row][col] === value) return;
+        const [row, col] = activeCell;
+        if (givenCells.has(`${row},${col}`)) return;
         const cellElement = document.querySelectorAll('.cell')[row * 9 + col];
-        grid[row][col] = value;
-        cellElement.querySelector('.cell-content').textContent = value || '';
-        cellElement.classList.remove('error');
-        cellElement.classList.toggle('user-input', value !== 0);
-        updateNumberPanelState();
-        if (highlightEnabled) { clearHighlights(true); if (value !== 0) highlightSimilarNumbers(value); }
+        const value = action === 'erase' ? 0 : action;
+        if (grid[row][col] !== value) {
+             grid[row][col] = value;
+             cellElement.querySelector('.cell-content').textContent = value || '';
+             cellElement.classList.remove('error');
+             cellElement.classList.toggle('user-input', value !== 0);
+             updateNumberPanelState();
+             if (highlightEnabled) {
+                clearHighlights(true); // Очищаем только подсветку цифр
+                if (value !== 0) highlightSimilarNumbers(value);
+             }
+        }
     }
-    
-    function startNewGame() { createGrid(); createNumberRow(); generatePuzzle(elements.difficulty.value); elements.message.textContent = ""; }
+
+    function deselectCell() {
+        if (activeCell) {
+            clearHighlights();
+            activeCell = null;
+        }
+    }
+
     function renderGrid() {document.querySelectorAll(".cell").forEach((e,t)=>{const n=Math.floor(t/9),l=t%9;e.querySelector(".cell-content").textContent=grid[n][l]||"",e.className="cell",givenCells.has(`${n},${l}`)?e.classList.add("given"):0!==grid[n][l]&&e.classList.add("user-input")}),activeCell=null,clearHighlights(),resetTimer(),updateNumberPanelState()}
     function updateNumberPanelState() {const e=Array(10).fill(0);for(let t of grid)for(let n of t)0!==n&&e[n]++;elements.numberRow.querySelectorAll(".number-button-wrapper").forEach((t,n)=>{if(n<9){const l=n+1,s=9===e[l],c=t.querySelector(".number-counter");c.textContent=9-e[l],t.classList.toggle("disabled",s)}})}
     function checkSolution() {if(!grid.every(e=>e.every(e=>e)))return void(elements.message.textContent="Заполните все ячейки.");let e=!0;document.querySelectorAll(".cell").forEach((t,n)=>{const l=Math.floor(n/9),s=n%9;givenCells.has(`${l},${s}`)||t.classList.toggle("error",grid[l][s]!==solution[l][s])&&(e=!1)}),e?(clearInterval(timerInterval),elements.message.textContent="Поздравляем! Вы решили пазл!",elements.numberRow.querySelectorAll(".number-button-wrapper").forEach(e=>e.classList.add("disabled"))):elements.message.textContent="В решении есть ошибки."}
-    function highlightSimilarNumbers(e){ document.querySelectorAll(".cell").forEach((t,n)=>{ if(grid[Math.floor(n/9)][n%9]===e) t.classList.add("highlight") })}
-    function clearHighlights(keepArea = false){ document.querySelectorAll(".cell").forEach(e=>{ e.classList.remove("highlight"); if (!keepArea) e.classList.remove("area-highlight","active-cell"); }) }
+    
+    function highlightSimilarNumbers(e){
+        document.querySelectorAll(".cell").forEach((t,n)=>{
+            if(grid[Math.floor(n/9)][n%9]===e) t.classList.add("highlight")
+        })
+    }
+    function clearHighlights(keepArea = false){
+        document.querySelectorAll(".cell").forEach(e=>{
+            e.classList.remove("highlight");
+            if (!keepArea) e.classList.remove("area-highlight","active-cell");
+        })
+    }
+
     function resetTimer(){clearInterval(timerInterval),startTime=Date.now(),timerInterval=setInterval(()=>{const e=Math.floor((Date.now()-startTime)/1e3),t=String(Math.floor(e/60)).padStart(2,"0"),n=String(e%60).padStart(2,"0");elements.timer.textContent=`${t}:${n}`},1e3)}
     function applyTheme(e){document.body.dataset.theme=e,localStorage.setItem("sudoku-theme",e),document.querySelectorAll(".theme-button").forEach(t=>{t.style.borderColor=t.dataset.theme===e?"var(--primary-color)":"transparent"})}
-    function clearUserCells() { grid.forEach((row, r) => row.forEach((_, c) => { if (!givenCells.has(`${r},${c}`)) grid[r][c] = 0; })); renderGrid(); }
-    function toggleFullScreen() { document.fullscreenElement?document.exitFullscreen():elements.gameContainer.requestFullscreen().catch(e=>alert(`Ошибка: ${e.message}`)) }
-    function updateFullscreenIcons() { const e=!!document.fullscreenElement;elements.iconExpand.classList.toggle("hidden",e);elements.iconCompress.classList.toggle("hidden",!e) }
-
+    
     function init() {
+        const startNewGame = () => { createGrid(); createNumberRow(); generatePuzzle(elements.difficulty.value); elements.message.textContent = ""; };
         elements.newGameBtn.addEventListener('click', startNewGame);
         elements.checkBtn.addEventListener('click', checkSolution);
         elements.difficulty.addEventListener('change', startNewGame);
-        elements.clearBtn.addEventListener('click', clearUserCells);
         elements.highlightBtn.addEventListener('click', ()=>{highlightEnabled=!highlightEnabled,elements.highlightBtn.textContent=`Подсветка: ${highlightEnabled?"ВКЛ":"ВЫКЛ"}`,highlightEnabled?activeCell&&grid[activeCell[0]][activeCell[1]]&&highlightSimilarNumbers(grid[activeCell[0]][activeCell[1]]):clearHighlights()});
         elements.settingsBtn.addEventListener('click', e => { e.stopPropagation(); elements.themePanel.classList.toggle('hidden'); });
-        elements.fullscreenBtn.addEventListener('click', toggleFullScreen);
-        document.addEventListener('fullscreenchange', updateFullscreenIcons);
-        document.addEventListener('click', ()=>elements.themePanel.classList.add('hidden'));
         elements.themePanel.addEventListener('click', e => { e.stopPropagation(); if (e.target.closest('.theme-button')) { applyTheme(e.target.closest('.theme-button').dataset.theme); } });
+        // ИЗМЕНЕНИЕ: Слушатель для деселекта
+        document.addEventListener('click', (e) => {
+            if (!elements.gameContainer.contains(e.target)) {
+                deselectCell();
+            }
+        });
+        elements.gameContainer.addEventListener('click', (e) => {
+            if (e.target === elements.gameContainer || e.target.classList.contains('title-text') || e.target.classList.contains('p-4')) {
+                 deselectCell();
+            }
+        });
+
         applyTheme(localStorage.getItem('sudoku-theme') || 'purple');
         startNewGame();
     }
