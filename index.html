@@ -1,265 +1,318 @@
-<script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-        </script><!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sudoku Game</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=2.0, user-scalable=yes">
+  <title>Судоку</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
+    body {
+      background-color: #030712; /* Tailwind gray-950 */
+    }
     .glow {
-      box-shadow: 0 0 10px rgba(168, 85, 247, 0.5); /* Tailwind purple-500 */
+      box-shadow: 0 0 10px rgba(168, 85, 247, 0.5);
     }
-    .cell {
-      transition: all 0.2s ease-in-out;
+    
+    /* --- ИЗМЕНЕНИЕ: Адаптивный контейнер --- */
+    #game-container {
+      width: 100%;
+      max-width: 420px; /* Базовая макс. ширина для телефонов */
+      margin: auto;
     }
-    .cell:focus {
-      outline: none;
-      box-shadow: 0 0 15px rgba(168, 85, 247, 0.7);
+    @media (min-width: 768px) { /* Планшеты и больше */
+      #game-container {
+        max-width: 600px;
+      }
     }
-    .error {
-      background-color: rgba(168, 85, 247, 0.2);
+    @media (min-width: 1024px) { /* Настольные ПК */
+       #game-container {
+        max-width: 640px;
+      }
     }
+
     .grid-container {
       display: grid;
       grid-template-columns: repeat(9, minmax(0, 1fr));
-      gap: 1px;
-      background-color: #1f2937; /* Tailwind gray-800 */
+      gap: 2px;
+      background-color: #374151;
       position: relative;
-    }
-    .cell-container {
-      position: relative;
-    }
-    /* Vertical 3x3 subgrid borders */
-    .cell-container:nth-child(3n):not(:nth-child(9n))::after {
-      content: '';
-      position: absolute;
-      right: -2px;
-      top: 0;
-      height: 100%;
-      width: 3px;
-      background-color: #a855f7; /* Tailwind purple-500 */
-    }
-    /* Horizontal 3x3 subgrid borders */
-    .cell-container:nth-child(n+19):nth-child(-n+27)::before,
-    .cell-container:nth-child(n+46):nth-child(-n+54)::before {
-      content: '';
-      position: absolute;
-      bottom: -2px;
-      left: 0;
       width: 100%;
-      height: 3px;
-      background-color: #a855f7;
+      padding: 3px;
+      border-radius: 12px;
     }
-    /* Outer border for the entire grid */
-    .grid-container::before {
-      content: '';
-      position: absolute;
-      top: -3px;
-      left: -3px;
-      right: -3px;
-      bottom: -3px;
-      border: 3px solid #a855f7;
-      border-radius: 8px;
-      pointer-events: none;
+    .cell {
+      transition: all 0.2s ease-in-out;
+      width: 100%;
+      height: 0;
+      padding-bottom: 100%;
+      position: relative;
+      background-color: #111827;
+      border: none;
+      border-radius: 6px;
+      font-size: clamp(1rem, 4.5vw, 1.75rem); /* Адаптивный размер шрифта */
+      font-weight: 500;
+      caret-color: transparent;
     }
+    .cell-content {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .cell:focus {
+      outline: none; box-shadow: 0 0 15px rgba(168, 85, 247, 0.7);
+    }
+    .error .cell-content { color: #ef4444; font-weight: 700; }
+    .given .cell-content { color: white; font-weight: 700; }
+    .user-input .cell-content { color: #22d3ee; }
+    .highlight { box-shadow: 0 0 15px rgba(132, 204, 22, 0.9); }
+    
+    .grid-container::before, .grid-container::after { content: ''; position: absolute; background-color: #a855f7; z-index: 1; }
+    .grid-container::before { left: 33.333%; right: 33.333%; top: 3px; bottom: 3px; width: 2px; transform: translateX(-1px); }
+    .grid-container::after { top: 33.333%; bottom: 33.333%; left: 3px; right: 3px; height: 2px; transform: translateY(-1px); }
+    .grid-container .h-sep { position: absolute; background-color: #a855f7; z-index: 1; top: 66.666%; bottom: 0; left: 3px; right: 3px; height: 2px; transform: translateY(-1px); }
+    .grid-container .v-sep { position: absolute; background-color: #a855f7; z-index: 1; left: 66.666%; right: 0; top: 3px; bottom: 3px; width: 2px; transform: translateX(-1px); }
+
+    .number-button {
+      width: 100%; height: 0; padding-bottom: 100%; position: relative;
+    }
+    .number-button-content {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: clamp(1rem, 4vw, 1.5rem);
+    }
+    .number-button-wrapper.selected .number-button-content { background-color: #a855f7; color: white; border-radius: 0.375rem; }
   </style>
 </head>
-<body class="bg-gray-900 flex flex-col items-center justify-center min-h-screen p-4">
-  <div class="bg-black rounded-2xl p-6 glow max-w-md w-full">
-    <h1 class="text-3xl font-bold text-purple-500 text-center mb-4">Sudoku</h1>
+<body class="flex flex-col items-center justify-center min-h-screen p-2 sm:p-4">
+  <div id="game-container" class="bg-gray-900 rounded-2xl p-4 glow">
+    <h1 class="text-2xl font-bold text-purple-500 text-center mb-4">Судоку</h1>
     <div class="mb-4 flex justify-between items-center">
-      <select id="difficulty" class="bg-gray-800 text-purple-500 rounded-lg p-2 glow">
-        <option value="easy">Easy</option>
-        <option value="medium">Medium</option>
-        <option value="hard">Hard</option>
+      <select id="difficulty" class="bg-gray-800 text-purple-500 rounded-lg p-2 glow text-sm">
+        <option value="easy">Лёгкий</option>
+        <option value="medium">Средний</option>
+        <option value="hard">Сложный</option>
       </select>
-      <div id="timer" class="text-purple-500 font-semibold">00:00</div>
+      <div class="flex items-center gap-2 sm:gap-4">
+        <button id="clear-button" class="p-2 bg-gray-800 text-purple-400 rounded-lg glow hover:bg-gray-700 hover:text-purple-300 transition-colors" title="Очистить поле">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0011.664 0l3.181-3.183m-4.991-2.695v-2.695A8.25 8.25 0 005.67 6.75v2.695m12.663 0V6.75a8.25 8.25 0 00-11.664 0v2.695" /></svg>
+        </button>
+        <!-- ИЗМЕНЕНИЕ: Кнопка полного экрана -->
+        <button id="fullscreen-button" class="p-2 bg-gray-800 text-purple-400 rounded-lg glow hover:bg-gray-700 hover:text-purple-300 transition-colors" title="Полный экран">
+          <svg id="icon-expand" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" /></svg>
+          <svg id="icon-compress" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 hidden"><path stroke-linecap="round" stroke-linejoin="round" d="M9 9V4.5M9 9H4.5M9 9L3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5M15 15l5.25 5.25" /></svg>
+        </button>
+        <div id="timer" class="text-purple-500 font-semibold text-sm">00:00</div>
+      </div>
     </div>
-    <div id="grid" class="grid-container p-2 rounded-lg">
-      <!-- Grid cells will be generated by JavaScript -->
+    <div id="grid" class="grid-container mx-auto"><div class="h-sep"></div><div class="v-sep"></div></div>
+    <div id="number-row" class="grid grid-cols-9 gap-1 sm:gap-2 mt-4 mx-auto"></div>
+    <div class="mt-4 flex justify-between gap-2">
+      <button id="newGame" class="bg-purple-500 text-white px-3 py-2 rounded-lg glow hover:bg-purple-600 text-sm flex-grow sm:flex-grow-0">Новая игра</button>
+      <button id="highlightToggle" class="bg-purple-500 text-white px-3 py-2 rounded-lg glow hover:bg-purple-600 text-sm flex-grow sm:flex-grow-0">Подсветка</button>
+      <button id="check" class="bg-purple-500 text-white px-3 py-2 rounded-lg glow hover:bg-purple-600 text-sm flex-grow sm:flex-grow-0">Проверить</button>
     </div>
-    <div class="mt-4 flex justify-between">
-      <button id="newGame" class="bg-purple-500 text-white px-4 py-2 rounded-lg glow hover:bg-purple-600">New Game</button>
-      <button id="check" class="bg-purple-500 text-white px-4 py-2 rounded-lg glow hover:bg-purple-600">Check Solution</button>
-    </div>
-    <p id="message" class="mt-4 text-center text-purple-500"></p>
+    <p id="message" class="mt-4 text-center text-purple-500 text-sm h-5"></p>
   </div>
 
   <script>
+    const gameContainer = document.getElementById('game-container');
     const gridElement = document.getElementById('grid');
     const difficultySelect = document.getElementById('difficulty');
     const newGameButton = document.getElementById('newGame');
     const checkButton = document.getElementById('check');
+    const highlightToggleButton = document.getElementById('highlightToggle');
     const timerElement = document.getElementById('timer');
     const messageElement = document.getElementById('message');
-    let grid = [];
-    let solution = [];
-    let timerInterval;
-    let startTime;
+    const numberRow = document.getElementById('number-row');
+    const clearButton = document.getElementById('clear-button');
+    const fullscreenButton = document.getElementById('fullscreen-button');
+    const iconExpand = document.getElementById('icon-expand');
+    const iconCompress = document.getElementById('icon-compress');
+    let grid = [], solution = [], givenCells = new Set(), timerInterval, startTime, selectedNumber = null, highlightEnabled = true;
 
-    // Generate a 9x9 grid with input cells
     function createGrid() {
-      gridElement.innerHTML = '';
+      gridElement.innerHTML = '<div class="h-sep"></div><div class="v-sep"></div>';
       grid = Array(9).fill().map(() => Array(9).fill(0));
-      for (let i = 0; i < 9; i++) {
-        for (let j = 0; j < 9; j++) {
-          const div = document.createElement('div');
-          div.className = 'cell-container';
-          const input = document.createElement('input');
-          input.type = 'text';
-          input.maxLength = 1;
-          input.className = 'cell w-10 h-10 text-center text-purple-500 bg-black rounded-md border border-gray-700 focus:border-purple-500';
-          input.addEventListener('input', (e) => {
-            const value = e.target.value;
-            if (value && !/^[1-9]$/.test(value)) {
-              e.target.value = '';
-            } else {
-              grid[i][j] = value ? parseInt(value) : 0;
-            }
-          });
-          div.appendChild(input);
-          gridElement.appendChild(div);
+      givenCells.clear();
+      for (let i = 0; i < 9; i++) for (let j = 0; j < 9; j++) {
+        const cellWrapper = document.createElement('div');
+        cellWrapper.className = 'cell';
+        const cellContent = document.createElement('div');
+        cellContent.className = 'cell-content';
+        cellWrapper.appendChild(cellContent);
+        cellWrapper.addEventListener('click', () => handleCellClick(i, j, cellWrapper, cellContent));
+        gridElement.appendChild(cellWrapper);
+      }
+      createNumberRow();
+    }
+    
+    function handleCellClick(i, j, wrapper, content) {
+      if (givenCells.has(`${i},${j}`)) {
+        if (content.textContent) {
+          selectedNumber = parseInt(content.textContent);
+          updateNumberSelection();
+          if (highlightEnabled) highlightSimilarNumbers(selectedNumber);
         }
-      }
-    }
-
-    // Generate a Sudoku puzzle based on difficulty
-    function generatePuzzle(difficulty) {
-      solution = [
-        [5,3,4,6,7,8,9,1,2],
-        [6,7,2,1,9,5,3,4,8],
-        [1,9,8,3,4,2,5,6,7],
-        [8,5,9,7,6,1,4,2,3],
-        [4,2,6,8,5,3,7,9,1],
-        [7,1,3,9,2,4,8,5,6],
-        [9,6,1,5,3,7,2,8,4],
-        [2,8,7,4,1,9,6,3,5],
-        [3,4,5,2,8,6,1,7,9]
-      ];
-      grid = solution.map(row => row.slice());
-      const removeCount = { easy: 40, medium: 50, hard: 60 }[difficulty];
-      for (let i = 0; i < removeCount; i++) {
-        const row = Math.floor(Math.random() * 9);
-        const col = Math.floor(Math.random() * 9);
-        grid[row][col] = 0;
-      }
-      renderGrid();
-    }
-
-    // Render the grid to the UI
-    function renderGrid() {
-      const inputs = gridElement.querySelectorAll('input');
-      inputs.forEach((input, index) => {
-        const row = Math.floor(index / 9);
-        const col = index % 9;
-        input.value = grid[row][col] || '';
-        input.disabled = grid[row][col] !== 0;
-        input.classList.remove('error');
-      });
-      resetTimer();
-    }
-
-    // Start or reset the timer
-    function resetTimer() {
-      clearInterval(timerInterval);
-      startTime = Date.now();
-      timerInterval = setInterval(() => {
-        const elapsed = Math.floor((Date.now() - startTime) / 1000);
-        const minutes = String(Math.floor(elapsed / 60)).padStart(2, '0');
-        const seconds = String(elapsed % 60).padStart(2, '0');
-        timerElement.textContent = `${minutes}:${seconds}`;
-      }, 1000);
-    }
-
-    // Check if the grid is fully filled
-    function isGridFilled() {
-      return grid.every(row => row.every(cell => cell !== 0));
-    }
-
-    // Check the solution
-    function checkSolution() {
-      if (!isGridFilled()) {
-        messageElement.textContent = 'Please fill all cells before checking.';
         return;
       }
-      let correct = true;
-      const inputs = gridElement.querySelectorAll('input');
-      for (let i = 0; i < 9; i++) {
-        for (let j = 0; j < 9; j++) {
-          const index = i * 9 + j;
-          if (grid[i][j] !== solution[i][j]) {
-            inputs[index].classList.add('error');
-            correct = false;
-          } else {
-            inputs[index].classList.remove('error');
-          }
+      if (selectedNumber !== null) {
+        if (grid[i][j] === selectedNumber) {
+          content.textContent = '';
+          grid[i][j] = 0;
+          wrapper.classList.remove('user-input', 'error');
+        } else {
+          content.textContent = selectedNumber;
+          grid[i][j] = selectedNumber;
+          wrapper.classList.remove('error');
+          wrapper.classList.add('user-input');
+          if (highlightEnabled) highlightSimilarNumbers(selectedNumber);
         }
+        updateNumberPanelState(); 
+      } else if (content.textContent) {
+        selectedNumber = parseInt(content.textContent);
+        updateNumberSelection();
+        if (highlightEnabled) highlightSimilarNumbers(selectedNumber);
       }
-      messageElement.textContent = correct ? 'Congratulations! You solved it!' : 'There are errors in your solution.';
     }
 
-    // Start a new game
+    function createNumberRow() {
+      numberRow.innerHTML = '';
+      for (let i = 1; i <= 9; i++) {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'number-button-wrapper';
+        const button = document.createElement('div');
+        button.className = 'number-button';
+        const content = document.createElement('div');
+        content.className = 'number-button-content bg-gray-800 text-purple-400 rounded-md glow hover:bg-gray-700 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed';
+        content.textContent = i;
+        button.appendChild(content);
+        wrapper.appendChild(button);
+        wrapper.addEventListener('click', () => {
+          if (wrapper.classList.contains('disabled')) return;
+          selectedNumber = (selectedNumber === i) ? null : i;
+          if (selectedNumber && highlightEnabled) highlightSimilarNumbers(i); else clearHighlights();
+          updateNumberSelection();
+        });
+        numberRow.appendChild(wrapper);
+      }
+    }
+    
+    function updateNumberPanelState() {
+      const counts = Array(10).fill(0);
+      for(let row of grid) for(let cell of row) if(cell !== 0) counts[cell]++;
+      const buttons = numberRow.querySelectorAll('.number-button-wrapper');
+      buttons.forEach((btn, index) => {
+        const num = index + 1;
+        const isDisabled = counts[num] === 9;
+        btn.classList.toggle('disabled', isDisabled);
+        btn.querySelector('.number-button-content').classList.toggle('opacity-40', isDisabled);
+        btn.querySelector('.number-button-content').classList.toggle('cursor-not-allowed', isDisabled);
+        if (isDisabled && selectedNumber === num) {
+          selectedNumber = null;
+          clearHighlights();
+          updateNumberSelection();
+        }
+      });
+    }
+
+    function clearUserCells() {
+      document.querySelectorAll('.cell').forEach((cell, index) => {
+        const row = Math.floor(index / 9), col = index % 9;
+        if (!givenCells.has(`${row},${col}`)) {
+          grid[row][col] = 0;
+          cell.querySelector('.cell-content').textContent = '';
+          cell.classList.remove('user-input', 'error');
+        }
+      });
+      if (selectedNumber) clearHighlights();
+      messageElement.textContent = '';
+      updateNumberPanelState();
+    }
+
+    function updateNumberSelection() {
+        numberRow.querySelectorAll('.number-button-wrapper').forEach((btn, i) => {
+            btn.classList.toggle('selected', (i + 1) === selectedNumber);
+        });
+    }
+
+    function highlightSimilarNumbers(num) {
+      clearHighlights();
+      document.querySelectorAll('.cell').forEach((cell, index) => {
+        if (grid[Math.floor(index/9)][index%9] === num) cell.classList.add('highlight');
+      });
+    }
+
+    function clearHighlights() {
+      document.querySelectorAll('.cell.highlight').forEach(c => c.classList.remove('highlight'));
+    }
+
+    function generatePuzzle(difficulty) { /* ... same as before ... */ solution = Array(9).fill().map(()=>Array(9).fill(0));fillDiagonal();fillRemaining(0, 0);grid = solution.map(row => row.slice());const cells = [];for(let i=0; i<9; i++) for(let j=0; j<9; j++) cells.push([i,j]);shuffle(cells);const removeCount = {easy:45, medium:52, hard:58}[difficulty];for(let i=0; i<removeCount; i++) {const [row, col] = cells[i];grid[row][col] = 0;}givenCells.clear();for(let i=0; i<9; i++) for(let j=0; j<9; j++) if(grid[i][j] !== 0) givenCells.add(`${i},${j}`);renderGrid();function fillDiagonal(){for(let o=0;o<9;o+=3){const t=[1,2,3,4,5,6,7,8,9];shuffle(t);let l=0;for(let r=0;r<3;r++)for(let e=0;e<3;e++)solution[o+r][o+e]=t[l++]}}function isSafe(o,t,l){for(let r=0;r<9;r++)if(solution[o][r]===l||solution[r][t]===l)return!1;const r=o-o%3,e=t-t%3;for(let o=0;o<3;o++)for(let t=0;t<3;t++)if(solution[r+o][e+t]===l)return!1;return!0}function fillRemaining(o,t){if(t>=9&&(o++,t=0),o>=9)return!0;if(0!==solution[o][t])return fillRemaining(o,t+1);const l=[1,2,3,4,5,6,7,8,9];shuffle(l);for(let r of l)if(isSafe(o,t,r)){if(solution[o][t]=r,fillRemaining(o,t+1))return!0;solution[o][t]=0}return!1}function shuffle(o){for(let t=o.length-1;t>0;t--){const l=Math.floor(Math.random()*(t+1));[o[t],o[l]]=[o[l],o[t]]}} }
+    
+    function renderGrid() {
+      document.querySelectorAll('.cell').forEach((cell, index) => {
+        const row = Math.floor(index/9), col = index % 9;
+        cell.querySelector('.cell-content').textContent = grid[row][col] || '';
+        cell.className = 'cell'; // Reset classes
+        if (givenCells.has(`${row},${col}`)) cell.classList.add('given');
+        else if (grid[row][col] !== 0) cell.classList.add('user-input');
+      });
+      selectedNumber = null;
+      updateNumberSelection();
+      clearHighlights();
+      resetTimer();
+      updateNumberPanelState();
+    }
+
+    function resetTimer() { /* ... same as before ... */ clearInterval(timerInterval);startTime=Date.now();timerInterval=setInterval(()=>{const e=Math.floor((Date.now()-startTime)/1e3),t=String(Math.floor(e/60)).padStart(2,"0"),n=String(e%60).padStart(2,"0");timerElement.textContent=`${t}:${n}`},1e3)}
+    
+    function checkSolution() {
+      if (!grid.every(r => r.every(c => c))) return messageElement.textContent = 'Заполните все ячейки.';
+      let correct = true;
+      document.querySelectorAll('.cell').forEach((cell, index) => {
+        const row = Math.floor(index/9), col = index % 9;
+        if (!givenCells.has(`${row},${col}`)) {
+          if (grid[row][col] !== solution[row][col]) {
+            cell.classList.add('error'); correct = false;
+          } else cell.classList.remove('error');
+        }
+      });
+      if (correct) {
+        clearInterval(timerInterval);
+        messageElement.textContent = 'Поздравляем! Вы решили пазл!';
+        numberRow.querySelectorAll('.number-button-wrapper').forEach(b => b.classList.add('disabled', 'opacity-40', 'cursor-not-allowed'));
+      } else messageElement.textContent = 'В решении есть ошибки.';
+    }
+
     function startNewGame() {
       const difficulty = difficultySelect.value;
+      messageElement.textContent = '';
+      highlightToggleButton.textContent = `Подсветка: ${highlightEnabled ? 'ВКЛ' : 'ВЫКЛ'}`;
       createGrid();
       generatePuzzle(difficulty);
-      messageElement.textContent = '';
+    }
+    
+    function toggleFullScreen() {
+      if (!document.fullscreenElement) {
+        gameContainer.requestFullscreen().catch(err => alert(`Не удалось перейти в полный экран: ${err.message}`));
+      } else document.exitFullscreen();
+    }
+    
+    function updateFullscreenIcons() {
+      const isFullscreen = !!document.fullscreenElement;
+      iconExpand.classList.toggle('hidden', isFullscreen);
+      iconCompress.classList.toggle('hidden', !isFullscreen);
     }
 
-    // Event listeners
+    highlightToggleButton.addEventListener('click', () => {highlightEnabled = !highlightEnabled;highlightToggleButton.textContent = `Подсветка: ${highlightEnabled?'ВКЛ':'ВЫКЛ'}`;if(!highlightEnabled)clearHighlights();else if(selectedNumber)highlightSimilarNumbers(selectedNumber);});
+    clearButton.addEventListener('click', clearUserCells);
+    fullscreenButton.addEventListener('click', toggleFullScreen);
+    document.addEventListener('fullscreenchange', updateFullscreenIcons);
     newGameButton.addEventListener('click', startNewGame);
     checkButton.addEventListener('click', checkSolution);
     difficultySelect.addEventListener('change', startNewGame);
 
-    // Initialize the game
     startNewGame();
-
-    // Handle pinch-to-zoom
-    document.addEventListener('gesturestart', (e) => e.preventDefault());
-    document.addEventListener('touchmove', (e) => {
-      if (e.scale !== 1) {
-        e.preventDefault();
-      }
-    }, { passive: false });
+    document.addEventListener('gesturestart', (e)=>e.preventDefault());
+    document.addEventListener('touchmove', (e)=>{if(e.scale !== 1) e.preventDefault()},{passive:false});
   </script>
 </body>
 </html>
