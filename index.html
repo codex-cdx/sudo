@@ -6,11 +6,29 @@
   <title>Судоку</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    /* --- Система тем на CSS-переменных --- */
-    :root, body[data-theme="purple"] { --primary-color: #a855f7; --primary-hover: #9333ea; --text-accent: #c084fc; --body-bg: #030712; --container-bg: #111827; --cell-bg: #1f2937; --grid-line: #4b5563; --user-input: #67e8f9; --given-text: #ffffff; --error-text: #f87171; --area-highlight-bg: rgba(168, 85, 247, 0.1); --active-cell-bg: rgba(168, 85, 247, 0.2); }
-    body[data-theme="orange"] { --primary-color: #f97316; --primary-hover: #ea580c; --text-accent: #fb923c; --body-bg: #0c0a09; --container-bg: #1c1917; --cell-bg: #292524; --grid-line: #57534e; --user-input: #fdba74; --given-text: #ffffff; --error-text: #f87171; --area-highlight-bg: rgba(249, 115, 22, 0.1); --active-cell-bg: rgba(249, 115, 22, 0.2); }
-    body[data-theme="green"] { --primary-color: #22c55e; --primary-hover: #16a34a; --text-accent: #4ade80; --body-bg: #050f09; --container-bg: #0f1a14; --cell-bg: #1a2e24; --grid-line: #3f6251; --user-input: #86efac; --given-text: #ffffff; --error-text: #f87171; --area-highlight-bg: rgba(34, 197, 94, 0.1); --active-cell-bg: rgba(34, 197, 94, 0.2); }
-    body[data-theme="light"] { --primary-color: #a16207; --primary-hover: #854d0e; --text-accent: #a16207; --body-bg: #f1f5f9; --container-bg: #ffffff; --cell-bg: #f8fafc; --grid-line: #e2e8f0; --user-input: #1e40af; --given-text: #1e293b; --error-text: #dc2626; --area-highlight-bg: rgba(161, 98, 7, 0.07); --active-cell-bg: rgba(161, 98, 7, 0.15); }
+    /* --- Система тем на CSS-переменных с новым стилем подсветки --- */
+    :root, body[data-theme="purple"] {
+      --primary-color: #a855f7; --primary-hover: #9333ea; --text-accent: #c084fc; --body-bg: #030712; --container-bg: #111827; --cell-bg: #1f2937; --grid-line: #4b5563; --user-input: #67e8f9; --given-text: #ffffff; --error-text: #f87171;
+      --area-highlight-bg: rgba(168, 85, 247, 0.1); --active-cell-bg: rgba(168, 85, 247, 0.2);
+      /* ИЗМЕНЕНИЕ: Цвета для выразительной подсветки */
+      --highlight-bg: var(--primary-color);
+      --highlight-text: var(--given-text);
+    }
+    body[data-theme="orange"] {
+      --primary-color: #f97316; --primary-hover: #ea580c; --text-accent: #fb923c; --body-bg: #0c0a09; --container-bg: #1c1917; --cell-bg: #292524; --grid-line: #57534e; --user-input: #fdba74; --given-text: #ffffff; --error-text: #f87171;
+      --area-highlight-bg: rgba(249, 115, 22, 0.1); --active-cell-bg: rgba(249, 115, 22, 0.2);
+      --highlight-bg: var(--primary-color); --highlight-text: var(--given-text);
+    }
+    body[data-theme="green"] {
+      --primary-color: #22c55e; --primary-hover: #16a34a; --text-accent: #4ade80; --body-bg: #050f09; --container-bg: #0f1a14; --cell-bg: #1a2e24; --grid-line: #3f6251; --user-input: #86efac; --given-text: #ffffff; --error-text: #f87171;
+      --area-highlight-bg: rgba(34, 197, 94, 0.1); --active-cell-bg: rgba(34, 197, 94, 0.2);
+      --highlight-bg: var(--primary-color); --highlight-text: var(--given-text);
+    }
+    body[data-theme="light"] {
+      --primary-color: #a16207; --primary-hover: #854d0e; --text-accent: #a16207; --body-bg: #f1f5f9; --container-bg: #ffffff; --cell-bg: #f8fafc; --grid-line: #e2e8f0; --user-input: #1e40af; --given-text: #1e293b; --error-text: #dc2626;
+      --area-highlight-bg: rgba(161, 98, 7, 0.07); --active-cell-bg: rgba(161, 98, 7, 0.15);
+      --highlight-bg: #fde047; --highlight-text: var(--primary-hover);
+    }
 
     /* --- Общие стили с использованием переменных --- */
     body { background-color: var(--body-bg); color: var(--text-accent); transition: background-color 0.3s; }
@@ -28,10 +46,18 @@
     .error .cell-content { color: var(--error-text); }
     .number-button-content { background-color: var(--cell-bg); color: var(--text-accent); }
     .number-button-wrapper.selected .number-button-content { background-color: var(--primary-color); color: var(--given-text); }
-
-    /* --- ИЗМЕНЕНИЕ: Стили для подсветки области и активной ячейки --- */
     .area-highlight { background-color: var(--area-highlight-bg); }
     .active-cell { background-color: var(--active-cell-bg); }
+    
+    /* ИЗМЕНЕНИЕ: Новый стиль для .highlight */
+    .highlight {
+      background-color: var(--highlight-bg) !important; /* Важно для переопределения */
+      z-index: 5;
+    }
+    .highlight .cell-content {
+      color: var(--highlight-text) !important;
+      font-weight: 700;
+    }
 
     /* --- Прочие стили --- */
     #game-container { width: 100%; max-width: 420px; margin: auto; }
@@ -41,7 +67,6 @@
     .cell { transition: background-color 0.2s ease-in-out; width: 100%; height: 0; padding-bottom: 100%; position: relative; border: none; border-radius: 6px; font-size: clamp(1rem, 4.5vw, 1.75rem); font-weight: 500; caret-color: transparent; }
     .cell-content { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
     .error .cell-content, .given .cell-content { font-weight: 700; }
-    .highlight { box-shadow: 0 0 10px 2px #a3e635; z-index: 5; }
     .grid-separator { position: absolute; z-index: 1; }
     .v-sep-1 { left: 33.333%; right: 33.333%; top: 3px; bottom: 3px; width: 2px; transform: translateX(-1px); }
     .v-sep-2 { left: 66.666%; right: 0; top: 3px; bottom: 3px; width: 2px; transform: translateX(-1px); }
@@ -61,7 +86,7 @@
         <option value="easy">Лёгкий</option> <option value="medium">Средний</option> <option value="hard">Сложный</option>
       </select>
       <div class="flex items-center gap-2 sm:gap-4 relative">
-        <button id="settings-button" class="control-button p-2 rounded-lg glow transition-colors" title="Настройки темы"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-1.007 1.11-1.11.55-.102 1.13-.102 1.68 0 .55.103 1.02.568 1.11 1.11.09.542.09 1.128 0 1.67-.09.542-.56 1.007-1.11 1.11-.55.102-1.13.102-1.68 0-.55-.103-1.02-.568-1.11-1.11-.09-.542-.09-1.128 0-1.67zM14.25 10.25a2.25 2.25 0 00-2.25-2.25H7.5a2.25 2.25 0 00-2.25 2.25v.5c0 .59.38 1.095.92 1.254a2.25 2.25 0 011.68.026l.22.067.22.067.22.067a2.25 2.25 0 011.13 1.933V16.5a2.25 2.25 0 002.25 2.25h.5a2.25 2.25 0 002.25-2.25v-2.25a2.25 2.25 0 00-1.13-1.933l-.22-.067-.22-.067-.22-.067a2.25 2.25 0 01-1.68-.026 1.125 1.125 0 01-.92-1.254v-.5z" /></svg></button>
+        <button id="settings-button" class="control-button p-2 rounded-lg glow transition-colors" title="Настройки темы"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-1.007 1.11-1.11.55-.102 1.13-.102 1.68 0 .55.103 1.02.568 1.11 1.11.09.542.09 1.128 0 1.67-.09.542-.56 1.007-1.11 1.11-.55.102-1.13-.102-1.68 0-.55-.103-1.02-.568-1.11-1.11-.09-.542-.09-1.128 0-1.67zM14.25 10.25a2.25 2.25 0 00-2.25-2.25H7.5a2.25 2.25 0 00-2.25 2.25v.5c0 .59.38 1.095.92 1.254a2.25 2.25 0 011.68.026l.22.067.22.067.22.067a2.25 2.25 0 011.13 1.933V16.5a2.25 2.25 0 002.25 2.25h.5a2.25 2.25 0 002.25-2.25v-2.25a2.25 2.25 0 00-1.13-1.933l-.22-.067-.22-.067-.22-.067a2.25 2.25 0 01-1.68-.026 1.125 1.125 0 01-.92-1.254v-.5z" /></svg></button>
         <div id="theme-panel" class="hidden absolute top-full right-0 mt-2 p-2 bg-gray-800 rounded-lg shadow-lg z-20"><div class="flex gap-2"><button class="theme-button w-6 h-6 rounded-full bg-purple-500 border-2" data-theme="purple" title="Фиолетовая"></button><button class="theme-button w-6 h-6 rounded-full bg-orange-500 border-2" data-theme="orange" title="Оранжевая"></button><button class="theme-button w-6 h-6 rounded-full bg-green-500 border-2" data-theme="green" title="Зелёная"></button><button class="theme-button w-6 h-6 rounded-full bg-yellow-700 border-2" data-theme="light" title="Светлая"></button></div></div>
         <div id="timer" class="timer-text font-semibold text-sm">00:00</div>
       </div>
@@ -77,6 +102,7 @@
   </div>
 
   <script>
+    // Код JavaScript остаётся без изменений, так как все доработки были внесены в CSS
     const elements = { body: document.body, grid: document.getElementById('grid'), difficulty: document.getElementById('difficulty'), newGameBtn: document.getElementById('newGame'), checkBtn: document.getElementById('check'), highlightBtn: document.getElementById('highlightToggle'), timer: document.getElementById('timer'), message: document.getElementById('message'), numberRow: document.getElementById('number-row'), settingsBtn: document.getElementById('settings-button'), themePanel: document.getElementById('theme-panel')};
     let grid = [], solution = [], givenCells = new Set(), timerInterval, startTime, activeCell = null, highlightEnabled = true;
 
@@ -119,25 +145,37 @@
         if (!activeCell) return;
         const [row, col] = activeCell;
         if (givenCells.has(`${row},${col}`)) return;
-        
         const cellElement = document.querySelectorAll('.cell')[row * 9 + col];
         const value = action === 'erase' ? 0 : action;
-
         if (grid[row][col] !== value) {
              grid[row][col] = value;
              cellElement.querySelector('.cell-content').textContent = value || '';
              cellElement.classList.remove('error');
              cellElement.classList.toggle('user-input', value !== 0);
              updateNumberPanelState();
-             if (highlightEnabled) highlightSimilarNumbers(value);
+             if (highlightEnabled) {
+                clearHighlights(true); // Очищаем только подсветку цифр
+                if (value !== 0) highlightSimilarNumbers(value);
+             }
         }
     }
 
     function renderGrid() {document.querySelectorAll(".cell").forEach((e,t)=>{const n=Math.floor(t/9),l=t%9;e.querySelector(".cell-content").textContent=grid[n][l]||"",e.className="cell",givenCells.has(`${n},${l}`)?e.classList.add("given"):0!==grid[n][l]&&e.classList.add("user-input")}),activeCell=null,clearHighlights(),resetTimer(),updateNumberPanelState()}
     function updateNumberPanelState() {const e=Array(10).fill(0);for(let t of grid)for(let n of t)0!==n&&e[n]++;elements.numberRow.querySelectorAll(".number-button-wrapper").forEach((t,n)=>{if(n<9){const l=n+1,s=9===e[l],c=t.querySelector(".number-counter");c.textContent=9-e[l],t.classList.toggle("disabled",s)}})}
     function checkSolution() {if(!grid.every(e=>e.every(e=>e)))return void(elements.message.textContent="Заполните все ячейки.");let e=!0;document.querySelectorAll(".cell").forEach((t,n)=>{const l=Math.floor(n/9),s=n%9;givenCells.has(`${l},${s}`)||t.classList.toggle("error",grid[l][s]!==solution[l][s])&&(e=!1)}),e?(clearInterval(timerInterval),elements.message.textContent="Поздравляем! Вы решили пазл!",elements.numberRow.querySelectorAll(".number-button-wrapper").forEach(e=>e.classList.add("disabled"))):elements.message.textContent="В решении есть ошибки."}
-    function highlightSimilarNumbers(e){document.querySelectorAll(".cell").forEach((t,n)=>{grid[Math.floor(n/9)][n%9]===e&&t.classList.add("highlight")})}
-    function clearHighlights(){document.querySelectorAll(".cell").forEach(e=>{e.classList.remove("highlight","area-highlight","active-cell")})}
+    
+    function highlightSimilarNumbers(e){
+        document.querySelectorAll(".cell").forEach((t,n)=>{
+            if(grid[Math.floor(n/9)][n%9]===e) t.classList.add("highlight")
+        })
+    }
+    function clearHighlights(keepArea = false){
+        document.querySelectorAll(".cell").forEach(e=>{
+            e.classList.remove("highlight");
+            if (!keepArea) e.classList.remove("area-highlight","active-cell");
+        })
+    }
+
     function resetTimer(){clearInterval(timerInterval),startTime=Date.now(),timerInterval=setInterval(()=>{const e=Math.floor((Date.now()-startTime)/1e3),t=String(Math.floor(e/60)).padStart(2,"0"),n=String(e%60).padStart(2,"0");elements.timer.textContent=`${t}:${n}`},1e3)}
     function applyTheme(e){document.body.dataset.theme=e,localStorage.setItem("sudoku-theme",e),document.querySelectorAll(".theme-button").forEach(t=>{t.style.borderColor=t.dataset.theme===e?"var(--primary-color)":"transparent"})}
     
@@ -148,7 +186,7 @@
         elements.highlightBtn.addEventListener('click', ()=>{highlightEnabled=!highlightEnabled,elements.highlightBtn.textContent=`Подсветка: ${highlightEnabled?"ВКЛ":"ВЫКЛ"}`,highlightEnabled?activeCell&&grid[activeCell[0]][activeCell[1]]&&highlightSimilarNumbers(grid[activeCell[0]][activeCell[1]]):clearHighlights()});
         elements.settingsBtn.addEventListener('click', e => { e.stopPropagation(); elements.themePanel.classList.toggle('hidden'); });
         document.addEventListener('click', ()=>elements.themePanel.classList.add('hidden'));
-        elements.themePanel.addEventListener('click', e => { e.stopPropagation(); if (e.target.classList.contains('theme-button')) { applyTheme(e.target.dataset.theme); elements.themePanel.classList.add('hidden'); } });
+        elements.themePanel.addEventListener('click', e => { e.stopPropagation(); if (e.target.classList.contains('theme-button')) { applyTheme(e.target.dataset.theme); } });
         applyTheme(localStorage.getItem('sudoku-theme') || 'purple');
         createGrid();
         generatePuzzle(elements.difficulty.value);
