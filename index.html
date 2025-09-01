@@ -7,7 +7,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
-    /* --- Система тем на CSS-переменных (без изменений) --- */
+    /* --- Стили CSS (без изменений) --- */
     :root, body[data-theme="purple"] { --primary-color: #a855f7; --primary-hover: #9333ea; --text-accent: #c084fc; --body-bg: #030712; --container-bg: #111827; --cell-bg: #1f2937; --grid-line: #4b5563; --given-text: #ffffff; --error-text: #f87171; --highlight-bg: var(--primary-color); --highlight-text: var(--given-text); --area-highlight-bg: rgba(168, 85, 247, 0.06); --active-cell-bg: rgba(168, 85, 247, 0.12); --hint-bg: #ffffff; --hint-text: #111827; }
     body[data-theme="orange"] { --primary-color: #f97316; --primary-hover: #ea580c; --text-accent: #fb923c; --body-bg: #0c0a09; --container-bg: #1c1917; --cell-bg: #292524; --grid-line: #57534e; --given-text: #ffffff; --error-text: #f87171; --highlight-bg: var(--primary-color); --highlight-text: var(--given-text); --area-highlight-bg: rgba(249, 115, 22, 0.06); --active-cell-bg: rgba(249, 115, 22, 0.12); --hint-bg: #ffffff; --hint-text: #1c1917; }
     body[data-theme="green"] { --primary-color: #22c55e; --primary-hover: #16a34a; --text-accent: #4ade80; --body-bg: #050f09; --container-bg: #0f1a14; --cell-bg: #1a2e24; --grid-line: #3f6251; --given-text: #ffffff; --error-text: #f87171; --highlight-bg: var(--primary-color); --highlight-text: var(--given-text); --area-highlight-bg: rgba(34, 197, 94, 0.06); --active-cell-bg: rgba(34, 197, 94, 0.12); --hint-bg: #ffffff; --hint-text: #0f1a14; }
@@ -18,8 +18,6 @@
     body[data-theme="purple"] .user-input .cell-content, body[data-theme="orange"] .user-input .cell-content, body[data-theme="green"] .user-input .cell-content, body[data-theme="pink"] .user-input .cell-content, body[data-theme="turquoise"] .user-input .cell-content { color: var(--primary-color); }
     body[data-theme="black"] .user-input .cell-content { color: #9ca3af; }
     body[data-theme="light"] .user-input .cell-content { color: var(--primary-color); }
-
-    /* --- Общие стили (без изменений) --- */
     body { background-color: var(--body-bg); color: var(--text-accent); transition: background-color 0.3s; }
     #game-container { transition: transform 0.2s ease-in-out; background-color: var(--container-bg); width: 100%; max-width: 420px; margin: auto; }
     @media (min-width: 768px) { #game-container { max-width: 600px; } }
@@ -67,7 +65,6 @@
 <body class="flex flex-col items-center justify-center min-h-screen p-2 sm:p-4">
   
   <div id="game-container" class="rounded-2xl p-4 glow">
-    <!-- HTML структура игры (без изменений) -->
     <div id="user-info" class="flex items-center mb-4">
       <img id="user-avatar" src="https://t.me/i/userpic/320/default.jpg" alt="User Avatar" class="w-10 h-10 rounded-full mr-3">
       <div>
@@ -104,51 +101,113 @@
   </div>
 
   <div id="recent-games-modal" class="modal-overlay hidden">
-    <!-- ... HTML модальных окон без изменений ... -->
+    <div class="modal-content">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-bold title-text">Недавние игры</h2>
+        <button id="close-modal-button" class="text-2xl">&times;</button>
+      </div>
+      <div id="recent-games-list" class="space-y-2"></div>
+    </div>
   </div>
+
   <div id="rating-modal" class="modal-overlay hidden">
-    <!-- ... -->
+    <div class="modal-content">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-bold title-text">Рейтинг</h2>
+        <button id="close-rating-button" class="text-2xl">&times;</button>
+      </div>
+      <div id="rating-list" class="space-y-2"></div>
+    </div>
   </div>
+
   <div id="tutorial-modal" class="modal-overlay hidden">
-    <!-- ... -->
+    <div class="modal-content">
+      <div class="flex justify-between items-center mb-4">
+        <h2 id="tutorial-title" class="text-xl font-bold title-text">Обучение</h2>
+        <button id="close-tutorial-button" class="text-2xl">&times;</button>
+      </div>
+      <div class="flex flex-col sm:flex-row items-center gap-4">
+        <div class="w-full max-w-[180px] sm:w-2/5 flex-shrink-0">
+          <div id="tutorial-grid" class="tutorial-grid"></div>
+        </div>
+        <div class="flex flex-col flex-grow w-full text-center sm:text-left">
+          <p id="tutorial-text" class="text-sm flex-grow min-h-[4rem]"></p>
+          <div class="flex justify-between items-center mt-4">
+            <button id="tutorial-prev" class="main-button py-2 px-4 rounded-lg glow disabled:opacity-50" disabled>Назад</button>
+            <span id="tutorial-step-indicator" class="text-xs opacity-70"></span>
+            <button id="tutorial-next" class="main-button py-2 px-4 rounded-lg glow">Далее</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- СКРИПТЫ FIREBASE -->
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
-  <!-- Добавляем скрипт для Аутентификации -->
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
 
   <script>
     // TODO: Вставьте сюда ваш firebaseConfig из консоли Firebase
     const firebaseConfig = {
-      apiKey: "AIzaSyBkYQ7tRMrZ-mghBnkJ_EvuzHpjs_p8hOY",
-      authDomain: "sudo-9fbfc.firebaseapp.com",
-      projectId: "sudo-9fbfc",
-      storageBucket: "sudo-9fbfc.firebasestorage.app",
-      messagingSenderId: "927814106972",
-      appId: "1:927814106972:web:71e0773453f9d16f598b99"
+      apiKey: "ВАШ_API_KEY",
+      authDomain: "ВАШ_AUTH_DOMAIN",
+      projectId: "ВАШ_PROJECT_ID",
+      storageBucket: "ВАШ_STORAGE_BUCKET",
+      messagingSenderId: "ВАШ_MESSAGING_SENDER_ID",
+      appId: "ВАШ_APP_ID"
     };
 
     // Инициализация Firebase
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
-    const auth = firebase.auth(); // Инициализируем сервис Аутентификации
+    const auth = firebase.auth();
     const usersCollection = db.collection('users');
 
+    // --- ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ И ЭЛЕМЕНТЫ ---
     const elements = { body: document.body, gameContainer: document.getElementById('game-container'), grid: document.getElementById('grid'), difficulty: document.getElementById('difficulty'), newGameBtn: document.getElementById('newGame'), checkBtn: document.getElementById('check'), highlightBtn: document.getElementById('highlightToggle'), timer: document.getElementById('timer'), message: document.getElementById('message'), numberRow: document.getElementById('number-row'), undoBtn: document.getElementById('undo-button'), hintBtn: document.getElementById('hint-button'), recentGamesBtn: document.getElementById('recent-games-button'), recentGamesModal: document.getElementById('recent-games-modal'), closeModalBtn: document.getElementById('close-modal-button'), recentGamesList: document.getElementById('recent-games-list'), settingsBtn: document.getElementById('settings-button'), themePanel: document.getElementById('theme-panel'), tutorialBtn: document.getElementById('tutorial-button'), tutorialModal: document.getElementById('tutorial-modal'), closeTutorialBtn: document.getElementById('close-tutorial-button'), tutorialGrid: document.getElementById('tutorial-grid'), tutorialText: document.getElementById('tutorial-text'), tutorialTitle: document.getElementById('tutorial-title'), tutorialPrevBtn: document.getElementById('tutorial-prev'), tutorialNextBtn: document.getElementById('tutorial-next'), tutorialStepIndicator: document.getElementById('tutorial-step-indicator'), ratingBtn: document.getElementById('rating-button'), ratingModal: document.getElementById('rating-modal'), closeRatingBtn: document.getElementById('close-rating-button'), ratingList: document.getElementById('rating-list'), userAvatar: document.getElementById('user-avatar'), username: document.getElementById('username'), userScore: document.getElementById('user-score') };
     let grid = [], solution = [], givenCells = new Set(), timerInterval, startTime=0, activeCell = null, activeTool = null, highlightEnabled = true, undoStack = [];
     let hintCount = 0;
-    // ID теперь будет браться из auth, а не из Telegram
     let currentUser = { id: null, username: 'Гость', avatar: 'https://t.me/i/userpic/320/default.jpg', score: 0 };
     
-    // --- ВСЕ ФУНКЦИИ ЛОГИКИ ИГРЫ ОСТАЮТСЯ БЕЗ ИЗМЕНЕНИЙ ---
-    function createGrid() { /* ... */ }
-    function createNumberRow() { /* ... */ }
-    function generatePuzzle(difficulty) { /* ... */ }
-    // ... и все остальные функции до addPoints ...
+    // --- ВСЯ ОРИГИНАЛЬНАЯ ЛОГИКА ИГРЫ ---
+    
+    function createGrid() { elements.grid.innerHTML='<div class="grid-separator v-sep-1"></div><div class="grid-separator v-sep-2"></div><div class="grid-separator h-sep-1"></div><div class="grid-separator h-sep-2"></div>';grid=Array(9).fill().map(()=>Array(9).fill(0));givenCells.clear();for(let i=0;i<9;i++)for(let j=0;j<9;j++){const e=document.createElement("div");e.className="cell";const t=document.createElement("div");t.className="cell-content";e.appendChild(t),e.addEventListener("click",(t)=>{t.stopPropagation();handleCellClick(i,j)}),elements.grid.appendChild(e)}}
+    function createNumberRow() { elements.numberRow.innerHTML="";for(let i=1;i<=9;i++){const e=document.createElement("div");e.className="number-button-wrapper",e.dataset.tool=i,e.innerHTML=`<div class="number-button"><div class="number-button-content"><span>${i}</span></div></div>`,e.addEventListener("click",()=>{e.classList.contains("disabled")||selectTool(i)}),elements.numberRow.appendChild(e)}const e=document.createElement("div");e.className="number-button-wrapper",e.dataset.tool="erase",e.innerHTML=`<div class="number-button"><div class="number-button-content"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /></svg></div></div>`,e.addEventListener("click",()=>selectTool("erase")),elements.numberRow.appendChild(e)}
+    function generatePuzzle(difficulty) { let puzzle, sol; do { sol = createSolution(); puzzle = createPuzzle(sol, difficulty); } while (countSolutions(puzzle.map(r => r.slice())) !== 1); solution = sol; grid = puzzle; givenCells.clear(); for (let r = 0; r < 9; r++) for (let c = 0; c < 9; c++) if (grid[r][c] !== 0) givenCells.add(`${r},${c}`); renderGrid(); }
+    function createSolution() { let board = Array(9).fill().map(() => Array(9).fill(0)); fill(board); return board; }
+    function createPuzzle(solution, difficulty) { const puzzle = solution.map(row => row.slice()); let cellsToRemove = { easy: 40, medium: 52, hard: 58 }[difficulty]; const cells = []; for (let r = 0; r < 9; r++) for (let c = 0; c < 9; c++) cells.push([r, c]); shuffle(cells); for (let i = 0; i < cells.length && cellsToRemove > 0; i++) { const [r, c] = cells[i]; const temp = puzzle[r][c]; puzzle[r][c] = 0; if (countSolutions(puzzle.map(row => row.slice())) !== 1) { puzzle[r][c] = temp; } else { cellsToRemove--; } } return puzzle; }
+    function countSolutions(board) { let counter = 0; function solve() { for (let r = 0; r < 9; r++) { for (let c = 0; c < 9; c++) { if (board[r][c] === 0) { for (let num = 1; num <= 9; num++) { if (isSafe(board, r, c, num)) { board[r][c] = num; solve(); if (counter > 1) return; board[r][c] = 0; } } return; } } } counter++; } solve(); return counter; }
+    function fill(board) { for (let r = 0; r < 9; r++) for (let c = 0; c < 9; c++) { if (board[r][c] === 0) { const nums = [1, 2, 3, 4, 5, 6, 7, 8, 9]; shuffle(nums); for (let num of nums) if (isSafe(board, r, c, num)) { board[r][c] = num; if (fill(board)) return true; board[r][c] = 0; } return false; } } return true; }
+    function isSafe(board, row, col, num) { for (let x = 0; x < 9; x++) if (board[row][x] === num || board[x][col] === num || board[3 * Math.floor(row / 3) + Math.floor(x / 3)][3 * Math.floor(col / 3) + x % 3] === num) return false; return true; }
+    function shuffle(arr) { for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } }
+    function handleCellClick(row, col) { (activeTool!==null)?(grid[row][col]===0||(grid[row][col]!==0&&activeTool==='erase'))?performAction(activeTool,row,col):(selectTool(null),selectCell(row,col)):selectCell(row,col)}
+    function selectCell(row, col) { clearHighlights();activeCell=[row,col];const e=document.querySelectorAll(".cell");e.forEach((t,n)=>{const l=Math.floor(n/9),s=n%9,c=l===row,r=s===col,o=Math.floor(l/3)===Math.floor(row/3)&&Math.floor(s/3)===Math.floor(col/3);(c||r||o)&&t.classList.add("area-highlight")}),e[9*row+col].classList.add("active-cell"),highlightEnabled&&0!==grid[row][col]&&highlightSimilarNumbers(grid[row][col])}
+    function performAction(action, row, col) { if(givenCells.has(`${row},${col}`)) return; const value = (action === 'erase') ? 0 : action; const prevValue = grid[row][col]; if(prevValue === value) return; undoStack.push({row, col, prevValue, value}); updateUndoButtonState(); const cellElement = document.querySelectorAll(".cell")[row * 9 + col]; grid[row][col] = value; cellElement.querySelector(".cell-content").textContent = value || ''; cellElement.classList.remove('error'); cellElement.classList.toggle('user-input', value !== 0); updateNumberPanelState(); if(highlightEnabled) { clearHighlights(true); if (value !== 0) highlightSimilarNumbers(value); }}
+    function undoLastAction() { if (undoStack.length === 0) return; const lastMove = undoStack.pop(); const {row, col, prevValue} = lastMove; const cellElement = document.querySelectorAll(".cell")[row * 9 + col]; grid[row][col] = prevValue; cellElement.querySelector(".cell-content").textContent = prevValue || ''; cellElement.classList.remove('error'); cellElement.classList.toggle('user-input', prevValue !== 0); updateUndoButtonState(); updateNumberPanelState(); if(activeCell && activeCell[0] === row && activeCell[1] === col) { selectCell(row, col); } }
+    function selectTool(tool) { activeTool = (activeTool === tool) ? null : tool; updateToolSelection(); clearHighlights(); activeCell = null; if (activeTool && activeTool !== 'erase' && highlightEnabled) { highlightSimilarNumbers(activeTool); } }
+    function deselectCell() { activeCell && (clearHighlights(), activeCell = null); if (activeTool !== null) { activeTool = null; updateToolSelection(); } }
+    function renderGrid(shouldResetTimer = true) { document.querySelectorAll(".cell").forEach((e,t)=>{const n=Math.floor(t/9),l=t%9;e.querySelector(".cell-content").textContent=grid[n][l]||"",e.className="cell",givenCells.has(`${n},${l}`)?e.classList.add("given"):0!==grid[n][l]&&e.classList.add("user-input")});activeCell=null;activeTool=null;updateToolSelection();clearHighlights();if(shouldResetTimer)resetTimer();updateNumberPanelState();undoStack = []; updateUndoButtonState(); updateHintButtonState();}
+    function updateNumberPanelState() { const counts = Array(10).fill(0); for (let row of grid) for (let cell of row) if (cell !== 0) counts[cell]++; elements.numberRow.querySelectorAll(".number-button-wrapper").forEach((wrapper, index) => { if (index < 9) { const num = index + 1; const isExhausted = counts[num] === 9; wrapper.classList.toggle("disabled", isExhausted); if (isExhausted && activeTool === num) { selectTool(null); } } });}
+    function updateToolSelection() { document.querySelectorAll('.number-button-wrapper').forEach(btn => btn.classList.toggle('selected', btn.dataset.tool == activeTool)); }
+    function updateUndoButtonState() { elements.undoBtn.disabled = undoStack.length === 0; }
+    function updateHintButtonState() { const isFull = grid.every(row => row.every(cell => cell !== 0)); elements.hintBtn.disabled = isFull; }
+    function getHint() { clearHintedCells(); const mistakes = []; const emptyCells = []; for (let r = 0; r < 9; r++) for (let c = 0; c < 9; c++) if (!givenCells.has(`${r},${c}`)) { if (grid[r][c] !== 0 && grid[r][c] !== solution[r][c]) mistakes.push([r, c]); else if (grid[r][c] === 0) emptyCells.push([r, c]); } let targetCell; if (mistakes.length > 0) targetCell = mistakes[Math.floor(Math.random() * mistakes.length)]; else if (emptyCells.length > 0) targetCell = emptyCells[Math.floor(Math.random() * emptyCells.length)]; else return; hintCount++; const [row, col] = targetCell; const correctValue = solution[row][col]; performAction(correctValue, row, col); const cellElement = document.querySelectorAll('.cell')[row * 9 + col]; cellElement.classList.add('hinted'); }
+    function highlightSimilarNumbers(e){ if(!e) return; document.querySelectorAll(".cell").forEach((t,n)=>{if(grid[Math.floor(n/9)][n%9]===e)t.classList.add("highlight")})}
+    function clearHighlights(keepArea = false){ clearHintedCells(); document.querySelectorAll(".cell").forEach(e=>{e.classList.remove("highlight"),keepArea||e.classList.remove("area-highlight","active-cell")})}
+    function clearHintedCells() { document.querySelectorAll('.hinted').forEach(c => c.classList.remove('hinted')); }
+    function resetTimer(elapsedSeconds = 0){ clearInterval(timerInterval); startTime = Date.now() - elapsedSeconds * 1000; timerInterval = setInterval(() => { const elapsed = Math.floor((Date.now() - startTime) / 1000); const minutes = String(Math.floor(elapsed / 60)).padStart(2, '0'); const seconds = String(elapsed % 60).padStart(2, '0'); elements.timer.textContent = `${minutes}:${seconds}`; }, 1000); }
+    function applyTheme(e){document.body.dataset.theme=e,localStorage.setItem("sudoku-theme",e),document.querySelectorAll(".theme-button").forEach(t=>{t.style.borderColor=t.dataset.theme===e?"var(--primary-color)":"transparent"})}
+    function saveCurrentGame() { if (grid.length === 0 || grid.every(r=>r.every(c=>c===0))) return; const gameState = { grid: grid, solution: solution, givenCells: Array.from(givenCells), time: Math.floor((Date.now() - startTime) / 1000), difficulty: elements.difficulty.value, savedAt: new Date().toISOString() }; let recentGames = JSON.parse(localStorage.getItem('sudoku-recent-games')) || []; recentGames.unshift(gameState); recentGames = recentGames.slice(0, 5); localStorage.setItem('sudoku-recent-games', JSON.stringify(recentGames)); }
+    function loadGame(gameState) { grid = gameState.grid; solution = gameState.solution; givenCells = new Set(gameState.givenCells); elements.difficulty.value = gameState.difficulty; renderGrid(false); resetTimer(gameState.time); elements.recentGamesModal.classList.add('hidden'); }
+    function populateRecentGames() { const games = JSON.parse(localStorage.getItem('sudoku-recent-games')) || []; elements.recentGamesList.innerHTML = ''; if (games.length === 0) { elements.recentGamesList.innerHTML = '<p>Сохранённых игр нет.</p>'; return; } games.forEach(game => { const gameEl = document.createElement('div'); gameEl.className = 'flex items-center gap-4 p-2 rounded-lg border-b border-[var(--grid-line)]'; const time = new Date(game.savedAt); const previewGrid = game.grid.flat().map((cell, i) => `<div class="modal-preview-cell" style="color: ${game.givenCells.includes(`${Math.floor(i/9)},${i%9}`) ? 'var(--given-text)' : 'var(--primary-color)'}; font-weight: ${game.givenCells.includes(`${Math.floor(i/9)},${i%9}`) ? 700 : 500}">${cell || ''}</div>`).join(''); gameEl.innerHTML = ` <div class="modal-preview-grid">${previewGrid}</div> <div class="flex-grow"> <p class="font-bold">${time.toLocaleDateString()} ${time.toLocaleTimeString()}</p> <p class="text-sm opacity-70">${game.difficulty}</p> </div> <div class="flex flex-col gap-1"> <button class="load-game-button main-button text-white px-3 py-1 rounded-lg glow text-xs" data-id="${game.savedAt}">Загрузить</button> <button class="delete-game-button control-button text-red-500 hover:bg-red-500 hover:text-white px-3 py-1 rounded-lg glow text-xs" data-id="${game.savedAt}">Удалить</button> </div> `; elements.recentGamesList.appendChild(gameEl); }); }
+    function deleteGame(gameId) { if (!confirm('Вы уверены, что хотите удалить эту игру?')) return; let recentGames = JSON.parse(localStorage.getItem('sudoku-recent-games')) || []; recentGames = recentGames.filter(game => game.savedAt !== gameId); localStorage.setItem('sudoku-recent-games', JSON.stringify(recentGames)); populateRecentGames(); }
+    const tutorialLessons=[{title:"Цель игры",steps:[{text:"Каждая СТРОКА должна содержать цифры от 1 до 9 без повторений.",setup:e=>{[1,2,3,4,5,6,7,8,9].forEach((t,l)=>e[l].textContent=t);for(let t=0;t<9;t++)e[t].classList.add("tut-highlight")}},{text:"То же самое правило действует для каждого СТОЛБЦА.",setup:e=>{[1,2,3,4,5,6,7,8,9].forEach((t,l)=>e[9*l].textContent=t);for(let t=0;t<9;t++)e[9*t].classList.add("tut-highlight")}},{text:"И для каждого малого КВАДРАТА 3х3.",setup:e=>{[1,2,3,4,5,6,7,8,9].forEach((t,l)=>{const s=Math.floor(l/3),i=l%3;e[9*s+i].textContent=t,e[9*s+i].classList.add("tut-highlight")})}}]},{title:"Техника: Сканирование",steps:[{text:"Задача: найти, где в этом блоке должна стоять цифра '5'.",setup:e=>{e[40].classList.add("tut-target"),[13,30,41].forEach(t=>e[t].textContent="5")}},{text:"Эта '5' исключает всю свою строку.",setup:e=>{[41].forEach(t=>e[t].classList.add("tut-conflict"));for(let t=36;t<45;t++)e[t].classList.add("tut-highlight");e[40].classList.add("tut-target")}},{text:"Эта '5' исключает весь свой столбец.",setup:e=>{[13,41].forEach(t=>e[t].classList.add("tut-conflict"));for(let t=4;t<81;t+=9)e[t].classList.add("tut-highlight");e[40].classList.add("tut-target")}},{text:"А эта '5' — свой блок.",setup:e=>{[13,30,41].forEach(t=>e[t].classList.add("tut-conflict"));for(let t=3;t<6;t++)for(let l=3;l<6;l++)e[9*t+l].classList.add("tut-highlight");e[40].classList.add("tut-target")}},{text:"Исключив все зоны, мы видим единственное свободное место.",setup:e=>{[13,30,41].forEach(t=>e[t].classList.add("tut-conflict")),[36,37,38,39,41,42,43,44,4,22,31,49,58,67,76].forEach(t=>e[t].classList.add("tut-highlight"))}},{text:"Готово! Смело ставим сюда '5'.",setup:e=>{[13,30,41].forEach(t=>e[t].textContent="5"),e[40].textContent="5",e[40].classList.add("tut-placed")}}] }];
+    let currentLesson = 0; let currentStep = 0;
+    function playTutorial(lessonIndex, stepIndex) { currentLesson = lessonIndex; currentStep = stepIndex; const lesson = tutorialLessons[currentLesson]; const step = lesson.steps[currentStep]; elements.tutorialTitle.textContent = lesson.title; elements.tutorialText.textContent = step.text; const gridEl = elements.tutorialGrid; gridEl.innerHTML = ''; const cells = []; for (let i = 0; i < 81; i++) { const cell = document.createElement('div'); const content = document.createElement('div'); content.className = 'cell-content'; cell.className = 'tutorial-cell'; cell.appendChild(content); cells.push(cell); gridEl.appendChild(cell); } step.setup(cells); elements.tutorialStepIndicator.textContent = `Шаг ${currentStep + 1} из ${lesson.steps.length}`; elements.tutorialPrevBtn.disabled = currentStep === 0; elements.tutorialNextBtn.textContent = (currentStep === lesson.steps.length - 1) ? 'Завершить' : 'Далее'; }
     
     // --- ИЗМЕНЕННЫЕ ФУНКЦИИ ДЛЯ РАБОТЫ С FIREBASE ---
+    
     async function addPoints() {
         const difficulty = elements.difficulty.value;
         let basePoints = 0;
@@ -160,13 +219,12 @@
         const hintPenalty = hintCount * 50;
         const totalPoints = Math.max(10, basePoints + timeBonus - hintPenalty);
         currentUser.score += totalPoints;
-        await updateUserScore(); // Вызываем обновленную функцию
+        await updateUserScore();
         elements.message.textContent = `Поздравляем! +${totalPoints} очков!`;
     }
 
     async function updateUserScore() {
         elements.userScore.textContent = currentUser.score;
-        // Проверяем, что пользователь вошел в систему и у него есть ID
         if (!currentUser.id) {
           console.error("Пользователь не аутентифицирован, счет не может быть сохранен.");
           return; 
@@ -179,14 +237,9 @@
         };
 
         try {
-            // Используем ID от Firebase Auth для записи. Правила безопасности проверят его.
             await usersCollection.doc(currentUser.id).set(userDoc, { merge: true });
         } catch (error) {
             console.error("Ошибка при обновлении очков: ", error);
-            // Если ошибка связана с правами доступа, это значит, что правила работают
-            if (error.code === 'permission-denied') {
-                alert("Ошибка безопасности: попытка изменить чужой счет.");
-            }
         }
     }
 
@@ -204,7 +257,6 @@
             
             let currentUserInTop10 = false;
             leaderboard.slice(0, 10).forEach((user, index) => {
-                // Сравниваем ID из Firebase Auth
                 const isCurrentUser = user.id === currentUser.id;
                 if(isCurrentUser) currentUserInTop10 = true;
                 
@@ -239,19 +291,41 @@
         }
     }
 
+    function checkSolution() {
+        if (!grid.every(row => row.every(cell => cell))) {
+            elements.message.textContent = "Заполните все ячейки.";
+            return;
+        }
+        let isCorrect = true;
+        document.querySelectorAll(".cell").forEach((cell, index) => {
+            const row = Math.floor(index / 9);
+            const col = index % 9;
+            if (!givenCells.has(`${row},${col}`) && grid[row][col] !== solution[row][col]) {
+                cell.classList.add("error");
+                isCorrect = false;
+            }
+        });
+
+        if (isCorrect) {
+            clearInterval(timerInterval);
+            elements.numberRow.querySelectorAll(".number-button-wrapper").forEach(btn => btn.classList.add("disabled"));
+            elements.hintBtn.disabled = true;
+            addPoints();
+        } else {
+            elements.message.textContent = "В решении есть ошибки.";
+        }
+    }
+
     async function init() {
         try {
-          // Анонимно входим в систему при запуске игры
-          const userCredential = await auth.signInAnonymously();
-          currentUser.id = userCredential.user.uid; // Получаем безопасный ID
-          console.log("Анонимный вход успешен, ID пользователя:", currentUser.id);
-
+            const userCredential = await auth.signInAnonymously();
+            currentUser.id = userCredential.user.uid;
+            console.log("Анонимный вход успешен, ID пользователя:", currentUser.id);
         } catch (error) {
-          console.error("Ошибка анонимной аутентификации:", error);
-          alert("Не удалось подключиться к сервису рейтинга. Пожалуйста, перезагрузите игру.");
+            console.error("Ошибка анонимной аутентификации:", error);
+            alert("Не удалось подключиться к сервису рейтинга. Пожалуйста, перезагрузите игру.");
         }
         
-        // Получаем данные из Telegram, как и раньше
         if (window.Telegram && window.Telegram.WebApp) {
             const telegram = window.Telegram.WebApp;
             telegram.ready();
@@ -267,15 +341,12 @@
         elements.username.textContent = currentUser.username;
         elements.userAvatar.src = currentUser.avatar;
 
-        // Загружаем счет пользователя из Firestore по его безопасному ID
         if (currentUser.id) {
             try {
                 const doc = await usersCollection.doc(currentUser.id).get();
                 if (doc.exists) {
                     currentUser.score = doc.data().score || 0;
                 } else {
-                    // Если пользователя нет, он будет создан при первом обновлении счета
-                    // с 0 очков.
                     await updateUserScore();
                 }
             } catch (error) {
@@ -288,10 +359,28 @@
         
         elements.newGameBtn.addEventListener('click', startNewGame);
         elements.checkBtn.addEventListener('click', checkSolution);
-        // ... остальная часть init (добавление event listeners) без изменений ...
+        elements.difficulty.addEventListener('change', startNewGame);
+        elements.undoBtn.addEventListener('click', undoLastAction);
+        elements.hintBtn.addEventListener('click', getHint);
+        elements.highlightBtn.addEventListener('click', ()=>{highlightEnabled=!highlightEnabled,elements.highlightBtn.textContent=`Подсветка: ${highlightEnabled?"ВКЛ":"ВЫКЛ"}`;if(!highlightEnabled){clearHighlights()}else{if(activeTool && activeTool !== 'erase'){highlightSimilarNumbers(activeTool)}else if(activeCell&&grid[activeCell[0]][activeCell[1]]){highlightSimilarNumbers(grid[activeCell[0]][activeCell[1]])}}});
+        elements.settingsBtn.addEventListener('click', e => { e.stopPropagation(); elements.themePanel.classList.toggle('hidden'); });
+        elements.recentGamesBtn.addEventListener('click', () => { populateRecentGames(); elements.recentGamesModal.classList.remove('hidden'); });
+        elements.ratingBtn.addEventListener('click', () => { populateLeaderboard(); elements.ratingModal.classList.remove('hidden'); });
+        elements.tutorialBtn.addEventListener('click', () => { elements.tutorialModal.classList.remove('hidden'); playTutorial(0, 0); });
+        elements.closeModalBtn.addEventListener('click', () => elements.recentGamesModal.classList.add('hidden'));
+        elements.closeRatingBtn.addEventListener('click', () => elements.ratingModal.classList.add('hidden'));
+        elements.closeTutorialBtn.addEventListener('click', () => elements.tutorialModal.classList.add('hidden'));
+        elements.tutorialNextBtn.addEventListener('click', () => { if (currentStep < tutorialLessons[currentLesson].steps.length - 1) { playTutorial(currentLesson, currentStep + 1); } else { elements.tutorialModal.classList.add('hidden'); } });
+        elements.tutorialPrevBtn.addEventListener('click', () => { if (currentStep > 0) { playTutorial(currentLesson, currentStep - 1); } });
+        elements.themePanel.addEventListener('click', e => { e.stopPropagation(); if (e.target.closest('.theme-button')) { applyTheme(e.target.closest('.theme-button').dataset.theme); } });
+        elements.recentGamesList.addEventListener('click', e => { const loadBtn = e.target.closest('.load-game-button'); const deleteBtn = e.target.closest('.delete-game-button'); if (loadBtn) { const gameId = loadBtn.dataset.id; const games = JSON.parse(localStorage.getItem('sudoku-recent-games')); const gameToLoad = games.find(g => g.savedAt === gameId); if (gameToLoad) loadGame(gameToLoad); } if (deleteBtn) { const gameId = deleteBtn.dataset.id; deleteGame(gameId); } });
+        document.addEventListener('click', (e) => { if (!elements.gameContainer.contains(e.target) && !elements.recentGamesModal.contains(e.target) && !elements.tutorialModal.contains(e.target) && !elements.ratingModal.contains(e.target)) { deselectCell(); } if (!elements.settingsBtn.contains(e.target) && !elements.themePanel.contains(e.target)) { elements.themePanel.classList.add('hidden'); } });
+        window.addEventListener('beforeunload', saveCurrentGame);
+        
+        applyTheme(localStorage.getItem('sudoku-theme') || 'purple');
+        startNewGame();
     }
     
-    // Запускаем всю логику
     init();
   </script>
 </body>
