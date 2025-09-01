@@ -103,10 +103,6 @@
       <button id="check" class="main-button text-white px-3 py-2 rounded-lg glow text-sm">Проверить</button>
     </div>
     <p id="message" class="mt-4 text-center text-sm h-5"></p>
-    <div class="mt-4 flex justify-center gap-2">
-      <button id="playSound1Btn" class="main-button text-white px-4 py-2 rounded-lg glow text-sm">Звук 1</button>
-      <button id="playSound2Btn" class="main-button text-white px-4 py-2 rounded-lg glow text-sm">Звук 2</button>
-    </div>
   </div>
 
   <div id="recent-games-modal" class="modal-overlay hidden"><div class="modal-content"><div class="flex justify-between items-center mb-4"><h2 class="text-xl font-bold title-text">Недавние игры</h2><button id="close-modal-button" class="text-2xl">&times;</button></div><div id="recent-games-list" class="space-y-2"></div></div></div>
@@ -134,10 +130,7 @@
     const auth = firebase.auth();
     const usersCollection = db.collection('users');
 
-    const sound1 = new Audio('https://github.com/codex-cdx/sudo/raw/refs/heads/main/click-hit-percussive-sound_130bpm_C_major.wav');
-    const sound2 = new Audio('https://github.com/codex-cdx/sudo/raw/refs/heads/main/kick-click-short-shot.wav');
-
-    const elements = { body: document.body, gameContainer: document.getElementById('game-container'), grid: document.getElementById('grid'), difficulty: document.getElementById('difficulty'), newGameBtn: document.getElementById('newGame'), checkBtn: document.getElementById('check'), highlightBtn: document.getElementById('highlightToggle'), timer: document.getElementById('timer'), message: document.getElementById('message'), numberRow: document.getElementById('number-row'), undoBtn: document.getElementById('undo-button'), hintBtn: document.getElementById('hint-button'), hintCountDisplay: document.getElementById('hint-count-display'), recentGamesBtn: document.getElementById('recent-games-button'), recentGamesModal: document.getElementById('recent-games-modal'), closeModalBtn: document.getElementById('close-modal-button'), recentGamesList: document.getElementById('recent-games-list'), settingsBtn: document.getElementById('settings-button'), themePanel: document.getElementById('theme-panel'), tutorialBtn: document.getElementById('tutorial-button'), tutorialModal: document.getElementById('tutorial-modal'), closeTutorialBtn: document.getElementById('close-tutorial-button'), tutorialGrid: document.getElementById('tutorial-grid'), tutorialText: document.getElementById('tutorial-text'), tutorialTitle: document.getElementById('tutorial-title'), tutorialPrevBtn: document.getElementById('tutorial-prev'), tutorialNextBtn: document.getElementById('tutorial-next'), tutorialStepIndicator: document.getElementById('tutorial-step-indicator'), ratingBtn: document.getElementById('rating-button'), ratingModal: document.getElementById('rating-modal'), closeRatingBtn: document.getElementById('close-rating-button'), ratingList: document.getElementById('rating-list'), userAvatar: document.getElementById('user-avatar'), username: document.getElementById('username'), userScore: document.getElementById('user-score'), winModal: document.getElementById('win-modal'), winModalMessage: document.getElementById('win-modal-message'), winModalCloseBtn: document.getElementById('win-modal-close-btn'), playSound1Btn: document.getElementById('playSound1Btn'), playSound2Btn: document.getElementById('playSound2Btn') };
+    const elements = { body: document.body, gameContainer: document.getElementById('game-container'), grid: document.getElementById('grid'), difficulty: document.getElementById('difficulty'), newGameBtn: document.getElementById('newGame'), checkBtn: document.getElementById('check'), highlightBtn: document.getElementById('highlightToggle'), timer: document.getElementById('timer'), message: document.getElementById('message'), numberRow: document.getElementById('number-row'), undoBtn: document.getElementById('undo-button'), hintBtn: document.getElementById('hint-button'), hintCountDisplay: document.getElementById('hint-count-display'), recentGamesBtn: document.getElementById('recent-games-button'), recentGamesModal: document.getElementById('recent-games-modal'), closeModalBtn: document.getElementById('close-modal-button'), recentGamesList: document.getElementById('recent-games-list'), settingsBtn: document.getElementById('settings-button'), themePanel: document.getElementById('theme-panel'), tutorialBtn: document.getElementById('tutorial-button'), tutorialModal: document.getElementById('tutorial-modal'), closeTutorialBtn: document.getElementById('close-tutorial-button'), tutorialGrid: document.getElementById('tutorial-grid'), tutorialText: document.getElementById('tutorial-text'), tutorialTitle: document.getElementById('tutorial-title'), tutorialPrevBtn: document.getElementById('tutorial-prev'), tutorialNextBtn: document.getElementById('tutorial-next'), tutorialStepIndicator: document.getElementById('tutorial-step-indicator'), ratingBtn: document.getElementById('rating-button'), ratingModal: document.getElementById('rating-modal'), closeRatingBtn: document.getElementById('close-rating-button'), ratingList: document.getElementById('rating-list'), userAvatar: document.getElementById('user-avatar'), username: document.getElementById('username'), userScore: document.getElementById('user-score'), winModal: document.getElementById('win-modal'), winModalMessage: document.getElementById('win-modal-message'), winModalCloseBtn: document.getElementById('win-modal-close-btn') };
     let grid = [], solution = [], givenCells = new Set(), timerInterval, startTime=0, activeCell = null, activeTool = null, highlightEnabled = true, undoStack = [];
     let hintCount = 0;
     let currentUser = { id: null, username: 'Гость', avatar: 'https://t.me/i/userpic/320/default.jpg', score: 0 };
@@ -181,18 +174,6 @@
     async function updateUserScore() { elements.userScore.textContent = currentUser.score; if (!currentUser.id) return; const userDoc = { username: currentUser.username, avatar: currentUser.avatar, score: currentUser.score }; try { await usersCollection.doc(currentUser.id).set(userDoc, { merge: true }); } catch (error) { console.error("Ошибка при обновлении очков: ", error); } }
     async function populateLeaderboard() { elements.ratingList.innerHTML = '<p>Загрузка рейтинга...</p>'; try { const snapshot = await usersCollection.orderBy('score', 'desc').limit(100).get(); if (snapshot.empty) { elements.ratingList.innerHTML = '<p>Рейтинг пуст.</p>'; return; } const leaderboard = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); elements.ratingList.innerHTML = ''; let currentUserInTop10 = false; leaderboard.slice(0, 10).forEach((user, index) => { const isCurrentUser = String(user.id) === String(currentUser.id); if(isCurrentUser) currentUserInTop10 = true; const userEl = document.createElement('div'); userEl.className = `flex items-center gap-4 p-2 rounded-lg ${isCurrentUser ? 'bg-[var(--active-cell-bg)]' : ''}`; userEl.innerHTML = `<span class="font-bold w-6 text-center">${index + 1}</span><img src="${user.avatar}" alt="User Avatar" class="w-10 h-10 rounded-full"><div class="flex-grow"><p class="font-bold">${user.username}</p></div><span class="font-bold">${user.score}</span>`; elements.ratingList.appendChild(userEl); }); const userRankIndex = leaderboard.findIndex(user => String(user.id) === String(currentUser.id)); if (!currentUserInTop10 && userRankIndex !== -1) { const user = leaderboard[userRankIndex]; elements.ratingList.innerHTML += '<div class="text-center my-2">...</div>'; const userEl = document.createElement('div'); userEl.className = 'flex items-center gap-4 p-2 rounded-lg bg-[var(--active-cell-bg)]'; userEl.innerHTML = `<span class="font-bold w-6 text-center">${userRankIndex + 1}</span><img src="${user.avatar}" alt="User Avatar" class="w-10 h-10 rounded-full"><div class="flex-grow"><p class="font-bold">${user.username}</p></div><span class="font-bold">${user.score}</span>`; elements.ratingList.appendChild(userEl); } } catch (error) { console.error("Ошибка при загрузке рейтинга: ", error); elements.ratingList.innerHTML = '<p>Не удалось загрузить рейтинг.</p>'; } }
     function checkSolution() { if (isGameFinished) return; if (!grid.every(row => row.every(cell => cell))) { elements.message.textContent = "Заполните все ячейки."; return; } let isCorrect = true; document.querySelectorAll(".cell").forEach((cell, index) => { const row = Math.floor(index / 9); const col = index % 9; if (!givenCells.has(`${row},${col}`) && grid[row][col] !== solution[row][col]) { cell.classList.add("error"); isCorrect = false; } }); if (isCorrect) { isGameFinished = true; clearInterval(timerInterval); elements.checkBtn.disabled = true; updateHintButtonState(); updateUndoButtonState(); elements.numberRow.querySelectorAll(".number-button-wrapper").forEach(btn => btn.classList.add("disabled")); addPoints(); } else { elements.message.textContent = "В решении есть ошибки."; } }
-    
-    // Новая надежная функция для воспроизведения звука
-    function playSound(sound) {
-      sound.currentTime = 0;
-      const playPromise = sound.play();
-      if (playPromise !== undefined) {
-        playPromise.catch(error => {
-          console.error("Ошибка воспроизведения аудио:", error);
-        });
-      }
-    }
-    
     async function init() {
         try {
             await auth.signInAnonymously();
@@ -207,14 +188,14 @@
             telegram.ready();
             if (telegram.initDataUnsafe && telegram.initDataUnsafe.user && telegram.initDataUnsafe.user.id) {
                 const user = telegram.initDataUnsafe.user;
-                currentUser.id = String(user.id);
+                currentUser.id = String(user.id); // Используем ID из Telegram как главный
                 currentUser.username = user.username || 'Guest';
                 if (user.photo_url) {
                     currentUser.avatar = user.photo_url;
                 }
             } else {
                 alert("Не удалось определить пользователя Telegram. Рейтинг может работать некорректно.");
-                currentUser.id = 'guest_mode_' + new Date().getTime();
+                currentUser.id = 'guest_mode_' + new Date().getTime(); // Запасной вариант для гостевого режима
             }
         }
         
@@ -257,10 +238,6 @@
         document.addEventListener('click', (e) => { if (!elements.gameContainer.contains(e.target) && !elements.recentGamesModal.contains(e.target) && !elements.tutorialModal.contains(e.target) && !elements.ratingModal.contains(e.target)) { deselectCell(); } if (!elements.settingsBtn.contains(e.target) && !elements.themePanel.contains(e.target)) { elements.themePanel.classList.add('hidden'); } });
         window.addEventListener('beforeunload', saveCurrentGame);
         elements.winModalCloseBtn.addEventListener('click', () => { elements.winModal.classList.add('hidden'); });
-
-        elements.playSound1Btn.addEventListener('click', () => playSound(sound1));
-        elements.playSound2Btn.addEventListener('click', () => playSound(sound2));
-
         applyTheme(localStorage.getItem('sudoku-theme') || 'purple');
         startNewGame();
     }
