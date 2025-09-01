@@ -103,6 +103,12 @@
       <button id="check" class="main-button text-white px-3 py-2 rounded-lg glow text-sm">Проверить</button>
     </div>
     <p id="message" class="mt-4 text-center text-sm h-5"></p>
+
+    <!-- Новые кнопки для звуков -->
+    <div class="mt-4 flex justify-center gap-2">
+      <button id="playSound1Btn" class="main-button text-white px-4 py-2 rounded-lg glow text-sm">Звук 1</button>
+      <button id="playSound2Btn" class="main-button text-white px-4 py-2 rounded-lg glow text-sm">Звук 2</button>
+    </div>
   </div>
 
   <div id="recent-games-modal" class="modal-overlay hidden"><div class="modal-content"><div class="flex justify-between items-center mb-4"><h2 class="text-xl font-bold title-text">Недавние игры</h2><button id="close-modal-button" class="text-2xl">&times;</button></div><div id="recent-games-list" class="space-y-2"></div></div></div>
@@ -130,7 +136,11 @@
     const auth = firebase.auth();
     const usersCollection = db.collection('users');
 
-    const elements = { body: document.body, gameContainer: document.getElementById('game-container'), grid: document.getElementById('grid'), difficulty: document.getElementById('difficulty'), newGameBtn: document.getElementById('newGame'), checkBtn: document.getElementById('check'), highlightBtn: document.getElementById('highlightToggle'), timer: document.getElementById('timer'), message: document.getElementById('message'), numberRow: document.getElementById('number-row'), undoBtn: document.getElementById('undo-button'), hintBtn: document.getElementById('hint-button'), hintCountDisplay: document.getElementById('hint-count-display'), recentGamesBtn: document.getElementById('recent-games-button'), recentGamesModal: document.getElementById('recent-games-modal'), closeModalBtn: document.getElementById('close-modal-button'), recentGamesList: document.getElementById('recent-games-list'), settingsBtn: document.getElementById('settings-button'), themePanel: document.getElementById('theme-panel'), tutorialBtn: document.getElementById('tutorial-button'), tutorialModal: document.getElementById('tutorial-modal'), closeTutorialBtn: document.getElementById('close-tutorial-button'), tutorialGrid: document.getElementById('tutorial-grid'), tutorialText: document.getElementById('tutorial-text'), tutorialTitle: document.getElementById('tutorial-title'), tutorialPrevBtn: document.getElementById('tutorial-prev'), tutorialNextBtn: document.getElementById('tutorial-next'), tutorialStepIndicator: document.getElementById('tutorial-step-indicator'), ratingBtn: document.getElementById('rating-button'), ratingModal: document.getElementById('rating-modal'), closeRatingBtn: document.getElementById('close-rating-button'), ratingList: document.getElementById('rating-list'), userAvatar: document.getElementById('user-avatar'), username: document.getElementById('username'), userScore: document.getElementById('user-score'), winModal: document.getElementById('win-modal'), winModalMessage: document.getElementById('win-modal-message'), winModalCloseBtn: document.getElementById('win-modal-close-btn') };
+    // --- ЗВУКИ ---
+    const sound1 = new Audio('https://d9olupt5igjta.cloudfront.net/samples/sample_files/54422/3ce80245abba899c140f023db3d0b0c366440800/mp3/_KICK_Click_01.mp3?1608141295');
+    const sound2 = new Audio('https://d9olupt5igjta.cloudfront.net/samples/sample_files/68702/28094e3e249d5c8a0997c8e46ff5989bc62fa0c8/mp3/_Click_1.mp3?1617258541');
+
+    const elements = { body: document.body, gameContainer: document.getElementById('game-container'), grid: document.getElementById('grid'), difficulty: document.getElementById('difficulty'), newGameBtn: document.getElementById('newGame'), checkBtn: document.getElementById('check'), highlightBtn: document.getElementById('highlightToggle'), timer: document.getElementById('timer'), message: document.getElementById('message'), numberRow: document.getElementById('number-row'), undoBtn: document.getElementById('undo-button'), hintBtn: document.getElementById('hint-button'), hintCountDisplay: document.getElementById('hint-count-display'), recentGamesBtn: document.getElementById('recent-games-button'), recentGamesModal: document.getElementById('recent-games-modal'), closeModalBtn: document.getElementById('close-modal-button'), recentGamesList: document.getElementById('recent-games-list'), settingsBtn: document.getElementById('settings-button'), themePanel: document.getElementById('theme-panel'), tutorialBtn: document.getElementById('tutorial-button'), tutorialModal: document.getElementById('tutorial-modal'), closeTutorialBtn: document.getElementById('close-tutorial-button'), tutorialGrid: document.getElementById('tutorial-grid'), tutorialText: document.getElementById('tutorial-text'), tutorialTitle: document.getElementById('tutorial-title'), tutorialPrevBtn: document.getElementById('tutorial-prev'), tutorialNextBtn: document.getElementById('tutorial-next'), tutorialStepIndicator: document.getElementById('tutorial-step-indicator'), ratingBtn: document.getElementById('rating-button'), ratingModal: document.getElementById('rating-modal'), closeRatingBtn: document.getElementById('close-rating-button'), ratingList: document.getElementById('rating-list'), userAvatar: document.getElementById('user-avatar'), username: document.getElementById('username'), userScore: document.getElementById('user-score'), winModal: document.getElementById('win-modal'), winModalMessage: document.getElementById('win-modal-message'), winModalCloseBtn: document.getElementById('win-modal-close-btn'), playSound1Btn: document.getElementById('playSound1Btn'), playSound2Btn: document.getElementById('playSound2Btn') };
     let grid = [], solution = [], givenCells = new Set(), timerInterval, startTime=0, activeCell = null, activeTool = null, highlightEnabled = true, undoStack = [];
     let hintCount = 0;
     let currentUser = { id: null, username: 'Гость', avatar: 'https://t.me/i/userpic/320/default.jpg', score: 0 };
@@ -238,6 +248,10 @@
         document.addEventListener('click', (e) => { if (!elements.gameContainer.contains(e.target) && !elements.recentGamesModal.contains(e.target) && !elements.tutorialModal.contains(e.target) && !elements.ratingModal.contains(e.target)) { deselectCell(); } if (!elements.settingsBtn.contains(e.target) && !elements.themePanel.contains(e.target)) { elements.themePanel.classList.add('hidden'); } });
         window.addEventListener('beforeunload', saveCurrentGame);
         elements.winModalCloseBtn.addEventListener('click', () => { elements.winModal.classList.add('hidden'); });
+
+        elements.playSound1Btn.addEventListener('click', () => { sound1.currentTime = 0; sound1.play(); });
+        elements.playSound2Btn.addEventListener('click', () => { sound2.currentTime = 0; sound2.play(); });
+
         applyTheme(localStorage.getItem('sudoku-theme') || 'purple');
         startNewGame();
     }
