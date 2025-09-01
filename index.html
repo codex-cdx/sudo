@@ -7,13 +7,105 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
+    /* --- Экран загрузки --- */
+    #loading-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #000000, #1a1a1a);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      transition: opacity 0.5s ease-out;
+    }
+
+    .loading-grid {
+      display: grid;
+      grid-template-columns: repeat(9, 1fr);
+      gap: 2px;
+      width: 200px;
+      height: 200px;
+      margin-bottom: 30px;
+    }
+
+    .loading-cell {
+      background: #333;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      font-size: 12px;
+      opacity: 0;
+      animation: cellReveal 0.5s ease-out forwards;
+    }
+
+    @keyframes cellReveal {
+      0% {
+        opacity: 0;
+        transform: scale(0.5) rotate(180deg);
+        background: #333;
+      }
+      50% {
+        opacity: 1;
+        transform: scale(1.1) rotate(90deg);
+        background: #fff;
+        color: #000;
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1) rotate(0deg);
+        background: #666;
+        color: #fff;
+      }
+    }
+
+    .loading-text {
+      color: white;
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 20px;
+      opacity: 0;
+      animation: textFade 1s ease-out 0.5s forwards;
+    }
+
+    .loading-dots {
+      color: white;
+      font-size: 20px;
+      opacity: 0;
+      animation: textFade 1s ease-out 1s forwards;
+    }
+
+    .loading-dots::after {
+      content: '';
+      animation: dots 2s infinite;
+    }
+
+    @keyframes textFade {
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes dots {
+      0%, 20% { content: ''; }
+      40% { content: '.'; }
+      60% { content: '..'; }
+      80%, 100% { content: '...'; }
+    }
+
     /* --- Система тем на CSS-переменных --- */
     :root, body[data-theme="lime"] { --primary-color: #CDFF07; --primary-hover: #b8e600; --text-accent: #69C5F8; --body-bg: #21242c; --container-bg: #313642; --cell-bg: #414550; --grid-line: #525762; --given-text: #ffffff; --error-text: #f87171; --highlight-bg: var(--primary-color); --highlight-text: #313642; --area-highlight-bg: rgba(205, 255, 7, 0.08); --active-cell-bg: rgba(105, 197, 248, 0.12); --hint-bg: #ffffff; --hint-text: #313642; }
     body[data-theme="orange"] { --primary-color: #f97316; --primary-hover: #ea580c; --text-accent: #fb923c; --body-bg: #0c0a09; --container-bg: #1c1917; --cell-bg: #292524; --grid-line: #57534e; --given-text: #ffffff; --error-text: #f87171; --highlight-bg: var(--primary-color); --highlight-text: var(--given-text); --area-highlight-bg: rgba(249, 115, 22, 0.06); --active-cell-bg: rgba(249, 115, 22, 0.12); --hint-bg: #ffffff; --hint-text: #1c1917; }
     body[data-theme="brown"] { --primary-color: #a16207; --primary-hover: #854d0e; --text-accent: #a16207; --body-bg: #f1f5f9; --container-bg: #ffffff; --cell-bg: #f8fafc; --grid-line: #d1d5db; --given-text: #1e293b; --error-text: #dc2626; --highlight-bg: #fde68a; --highlight-text: #1e293b; --area-highlight-bg: rgba(161, 98, 7, 0.08); --active-cell-bg: rgba(161, 98, 7, 0.16); --hint-bg: #1e293b; --hint-text: #ffffff; }
     body[data-theme="black"] { --primary-color: #e5e7eb; --primary-hover: #ffffff; --text-accent: #e5e7eb; --body-bg: #000000; --container-bg: #111111; --cell-bg: #1f1f1f; --grid-line: #333333; --given-text: #ffffff; --error-text: #ef4444; --highlight-bg: #e5e7eb; --highlight-text: #000000; --area-highlight-bg: rgba(229, 231, 235, 0.05); --active-cell-bg: rgba(229, 231, 235, 0.1); --hint-bg: #ffffff; --hint-text: #111111; }
     body[data-theme="terracotta"] { --primary-color: #E39157; --primary-hover: #d17b40; --text-accent: #E39157; --body-bg: #2a2d2b; --container-bg: #4A534C; --cell-bg: #5a645c; --grid-line: #3a423c; --given-text: #FFFFFF; --error-text: #ef4444; --highlight-bg: #E39157; --highlight-text: #FFFFFF; --area-highlight-bg: rgba(227, 145, 87, 0.1); --active-cell-bg: rgba(227, 145, 87, 0.15); --hint-bg: #FFFFFF; --hint-text: #4A534C; }
-    body[data-theme="ashRose"] { --primary-color: #D9ADAD; --primary-hover: #c99c9c; --text-accent: #D9ADAD; --body-bg: #3a3a3a; --container-bg: #838383; --cell-bg: #737373; --grid-line: #3a3a3a; --given-text: #FCDFD; --error-text: #f87171; --highlight-bg: #D9ADAD; --highlight-text: #3a3a3a; --area-highlight-bg: rgba(217, 173, 173, 0.1); --active-cell-bg: rgba(217, 173, 173, 0.15); --hint-bg: #FCDFD; --hint-text: #3a3a3a; }
+    body[data-theme="ashRose"] { --primary-color: #D9ADAD; --primary-hover: #c99c9c; --text-accent: #E8C4C4; --body-bg: #2c2c2c; --container-bg: #404040; --cell-bg: #4a4a4a; --grid-line: #2c2c2c; --given-text: #FFFFFF; --error-text: #ff6b6b; --highlight-bg: #D9ADAD; --highlight-text: #2c2c2c; --area-highlight-bg: rgba(217, 173, 173, 0.12); --active-cell-bg: rgba(232, 196, 196, 0.15); --hint-bg: #FFFFFF; --hint-text: #2c2c2c; }
 
     body[data-theme="orange"] .user-input .cell-content, body[data-theme="lime"] .user-input .cell-content, body[data-theme="brown"] .user-input .cell-content, body[data-theme="terracotta"] .user-input .cell-content, body[data-theme="ashRose"] .user-input .cell-content { color: var(--primary-color); }
     body[data-theme="black"] .user-input .cell-content { color: #9ca3af; }
@@ -28,7 +120,7 @@
     .main-button:hover { background-color: var(--primary-hover); }
     body[data-theme="black"] .main-button { color: #111111; }
     body[data-theme="lime"] .main-button { color: #313642; }
-    body[data-theme="ashRose"] .main-button { color: #3a3a3a; }
+    body[data-theme="ashRose"] .main-button { color: #2c2c2c; }
     .grid-container { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 2px; position: relative; width: 100%; padding: 3px; border-radius: 12px; background-color: var(--grid-line); }
     .cell { transition: background-color 0.2s ease-in-out; width: 100%; height: 0; padding-bottom: 100%; position: relative; border: none; border-radius: 6px; font-size: clamp(1rem, 4.5vw, 1.75rem); caret-color: transparent; background-color: var(--cell-bg); }
     .cell-content { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
@@ -44,7 +136,7 @@
     .number-button-content { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: clamp(1rem, 4vw, 1.5rem); border-radius: 0.375rem; background-color: var(--cell-bg); color: var(--text-accent); transition: background-color 0.2s; }
     .number-button-wrapper.selected .number-button-content { background-color: var(--primary-color); color: var(--given-text); }
     body[data-theme="lime"] .number-button-wrapper.selected .number-button-content { color: #313642; }
-    body[data-theme="ashRose"] .number-button-wrapper.selected .number-button-content { color: #3a3a3a; }
+    body[data-theme="ashRose"] .number-button-wrapper.selected .number-button-content { color: #2c2c2c; }
     .number-button-wrapper.disabled .number-button-content { opacity: 0.4; cursor: not-allowed; }
     .area-highlight { background-color: var(--area-highlight-bg); }
     .active-cell { background-color: var(--active-cell-bg) !important; }
@@ -97,10 +189,19 @@
     .tut-placed { animation: pop 0.3s ease-out; color: var(--primary-color); font-weight: 700; }
     #win-modal-content { animation: fadeIn 0.3s ease-out; }
     @keyframes fadeIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+
+    .hidden { display: none !important; }
   </style>
 </head>
 <body class="flex flex-col items-center justify-center min-h-screen p-2 sm:p-4">
   
+  <!-- Экран загрузки -->
+  <div id="loading-screen">
+    <div class="loading-text">Судоку</div>
+    <div class="loading-grid" id="loading-grid"></div>
+    <div class="loading-dots">Загрузка</div>
+  </div>
+
   <div id="game-container" class="rounded-2xl p-4 glow">
     <div id="user-info" class="flex items-center mb-4">
       <img id="user-avatar" src="https://t.me/i/userpic/320/default.jpg" alt="User Avatar" class="w-10 h-10 rounded-full mr-3">
@@ -160,7 +261,6 @@
         <h2 id="tutorial-title" class="text-xl font-bold title-text">Обучение</h2>
         <button id="close-tutorial-button" class="text-2xl">&times;</button>
       </div>
-      <!-- ИСПРАВЛЕННЫЙ БЛОК ДЛЯ АДАПТИВНОСТИ -->
       <div class="flex flex-col sm:flex-row items-center gap-4">
         <div class="w-full max-w-[200px] mx-auto sm:w-2/5 sm:max-w-none sm:mx-0 flex-shrink-0">
           <div id="tutorial-grid" class="tutorial-grid"></div>
@@ -185,6 +285,39 @@
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
 
   <script>
+    // Создание экрана загрузки
+    function createLoadingScreen() {
+      const loadingGrid = document.getElementById('loading-grid');
+      const numbers = [1,2,3,4,5,6,7,8,9];
+      
+      for (let i = 0; i < 81; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'loading-cell';
+        cell.style.animationDelay = `${Math.random() * 2}s`;
+        
+        // Добавляем случайные цифры в некоторые ячейки
+        if (Math.random() > 0.7) {
+          cell.textContent = numbers[Math.floor(Math.random() * numbers.length)];
+        }
+        
+        loadingGrid.appendChild(cell);
+      }
+    }
+
+    // Скрытие экрана загрузки
+    function hideLoadingScreen() {
+      setTimeout(() => {
+        const loadingScreen = document.getElementById('loading-screen');
+        loadingScreen.style.opacity = '0';
+        setTimeout(() => {
+          loadingScreen.style.display = 'none';
+        }, 500);
+      }, 2000); // Показываем загрузку 2 секунды
+    }
+
+    // Создаем экран загрузки при старте
+    createLoadingScreen();
+
     const firebaseConfig = {
       apiKey: "AIzaSyBkYQ7tRMrZ-mghBnkJ_EvuzHpjs_p8hOY",
       authDomain: "sudo-9fbfc.firebaseapp.com",
@@ -342,6 +475,9 @@
         updateSoundButtonVisuals();
         applyTheme(localStorage.getItem('sudoku-theme') || 'lime');
         startNewGame();
+        
+        // Скрываем экран загрузки после инициализации
+        hideLoadingScreen();
     }
     
     init();
