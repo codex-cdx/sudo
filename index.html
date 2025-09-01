@@ -7,7 +7,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
-    /* --- Стили CSS (без изменений) --- */
+    /* --- Система тем на CSS-переменных --- */
     :root, body[data-theme="purple"] { --primary-color: #a855f7; --primary-hover: #9333ea; --text-accent: #c084fc; --body-bg: #030712; --container-bg: #111827; --cell-bg: #1f2937; --grid-line: #4b5563; --given-text: #ffffff; --error-text: #f87171; --highlight-bg: var(--primary-color); --highlight-text: var(--given-text); --area-highlight-bg: rgba(168, 85, 247, 0.06); --active-cell-bg: rgba(168, 85, 247, 0.12); --hint-bg: #ffffff; --hint-text: #111827; }
     body[data-theme="orange"] { --primary-color: #f97316; --primary-hover: #ea580c; --text-accent: #fb923c; --body-bg: #0c0a09; --container-bg: #1c1917; --cell-bg: #292524; --grid-line: #57534e; --given-text: #ffffff; --error-text: #f87171; --highlight-bg: var(--primary-color); --highlight-text: var(--given-text); --area-highlight-bg: rgba(249, 115, 22, 0.06); --active-cell-bg: rgba(249, 115, 22, 0.12); --hint-bg: #ffffff; --hint-text: #1c1917; }
     body[data-theme="green"] { --primary-color: #22c55e; --primary-hover: #16a34a; --text-accent: #4ade80; --body-bg: #050f09; --container-bg: #0f1a14; --cell-bg: #1a2e24; --grid-line: #3f6251; --given-text: #ffffff; --error-text: #f87171; --highlight-bg: var(--primary-color); --highlight-text: var(--given-text); --area-highlight-bg: rgba(34, 197, 94, 0.06); --active-cell-bg: rgba(34, 197, 94, 0.12); --hint-bg: #ffffff; --hint-text: #0f1a14; }
@@ -120,6 +120,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
 
   <script>
+    // НЕ ЗАБУДЬТЕ ВСТАВИТЬ СЮДА ВАШ НАСТОЯЩИЙ firebaseConfig
     const firebaseConfig = {
       apiKey: "AIzaSyBkYQ7tRMrZ-mghBnkJ_EvuzHpjs_p8hOY",
       authDomain: "sudo-9fbfc.firebaseapp.com",
@@ -141,8 +142,10 @@
     let isGameFinished = false;
     let isSoundEnabled = true;
     const CLICK_SOUND_URL = 'https://github.com/codex-cdx/sudo/raw/refs/heads/main/soft-click.wav';
+    const clickSound = new Audio(CLICK_SOUND_URL);
+    clickSound.preload = 'auto';
     
-    function playSound() { if (!isSoundEnabled) return; const sound = new Audio(CLICK_SOUND_URL); sound.play().catch(error => console.error("Ошибка воспроизведения звука:", error)); }
+    function playSound() { if (!isSoundEnabled) return; clickSound.currentTime = 0; clickSound.play().catch(error => console.error("Ошибка воспроизведения звука:", error)); }
     function updateSoundButtonVisuals() { if (isSoundEnabled) { elements.soundOnIcon.classList.remove('hidden'); elements.soundOffIcon.classList.add('hidden'); } else { elements.soundOnIcon.classList.add('hidden'); elements.soundOffIcon.classList.remove('hidden'); } }
     function toggleSound() { isSoundEnabled = !isSoundEnabled; localStorage.setItem('sudoku-sound-enabled', isSoundEnabled); updateSoundButtonVisuals(); if (isSoundEnabled) { playSound(); } }
     function createGrid() { elements.grid.innerHTML='<div class="grid-separator v-sep-1"></div><div class="grid-separator v-sep-2"></div><div class="grid-separator h-sep-1"></div><div class="grid-separator h-sep-2"></div>';grid=Array(9).fill().map(()=>Array(9).fill(0));givenCells.clear();for(let i=0;i<9;i++)for(let j=0;j<9;j++){const e=document.createElement("div");e.className="cell";const t=document.createElement("div");t.className="cell-content";e.appendChild(t),e.addEventListener("click",(t)=>{t.stopPropagation();handleCellClick(i,j)}),elements.grid.appendChild(e)}}
