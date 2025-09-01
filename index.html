@@ -8,15 +8,19 @@
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     /* --- Система тем на CSS-переменных --- */
+    /* НОВАЯ ТЕМА ПО УМОЛЧАНИЮ */
     :root, body[data-theme="lime"] { --primary-color: #CDFF07; --primary-hover: #b8e600; --text-accent: #69C5F8; --body-bg: #21242c; --container-bg: #313642; --cell-bg: #414550; --grid-line: #525762; --given-text: #ffffff; --error-text: #f87171; --highlight-bg: var(--primary-color); --highlight-text: #313642; --area-highlight-bg: rgba(205, 255, 7, 0.08); --active-cell-bg: rgba(105, 197, 248, 0.12); --hint-bg: #ffffff; --hint-text: #313642; }
+    
     body[data-theme="orange"] { --primary-color: #f97316; --primary-hover: #ea580c; --text-accent: #fb923c; --body-bg: #0c0a09; --container-bg: #1c1917; --cell-bg: #292524; --grid-line: #57534e; --given-text: #ffffff; --error-text: #f87171; --highlight-bg: var(--primary-color); --highlight-text: var(--given-text); --area-highlight-bg: rgba(249, 115, 22, 0.06); --active-cell-bg: rgba(249, 115, 22, 0.12); --hint-bg: #ffffff; --hint-text: #1c1917; }
+    
+    /* БЕЛО-ГОЛУБАЯ ЗАМЕНЕНА НА БЕЛО-КОРИЧНЕВУЮ */
     body[data-theme="brown"] { --primary-color: #a16207; --primary-hover: #854d0e; --text-accent: #a16207; --body-bg: #f1f5f9; --container-bg: #ffffff; --cell-bg: #f8fafc; --grid-line: #d1d5db; --given-text: #1e293b; --error-text: #dc2626; --highlight-bg: #fde68a; --highlight-text: #1e293b; --area-highlight-bg: rgba(161, 98, 7, 0.08); --active-cell-bg: rgba(161, 98, 7, 0.16); --hint-bg: #1e293b; --hint-text: #ffffff; }
+    
     body[data-theme="black"] { --primary-color: #e5e7eb; --primary-hover: #ffffff; --text-accent: #e5e7eb; --body-bg: #000000; --container-bg: #111111; --cell-bg: #1f1f1f; --grid-line: #333333; --given-text: #ffffff; --error-text: #ef4444; --highlight-bg: #e5e7eb; --highlight-text: #000000; --area-highlight-bg: rgba(229, 231, 235, 0.05); --active-cell-bg: rgba(229, 231, 235, 0.1); --hint-bg: #ffffff; --hint-text: #111111; }
-    /* НОВАЯ ТЕМА */
-    body[data-theme="terracotta"] { --primary-color: #E39157; --primary-hover: #d17b40; --text-accent: #E39157; --body-bg: #2a2d2b; --container-bg: #4A534C; --cell-bg: #5a645c; --grid-line: #3a423c; --given-text: #FFFFFF; --error-text: #ef4444; --highlight-bg: #E39157; --highlight-text: #FFFFFF; --area-highlight-bg: rgba(227, 145, 87, 0.1); --active-cell-bg: rgba(227, 145, 87, 0.15); --hint-bg: #FFFFFF; --hint-text: #4A534C; }
-
-    body[data-theme="orange"] .user-input .cell-content, body[data-theme="lime"] .user-input .cell-content, body[data-theme="brown"] .user-input .cell-content, body[data-theme="terracotta"] .user-input .cell-content { color: var(--primary-color); }
+    
+    body[data-theme="orange"] .user-input .cell-content, body[data-theme="lime"] .user-input .cell-content, body[data-theme="brown"] .user-input .cell-content { color: var(--primary-color); }
     body[data-theme="black"] .user-input .cell-content { color: #9ca3af; }
+
     body { background-color: var(--body-bg); color: var(--text-accent); transition: background-color 0.3s; }
     #game-container { transition: transform 0.2s ease-in-out; background-color: var(--container-bg); width: 100%; max-width: 420px; margin: auto; }
     @media (min-width: 768px) { #game-container { max-width: 600px; } }
@@ -89,7 +93,6 @@
         <button id="settings-button" class="control-button p-2 rounded-lg glow transition-colors" title="Настройки темы"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-1.007 1.11-1.11.55-.102 1.13-.102 1.68 0 .55.103 1.02.568 1.11 1.11.09.542.09 1.128 0 1.67-.09.542-.56 1.007-1.11 1.11-.55-.102-1.13-.102-1.68 0-.55-.103-1.02-.568-1.11-1.11-.09-.542-.09-1.128 0-1.67zM14.25 10.25a2.25 2.25 0 00-2.25-2.25H7.5a2.25 2.25 0 00-2.25 2.25v.5c0 .59.38 1.095.92 1.254a2.25 2.25 0 011.68.026l.22.067.22.067.22.067a2.25 2.25 0 011.13 1.933V16.5a2.25 2.25 0 002.25 2.25h.5a2.25 2.25 0 002.25-2.25v-2.25a2.25 2.25 0 00-1.13-1.933l-.22-.067-.22-.067-.22-.067a2.25 2.25 0 01-1.68-.026 1.125 1.125 0 01-.92-1.254v-.5z" /></svg></button>
         <div id="theme-panel" class="hidden absolute top-full right-0 mt-2 p-2 bg-gray-800 rounded-lg shadow-lg z-20"><div class="flex gap-2 flex-wrap max-w-xs justify-end">
           <button class="theme-button w-6 h-6 rounded-full border-2" data-theme="lime" style="background-color: #CDFF07;"></button>
-          <button class="theme-button w-6 h-6 rounded-full border-2" data-theme="terracotta" style="background-color: #E39157;"></button>
           <button class="theme-button w-6 h-6 rounded-full bg-orange-500 border-2" data-theme="orange"></button>
           <button class="theme-button w-6 h-6 rounded-full bg-black border-2 border-gray-600" data-theme="black"></button>
           <button class="theme-button w-6 h-6 rounded-full border-2" data-theme="brown" style="background-color: #a16207;"></button>
