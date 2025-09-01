@@ -13,9 +13,7 @@
     body[data-theme="brown"] { --primary-color: #a16207; --primary-hover: #854d0e; --text-accent: #a16207; --body-bg: #f1f5f9; --container-bg: #ffffff; --cell-bg: #f8fafc; --grid-line: #d1d5db; --given-text: #1e293b; --error-text: #dc2626; --highlight-bg: #fde68a; --highlight-text: #1e293b; --area-highlight-bg: rgba(161, 98, 7, 0.08); --active-cell-bg: rgba(161, 98, 7, 0.16); --hint-bg: #1e293b; --hint-text: #ffffff; }
     body[data-theme="black"] { --primary-color: #e5e7eb; --primary-hover: #ffffff; --text-accent: #e5e7eb; --body-bg: #000000; --container-bg: #111111; --cell-bg: #1f1f1f; --grid-line: #333333; --given-text: #ffffff; --error-text: #ef4444; --highlight-bg: #e5e7eb; --highlight-text: #000000; --area-highlight-bg: rgba(229, 231, 235, 0.05); --active-cell-bg: rgba(229, 231, 235, 0.1); --hint-bg: #ffffff; --hint-text: #111111; }
     body[data-theme="terracotta"] { --primary-color: #E39157; --primary-hover: #d17b40; --text-accent: #E39157; --body-bg: #2a2d2b; --container-bg: #4A534C; --cell-bg: #5a645c; --grid-line: #3a423c; --given-text: #FFFFFF; --error-text: #ef4444; --highlight-bg: #E39157; --highlight-text: #FFFFFF; --area-highlight-bg: rgba(227, 145, 87, 0.1); --active-cell-bg: rgba(227, 145, 87, 0.15); --hint-bg: #FFFFFF; --hint-text: #4A534C; }
-    /* НОВАЯ ТЕМА */
     body[data-theme="ashRose"] { --primary-color: #D9ADAD; --primary-hover: #c99c9c; --text-accent: #D9ADAD; --body-bg: #3a3a3a; --container-bg: #838383; --cell-bg: #737373; --grid-line: #3a3a3a; --given-text: #FCDFD; --error-text: #f87171; --highlight-bg: #D9ADAD; --highlight-text: #3a3a3a; --area-highlight-bg: rgba(217, 173, 173, 0.1); --active-cell-bg: rgba(217, 173, 173, 0.15); --hint-bg: #FCDFD; --hint-text: #3a3a3a; }
-
     body[data-theme="orange"] .user-input .cell-content, body[data-theme="lime"] .user-input .cell-content, body[data-theme="brown"] .user-input .cell-content, body[data-theme="terracotta"] .user-input .cell-content, body[data-theme="ashRose"] .user-input .cell-content { color: var(--primary-color); }
     body[data-theme="black"] .user-input .cell-content { color: #9ca3af; }
     body { background-color: var(--body-bg); color: var(--text-accent); transition: background-color 0.3s; }
@@ -57,7 +55,7 @@
     .modal-content { background-color: var(--container-bg); padding: 1.5rem; border-radius: 1rem; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto; }
     .modal-preview-grid { display: grid; grid-template-columns: repeat(9, 1fr); gap: 1px; width: 80px; height: 80px; background-color: var(--grid-line); flex-shrink: 0; }
     .modal-preview-cell { background-color: var(--cell-bg); font-size: 0.5rem; display: flex; align-items: center; justify-content: center; }
-    .tutorial-grid { display: grid; grid-template-columns: repeat(9, 1fr); gap: 1px; background-color: var(--grid-line); border: 2px solid var(--primary-color); }
+    .tutorial-grid { display: grid; grid-template-columns: repeat(9, 1fr); gap: 1px; background-color: var(--grid-line); border: 2px solid var(--primary-color); /* ИСПРАВЛЕНИЕ: Фиксируем размер сетки */ width: 180px; height: 180px; }
     .tutorial-cell { background-color: var(--cell-bg); color: var(--given-text); font-size: 0.8rem; display: flex; align-items: center; justify-content: center; position: relative; transition: all 0.3s; padding-bottom: 100%; }
     .tut-highlight { background-color: var(--area-highlight-bg); }
     .tut-conflict { color: var(--error-text); }
