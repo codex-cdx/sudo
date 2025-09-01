@@ -8,19 +8,19 @@
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     /* --- Система тем на CSS-переменных --- */
-    :root, body[data-theme="purple"] { --primary-color: #a855f7; --primary-hover: #9333ea; --text-accent: #c084fc; --body-bg: #030712; --container-bg: #111827; --cell-bg: #1f2937; --grid-line: #4b5563; --given-text: #ffffff; --error-text: #f87171; --highlight-bg: var(--primary-color); --highlight-text: var(--given-text); --area-highlight-bg: rgba(168, 85, 247, 0.06); --active-cell-bg: rgba(168, 85, 247, 0.12); --hint-bg: #ffffff; --hint-text: #111827; }
-    body[data-theme="orange"] { --primary-color: #f97316; --primary-hover: #ea580c; --text-accent: #fb923c; --body-bg: #0c0a09; --container-bg: #1c1917; --cell-bg: #292524; --grid-line: #57534e; --given-text: #ffffff; --error-text: #f87171; --highlight-bg: var(--primary-color); --highlight-text: var(--given-text); --area-highlight-bg: rgba(249, 115, 22, 0.06); --active-cell-bg: rgba(249, 115, 22, 0.12); --hint-bg: #ffffff; --hint-text: #1c1917; }
-    body[data-theme="green"] { --primary-color: #22c55e; --primary-hover: #16a34a; --text-accent: #4ade80; --body-bg: #050f09; --container-bg: #0f1a14; --cell-bg: #1a2e24; --grid-line: #3f6251; --given-text: #ffffff; --error-text: #f87171; --highlight-bg: var(--primary-color); --highlight-text: var(--given-text); --area-highlight-bg: rgba(34, 197, 94, 0.06); --active-cell-bg: rgba(34, 197, 94, 0.12); --hint-bg: #ffffff; --hint-text: #0f1a14; }
-    body[data-theme="light"] { --primary-color: #2563eb; --primary-hover: #1d4ed8; --text-accent: #1d4ed8; --body-bg: #f3f4f6; --container-bg: #ffffff; --cell-bg: #f9fafb; --grid-line: #d1d5db; --given-text: #111827; --error-text: #dc2626; --highlight-bg: #93c5fd; --highlight-text: #111827; --area-highlight-bg: rgba(59, 130, 246, 0.08); --active-cell-bg: rgba(59, 130, 246, 0.16); --hint-bg: #111827; --hint-text: #ffffff; }
-    body[data-theme="black"] { --primary-color: #e5e7eb; --primary-hover: #ffffff; --text-accent: #e5e7eb; --body-bg: #000000; --container-bg: #111111; --cell-bg: #1f1f1f; --grid-line: #333333; --given-text: #ffffff; --error-text: #ef4444; --highlight-bg: #e5e7eb; --highlight-text: #000000; --area-highlight-bg: rgba(229, 231, 235, 0.05); --active-cell-bg: rgba(229, 231, 235, 0.1); --hint-bg: #ffffff; --hint-text: #111111; }
-    body[data-theme="pink"] { --primary-color: #ec4899; --primary-hover: #db2777; --text-accent: #f472b6; --body-bg: #1a0810; --container-bg: #2a0f1c; --cell-bg: #3a1628; --grid-line: #6d284f; --given-text: #ffffff; --error-text: #fca5a5; --highlight-bg: var(--primary-color); --highlight-text: var(--given-text); --area-highlight-bg: rgba(236, 72, 153, 0.06); --active-cell-bg: rgba(236, 72, 153, 0.12); --hint-bg: #ffffff; --hint-text: #2a0f1c; }
-    body[data-theme="turquoise"] { --primary-color: #14b8a6; --primary-hover: #0d9488; --text-accent: #2dd4bf; --body-bg: #040f0d; --container-bg: #0a1a17; --cell-bg: #112e29; --grid-line: #1f6259; --given-text: #ffffff; --error-text: #fca5a5; --highlight-bg: var(--primary-color); --highlight-text: #040f0d; --area-highlight-bg: rgba(20, 184, 166, 0.06); --active-cell-bg: rgba(20, 184, 166, 0.12); --hint-bg: #ffffff; --hint-text: #0a1a17; }
-    /* НОВАЯ ТЕМА */
-    body[data-theme="rose"] { --primary-color: #f43f5e; --primary-hover: #e11d48; --text-accent: #f43f5e; --body-bg: #f1f5f9; --container-bg: #ffffff; --cell-bg: #f8fafc; --grid-line: #cbd5e1; --given-text: #1e293b; --error-text: #ef4444; --highlight-bg: #fecdd3; --highlight-text: #1e293b; --area-highlight-bg: rgba(244, 63, 94, 0.08); --active-cell-bg: rgba(244, 63, 94, 0.16); --hint-bg: #1e293b; --hint-text: #ffffff; }
+    /* НОВАЯ ТЕМА ПО УМОЛЧАНИЮ */
+    :root, body[data-theme="lime"] { --primary-color: #CDFF07; --primary-hover: #b8e600; --text-accent: #69C5F8; --body-bg: #21242c; --container-bg: #313642; --cell-bg: #414550; --grid-line: #525762; --given-text: #ffffff; --error-text: #f87171; --highlight-bg: var(--primary-color); --highlight-text: #313642; --area-highlight-bg: rgba(205, 255, 7, 0.08); --active-cell-bg: rgba(105, 197, 248, 0.12); --hint-bg: #ffffff; --hint-text: #313642; }
     
-    body[data-theme="purple"] .user-input .cell-content, body[data-theme="orange"] .user-input .cell-content, body[data-theme="green"] .user-input .cell-content, body[data-theme="pink"] .user-input .cell-content, body[data-theme="turquoise"] .user-input .cell-content, body[data-theme="rose"] .user-input .cell-content { color: var(--primary-color); }
+    body[data-theme="orange"] { --primary-color: #f97316; --primary-hover: #ea580c; --text-accent: #fb923c; --body-bg: #0c0a09; --container-bg: #1c1917; --cell-bg: #292524; --grid-line: #57534e; --given-text: #ffffff; --error-text: #f87171; --highlight-bg: var(--primary-color); --highlight-text: var(--given-text); --area-highlight-bg: rgba(249, 115, 22, 0.06); --active-cell-bg: rgba(249, 115, 22, 0.12); --hint-bg: #ffffff; --hint-text: #1c1917; }
+    
+    /* БЕЛО-ГОЛУБАЯ ЗАМЕНЕНА НА БЕЛО-КОРИЧНЕВУЮ */
+    body[data-theme="brown"] { --primary-color: #a16207; --primary-hover: #854d0e; --text-accent: #a16207; --body-bg: #f1f5f9; --container-bg: #ffffff; --cell-bg: #f8fafc; --grid-line: #d1d5db; --given-text: #1e293b; --error-text: #dc2626; --highlight-bg: #fde68a; --highlight-text: #1e293b; --area-highlight-bg: rgba(161, 98, 7, 0.08); --active-cell-bg: rgba(161, 98, 7, 0.16); --hint-bg: #1e293b; --hint-text: #ffffff; }
+    
+    body[data-theme="black"] { --primary-color: #e5e7eb; --primary-hover: #ffffff; --text-accent: #e5e7eb; --body-bg: #000000; --container-bg: #111111; --cell-bg: #1f1f1f; --grid-line: #333333; --given-text: #ffffff; --error-text: #ef4444; --highlight-bg: #e5e7eb; --highlight-text: #000000; --area-highlight-bg: rgba(229, 231, 235, 0.05); --active-cell-bg: rgba(229, 231, 235, 0.1); --hint-bg: #ffffff; --hint-text: #111111; }
+    
+    body[data-theme="orange"] .user-input .cell-content, body[data-theme="lime"] .user-input .cell-content, body[data-theme="brown"] .user-input .cell-content { color: var(--primary-color); }
     body[data-theme="black"] .user-input .cell-content { color: #9ca3af; }
-    body[data-theme="light"] .user-input .cell-content { color: var(--primary-color); }
+
     body { background-color: var(--body-bg); color: var(--text-accent); transition: background-color 0.3s; }
     #game-container { transition: transform 0.2s ease-in-out; background-color: var(--container-bg); width: 100%; max-width: 420px; margin: auto; }
     @media (min-width: 768px) { #game-container { max-width: 600px; } }
@@ -31,6 +31,7 @@
     .main-button { background-color: var(--primary-color); color: white; }
     .main-button:hover { background-color: var(--primary-hover); }
     body[data-theme="black"] .main-button { color: #111111; }
+    body[data-theme="lime"] .main-button { color: #313642; }
     .grid-container { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 2px; position: relative; width: 100%; padding: 3px; border-radius: 12px; background-color: var(--grid-line); }
     .cell { transition: background-color 0.2s ease-in-out; width: 100%; height: 0; padding-bottom: 100%; position: relative; border: none; border-radius: 6px; font-size: clamp(1rem, 4.5vw, 1.75rem); caret-color: transparent; background-color: var(--cell-bg); }
     .cell-content { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
@@ -45,6 +46,7 @@
     .number-button { width: 100%; height: 0; padding-bottom: 100%; position: relative; }
     .number-button-content { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: clamp(1rem, 4vw, 1.5rem); border-radius: 0.375rem; background-color: var(--cell-bg); color: var(--text-accent); transition: background-color 0.2s; }
     .number-button-wrapper.selected .number-button-content { background-color: var(--primary-color); color: var(--given-text); }
+    body[data-theme="lime"] .number-button-wrapper.selected .number-button-content { color: #313642; }
     .number-button-wrapper.disabled .number-button-content { opacity: 0.4; cursor: not-allowed; }
     .area-highlight { background-color: var(--area-highlight-bg); }
     .active-cell { background-color: var(--active-cell-bg) !important; }
@@ -90,15 +92,10 @@
         <button id="recent-games-button" class="control-button p-2 rounded-lg glow transition-colors" title="Недавние игры"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z" /></svg></button>
         <button id="settings-button" class="control-button p-2 rounded-lg glow transition-colors" title="Настройки темы"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-1.007 1.11-1.11.55-.102 1.13-.102 1.68 0 .55.103 1.02.568 1.11 1.11.09.542.09 1.128 0 1.67-.09.542-.56 1.007-1.11 1.11-.55-.102-1.13-.102-1.68 0-.55-.103-1.02-.568-1.11-1.11-.09-.542-.09-1.128 0-1.67zM14.25 10.25a2.25 2.25 0 00-2.25-2.25H7.5a2.25 2.25 0 00-2.25 2.25v.5c0 .59.38 1.095.92 1.254a2.25 2.25 0 011.68.026l.22.067.22.067.22.067a2.25 2.25 0 011.13 1.933V16.5a2.25 2.25 0 002.25 2.25h.5a2.25 2.25 0 002.25-2.25v-2.25a2.25 2.25 0 00-1.13-1.933l-.22-.067-.22-.067-.22-.067a2.25 2.25 0 01-1.68-.026 1.125 1.125 0 01-.92-1.254v-.5z" /></svg></button>
         <div id="theme-panel" class="hidden absolute top-full right-0 mt-2 p-2 bg-gray-800 rounded-lg shadow-lg z-20"><div class="flex gap-2 flex-wrap max-w-xs justify-end">
-          <button class="theme-button w-6 h-6 rounded-full bg-purple-500 border-2" data-theme="purple"></button>
+          <button class="theme-button w-6 h-6 rounded-full border-2" data-theme="lime" style="background-color: #CDFF07;"></button>
           <button class="theme-button w-6 h-6 rounded-full bg-orange-500 border-2" data-theme="orange"></button>
-          <button class="theme-button w-6 h-6 rounded-full bg-green-500 border-2" data-theme="green"></button>
           <button class="theme-button w-6 h-6 rounded-full bg-black border-2 border-gray-600" data-theme="black"></button>
-          <button class="theme-button w-6 h-6 rounded-full bg-pink-500 border-2" data-theme="pink"></button>
-          <button class="theme-button w-6 h-6 rounded-full bg-teal-500 border-2" data-theme="turquoise"></button>
-          <button class="theme-button w-6 h-6 rounded-full bg-white border-2 border-gray-400" data-theme="light"></button>
-          <!-- НОВАЯ КНОПКА ТЕМЫ -->
-          <button class="theme-button w-6 h-6 rounded-full bg-rose-500 border-2" data-theme="rose"></button>
+          <button class="theme-button w-6 h-6 rounded-full border-2" data-theme="brown" style="background-color: #a16207;"></button>
         </div></div>
         <div id="timer" class="timer-text font-semibold text-sm">00:00</div>
       </div>
@@ -133,7 +130,6 @@
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
 
   <script>
-    // НЕ ЗАБУДЬТЕ ВСТАВИТЬ СЮДА ВАШ НАСТОЯЩИЙ firebaseConfig
     const firebaseConfig = {
       apiKey: "AIzaSyBkYQ7tRMrZ-mghBnkJ_EvuzHpjs_p8hOY",
       authDomain: "sudo-9fbfc.firebaseapp.com",
@@ -263,7 +259,7 @@
         const savedSoundState = localStorage.getItem('sudoku-sound-enabled');
         isSoundEnabled = savedSoundState === 'false' ? false : true;
         updateSoundButtonVisuals();
-        applyTheme(localStorage.getItem('sudoku-theme') || 'purple');
+        applyTheme(localStorage.getItem('sudoku-theme') || 'lime');
         startNewGame();
     }
     
