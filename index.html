@@ -7,7 +7,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
-    /* --- Стили CSS (без изменений) --- */
+    /* --- Система тем на CSS-переменных --- */
     :root, body[data-theme="purple"] { --primary-color: #a855f7; --primary-hover: #9333ea; --text-accent: #c084fc; --body-bg: #030712; --container-bg: #111827; --cell-bg: #1f2937; --grid-line: #4b5563; --given-text: #ffffff; --error-text: #f87171; --highlight-bg: var(--primary-color); --highlight-text: var(--given-text); --area-highlight-bg: rgba(168, 85, 247, 0.06); --active-cell-bg: rgba(168, 85, 247, 0.12); --hint-bg: #ffffff; --hint-text: #111827; }
     body[data-theme="orange"] { --primary-color: #f97316; --primary-hover: #ea580c; --text-accent: #fb923c; --body-bg: #0c0a09; --container-bg: #1c1917; --cell-bg: #292524; --grid-line: #57534e; --given-text: #ffffff; --error-text: #f87171; --highlight-bg: var(--primary-color); --highlight-text: var(--given-text); --area-highlight-bg: rgba(249, 115, 22, 0.06); --active-cell-bg: rgba(249, 115, 22, 0.12); --hint-bg: #ffffff; --hint-text: #1c1917; }
     body[data-theme="green"] { --primary-color: #22c55e; --primary-hover: #16a34a; --text-accent: #4ade80; --body-bg: #050f09; --container-bg: #0f1a14; --cell-bg: #1a2e24; --grid-line: #3f6251; --given-text: #ffffff; --error-text: #f87171; --highlight-bg: var(--primary-color); --highlight-text: var(--given-text); --area-highlight-bg: rgba(34, 197, 94, 0.06); --active-cell-bg: rgba(34, 197, 94, 0.12); --hint-bg: #ffffff; --hint-text: #0f1a14; }
@@ -99,15 +99,9 @@
         <span id="hint-count-display" class="ml-1 text-xs"></span>
       </button>
       <button id="newGame" class="main-button text-white px-3 py-2 rounded-lg glow text-sm">Новая игра</button>
-      <!-- НОВАЯ КНОПКА ЗВУКА -->
       <button id="sound-toggle-button" class="main-button text-white px-3 py-2 rounded-lg glow text-sm" title="Звук">
-        <svg id="sound-on-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-          <path d="M10 2.5a.75.75 0 01.75.75v13.5a.75.75 0 01-1.5 0V3.25A.75.75 0 0110 2.5zM4.75 6a.75.75 0 01.75.75v6.5a.75.75 0 01-1.5 0v-6.5A.75.75 0 014.75 6zM15.25 6a.75.75 0 01.75.75v6.5a.75.75 0 01-1.5 0v-6.5a.75.75 0 01.75-.75z" />
-        </svg>
-        <svg id="sound-off-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden" viewBox="0 0 20 20" fill="currentColor">
-          <path d="M10 2.5a.75.75 0 01.75.75v13.5a.75.75 0 01-1.5 0V3.25A.75.75 0 0110 2.5zM4.75 6a.75.75 0 01.75.75v6.5a.75.75 0 01-1.5 0v-6.5A.75.75 0 014.75 6zM15.25 6a.75.75 0 01.75.75v6.5a.75.75 0 01-1.5 0v-6.5a.75.75 0 01.75-.75z" />
-          <path fill-rule="evenodd" d="M1.22 5.22a.75.75 0 011.06 0L17.78 17.72a.75.75 0 11-1.06 1.06L2.28 6.28a.75.75 0 010-1.06z" clip-rule="evenodd" />
-        </svg>
+        <svg id="sound-on-icon" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.108 12 5v14c0 .892-1.077 1.337-1.707.707L5.586 15z"/></svg>
+        <svg id="sound-off-icon" class="h-5 w-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.108 12 5v14c0 .892-1.077 1.337-1.707.707L5.586 15zM17 14l2-2m0 0l2-2m-2 2L17 10m2 2l2 2"/></svg>
       </button>
       <button id="highlightToggle" class="main-button text-white px-3 py-2 rounded-lg glow text-sm">Подсветка</button>
       <button id="check" class="main-button text-white px-3 py-2 rounded-lg glow text-sm">Проверить</button>
@@ -126,6 +120,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
 
   <script>
+    // НЕ ЗАБУДЬТЕ ВСТАВИТЬ СЮДА ВАШ НАСТОЯЩИЙ firebaseConfig
     const firebaseConfig = {
       apiKey: "AIzaSyBkYQ7tRMrZ-mghBnkJ_EvuzHpjs_p8hOY",
       authDomain: "sudo-9fbfc.firebaseapp.com",
@@ -145,40 +140,14 @@
     let hintCount = 0;
     let currentUser = { id: null, username: 'Гость', avatar: 'https://t.me/i/userpic/320/default.jpg', score: 0 };
     let isGameFinished = false;
-    
-    // --- НОВЫЕ ПЕРЕМЕННЫЕ ДЛЯ ЗВУКА ---
     let isSoundEnabled = true;
     const CLICK_SOUND_URL = 'https://github.com/codex-cdx/sudo/raw/refs/heads/main/soft-click.wav';
     const clickSound = new Audio(CLICK_SOUND_URL);
     clickSound.preload = 'auto';
     
-    // --- НОВЫЕ ФУНКЦИИ ДЛЯ ЗВУКА ---
-    function playSound() {
-        if (!isSoundEnabled) return;
-        clickSound.currentTime = 0;
-        clickSound.play().catch(error => console.error("Ошибка воспроизведения звука:", error));
-    }
-    
-    function updateSoundButtonVisuals() {
-        if (isSoundEnabled) {
-            elements.soundOnIcon.classList.remove('hidden');
-            elements.soundOffIcon.classList.add('hidden');
-        } else {
-            elements.soundOnIcon.classList.add('hidden');
-            elements.soundOffIcon.classList.remove('hidden');
-        }
-    }
-
-    function toggleSound() {
-        isSoundEnabled = !isSoundEnabled;
-        localStorage.setItem('sudoku-sound-enabled', isSoundEnabled);
-        updateSoundButtonVisuals();
-        if (isSoundEnabled) {
-            playSound(); // Проиграть звук при включении
-        }
-    }
-
-    // --- ОСТАЛЬНОЙ КОД ---
+    function playSound() { if (!isSoundEnabled) return; clickSound.currentTime = 0; clickSound.play().catch(error => console.error("Ошибка воспроизведения звука:", error)); }
+    function updateSoundButtonVisuals() { if (isSoundEnabled) { elements.soundOnIcon.classList.remove('hidden'); elements.soundOffIcon.classList.add('hidden'); } else { elements.soundOnIcon.classList.add('hidden'); elements.soundOffIcon.classList.remove('hidden'); } }
+    function toggleSound() { isSoundEnabled = !isSoundEnabled; localStorage.setItem('sudoku-sound-enabled', isSoundEnabled); updateSoundButtonVisuals(); if (isSoundEnabled) { playSound(); } }
     function createGrid() { elements.grid.innerHTML='<div class="grid-separator v-sep-1"></div><div class="grid-separator v-sep-2"></div><div class="grid-separator h-sep-1"></div><div class="grid-separator h-sep-2"></div>';grid=Array(9).fill().map(()=>Array(9).fill(0));givenCells.clear();for(let i=0;i<9;i++)for(let j=0;j<9;j++){const e=document.createElement("div");e.className="cell";const t=document.createElement("div");t.className="cell-content";e.appendChild(t),e.addEventListener("click",(t)=>{t.stopPropagation();handleCellClick(i,j)}),elements.grid.appendChild(e)}}
     function createNumberRow() { elements.numberRow.innerHTML="";for(let i=1;i<=9;i++){const e=document.createElement("div");e.className="number-button-wrapper",e.dataset.tool=i,e.innerHTML=`<div class="number-button"><div class="number-button-content"><span>${i}</span></div></div>`,e.addEventListener("click",()=>{playSound(); if(!e.classList.contains("disabled")){selectTool(i)}}),elements.numberRow.appendChild(e)}const e=document.createElement("div");e.className="number-button-wrapper",e.dataset.tool="erase",e.innerHTML=`<div class="number-button"><div class="number-button-content"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /></svg></div></div>`,e.addEventListener("click",()=>{playSound(); selectTool("erase")}),elements.numberRow.appendChild(e)}
     function generatePuzzle(difficulty) { let puzzle, sol; do { sol = createSolution(); puzzle = createPuzzle(sol, difficulty); } while (countSolutions(puzzle.map(r => r.slice())) !== 1); solution = sol; grid = puzzle; givenCells.clear(); for (let r = 0; r < 9; r++) for (let c = 0; c < 9; c++) if (grid[r][c] !== 0) givenCells.add(`${r},${c}`); renderGrid(); }
@@ -226,21 +195,15 @@
             return;
         }
         
-        if (window.Telegram && window.Telegram.WebApp) {
-            const telegram = window.Telegram.WebApp;
-            telegram.ready();
-            if (telegram.initDataUnsafe && telegram.initDataUnsafe.user && telegram.initDataUnsafe.user.id) {
-                const user = telegram.initDataUnsafe.user;
-                currentUser.id = String(user.id);
-                currentUser.username = user.username || 'Guest';
-                if (user.photo_url) {
-                    currentUser.avatar = user.photo_url;
-                }
-            } else {
-                currentUser.id = auth.currentUser.uid; // Используем анонимный ID, если нет Telegram ID
+        if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe && window.Telegram.WebApp.initDataUnsafe.user && window.Telegram.WebApp.initDataUnsafe.user.id) {
+            const user = window.Telegram.WebApp.initDataUnsafe.user;
+            currentUser.id = String(user.id);
+            currentUser.username = user.username || 'Guest';
+            if (user.photo_url) {
+                currentUser.avatar = user.photo_url;
             }
         } else {
-             currentUser.id = auth.currentUser.uid; // Используем анонимный ID, если игра запущена не в Telegram
+            currentUser.id = auth.currentUser.uid;
         }
         
         elements.username.textContent = currentUser.username;
@@ -284,11 +247,9 @@
         elements.winModalCloseBtn.addEventListener('click', () => { playSound(); elements.winModal.classList.add('hidden'); });
         elements.soundToggleButton.addEventListener('click', toggleSound);
 
-        // Загружаем состояние звука из localStorage
         const savedSoundState = localStorage.getItem('sudoku-sound-enabled');
         isSoundEnabled = savedSoundState === 'false' ? false : true;
         updateSoundButtonVisuals();
-
         applyTheme(localStorage.getItem('sudoku-theme') || 'purple');
         startNewGame();
     }
