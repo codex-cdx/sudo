@@ -7,7 +7,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
-    /* --- Стили CSS (без изменений) --- */
+    /* --- Система тем на CSS-переменных --- */
     :root, body[data-theme="purple"] { --primary-color: #a855f7; --primary-hover: #9333ea; --text-accent: #c084fc; --body-bg: #030712; --container-bg: #111827; --cell-bg: #1f2937; --grid-line: #4b5563; --given-text: #ffffff; --error-text: #f87171; --highlight-bg: var(--primary-color); --highlight-text: var(--given-text); --area-highlight-bg: rgba(168, 85, 247, 0.06); --active-cell-bg: rgba(168, 85, 247, 0.12); --hint-bg: #ffffff; --hint-text: #111827; }
     body[data-theme="orange"] { --primary-color: #f97316; --primary-hover: #ea580c; --text-accent: #fb923c; --body-bg: #0c0a09; --container-bg: #1c1917; --cell-bg: #292524; --grid-line: #57534e; --given-text: #ffffff; --error-text: #f87171; --highlight-bg: var(--primary-color); --highlight-text: var(--given-text); --area-highlight-bg: rgba(249, 115, 22, 0.06); --active-cell-bg: rgba(249, 115, 22, 0.12); --hint-bg: #ffffff; --hint-text: #1c1917; }
     body[data-theme="green"] { --primary-color: #22c55e; --primary-hover: #16a34a; --text-accent: #4ade80; --body-bg: #050f09; --container-bg: #0f1a14; --cell-bg: #1a2e24; --grid-line: #3f6251; --given-text: #ffffff; --error-text: #f87171; --highlight-bg: var(--primary-color); --highlight-text: var(--given-text); --area-highlight-bg: rgba(34, 197, 94, 0.06); --active-cell-bg: rgba(34, 197, 94, 0.12); --hint-bg: #ffffff; --hint-text: #0f1a14; }
@@ -60,6 +60,15 @@
     .tut-target { background-color: var(--active-cell-bg); }
     @keyframes pop { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
     .tut-placed { animation: pop 0.3s ease-out; color: var(--primary-color); font-weight: 700; }
+    
+    /* Стили для модального окна победы */
+    #win-modal-content {
+      animation: fadeIn 0.3s ease-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.9); }
+      to { opacity: 1; transform: scale(1); }
+    }
   </style>
 </head>
 <body class="flex flex-col items-center justify-center min-h-screen p-2 sm:p-4">
@@ -142,6 +151,15 @@
     </div>
   </div>
 
+  <!-- НОВОЕ МОДАЛЬНОЕ ОКНО ПОБЕДЫ -->
+  <div id="win-modal" class="modal-overlay hidden">
+    <div id="win-modal-content" class="modal-content text-center">
+      <h2 class="text-2xl font-bold title-text mb-4">Победа!</h2>
+      <p id="win-modal-message" class="mb-6"></p>
+      <button id="win-modal-close-btn" class="main-button text-white px-6 py-2 rounded-lg glow">Отлично!</button>
+    </div>
+  </div>
+
   <!-- СКРИПТЫ FIREBASE -->
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
@@ -150,12 +168,12 @@
   <script>
     // TODO: Вставьте сюда ваш firebaseConfig из консоли Firebase
     const firebaseConfig = {
-      apiKey: "AIzaSyBkYQ7tRMrZ-mghBnkJ_EvuzHpjs_p8hOY",
-      authDomain: "sudo-9fbfc.firebaseapp.com",
-      projectId: "sudo-9fbfc",
-      storageBucket: "sudo-9fbfc.firebasestorage.app",
-      messagingSenderId: "927814106972",
-      appId: "1:927814106972:web:71e0773453f9d16f598b99"
+        apiKey: "AIzaSyBkYQ7tRMrZ-mghBnkJ_EvuzHpjs_p8hOY",
+        authDomain: "sudo-9fbfc.firebaseapp.com",
+        projectId: "sudo-9fbfc",
+        storageBucket: "sudo-9fbfc.firebasestorage.app",
+        messagingSenderId: "927814106972",
+        appId: "1:927814106972:web:71e0773453f9d16f598b99"
     };
 
     // Инициализация Firebase
@@ -165,11 +183,15 @@
     const usersCollection = db.collection('users');
 
     // --- ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ И ЭЛЕМЕНТЫ ---
-    const elements = { body: document.body, gameContainer: document.getElementById('game-container'), grid: document.getElementById('grid'), difficulty: document.getElementById('difficulty'), newGameBtn: document.getElementById('newGame'), checkBtn: document.getElementById('check'), highlightBtn: document.getElementById('highlightToggle'), timer: document.getElementById('timer'), message: document.getElementById('message'), numberRow: document.getElementById('number-row'), undoBtn: document.getElementById('undo-button'), hintBtn: document.getElementById('hint-button'), recentGamesBtn: document.getElementById('recent-games-button'), recentGamesModal: document.getElementById('recent-games-modal'), closeModalBtn: document.getElementById('close-modal-button'), recentGamesList: document.getElementById('recent-games-list'), settingsBtn: document.getElementById('settings-button'), themePanel: document.getElementById('theme-panel'), tutorialBtn: document.getElementById('tutorial-button'), tutorialModal: document.getElementById('tutorial-modal'), closeTutorialBtn: document.getElementById('close-tutorial-button'), tutorialGrid: document.getElementById('tutorial-grid'), tutorialText: document.getElementById('tutorial-text'), tutorialTitle: document.getElementById('tutorial-title'), tutorialPrevBtn: document.getElementById('tutorial-prev'), tutorialNextBtn: document.getElementById('tutorial-next'), tutorialStepIndicator: document.getElementById('tutorial-step-indicator'), ratingBtn: document.getElementById('rating-button'), ratingModal: document.getElementById('rating-modal'), closeRatingBtn: document.getElementById('close-rating-button'), ratingList: document.getElementById('rating-list'), userAvatar: document.getElementById('user-avatar'), username: document.getElementById('username'), userScore: document.getElementById('user-score') };
+    const elements = { body: document.body, gameContainer: document.getElementById('game-container'), grid: document.getElementById('grid'), difficulty: document.getElementById('difficulty'), newGameBtn: document.getElementById('newGame'), checkBtn: document.getElementById('check'), highlightBtn: document.getElementById('highlightToggle'), timer: document.getElementById('timer'), message: document.getElementById('message'), numberRow: document.getElementById('number-row'), undoBtn: document.getElementById('undo-button'), hintBtn: document.getElementById('hint-button'), recentGamesBtn: document.getElementById('recent-games-button'), recentGamesModal: document.getElementById('recent-games-modal'), closeModalBtn: document.getElementById('close-modal-button'), recentGamesList: document.getElementById('recent-games-list'), settingsBtn: document.getElementById('settings-button'), themePanel: document.getElementById('theme-panel'), tutorialBtn: document.getElementById('tutorial-button'), tutorialModal: document.getElementById('tutorial-modal'), closeTutorialBtn: document.getElementById('close-tutorial-button'), tutorialGrid: document.getElementById('tutorial-grid'), tutorialText: document.getElementById('tutorial-text'), tutorialTitle: document.getElementById('tutorial-title'), tutorialPrevBtn: document.getElementById('tutorial-prev'), tutorialNextBtn: document.getElementById('tutorial-next'), tutorialStepIndicator: document.getElementById('tutorial-step-indicator'), ratingBtn: document.getElementById('rating-button'), ratingModal: document.getElementById('rating-modal'), closeRatingBtn: document.getElementById('close-rating-button'), ratingList: document.getElementById('rating-list'), userAvatar: document.getElementById('user-avatar'), username: document.getElementById('username'), userScore: document.getElementById('user-score'), winModal: document.getElementById('win-modal'), winModalMessage: document.getElementById('win-modal-message'), winModalCloseBtn: document.getElementById('win-modal-close-btn') };
+    
     let grid = [], solution = [], givenCells = new Set(), timerInterval, startTime=0, activeCell = null, activeTool = null, highlightEnabled = true, undoStack = [];
     let hintCount = 0;
     let currentUser = { id: null, username: 'Гость', avatar: 'https://t.me/i/userpic/320/default.jpg', score: 0 };
     
+    // Новая переменная состояния игры для блокировки кнопок
+    let isGameFinished = false;
+
     // --- ВСЯ ОРИГИНАЛЬНАЯ ЛОГИКА ИГРЫ ---
     
     function createGrid() { elements.grid.innerHTML='<div class="grid-separator v-sep-1"></div><div class="grid-separator v-sep-2"></div><div class="grid-separator h-sep-1"></div><div class="grid-separator h-sep-2"></div>';grid=Array(9).fill().map(()=>Array(9).fill(0));givenCells.clear();for(let i=0;i<9;i++)for(let j=0;j<9;j++){const e=document.createElement("div");e.className="cell";const t=document.createElement("div");t.className="cell-content";e.appendChild(t),e.addEventListener("click",(t)=>{t.stopPropagation();handleCellClick(i,j)}),elements.grid.appendChild(e)}}
@@ -181,24 +203,24 @@
     function fill(board) { for (let r = 0; r < 9; r++) for (let c = 0; c < 9; c++) { if (board[r][c] === 0) { const nums = [1, 2, 3, 4, 5, 6, 7, 8, 9]; shuffle(nums); for (let num of nums) if (isSafe(board, r, c, num)) { board[r][c] = num; if (fill(board)) return true; board[r][c] = 0; } return false; } } return true; }
     function isSafe(board, row, col, num) { for (let x = 0; x < 9; x++) if (board[row][x] === num || board[x][col] === num || board[3 * Math.floor(row / 3) + Math.floor(x / 3)][3 * Math.floor(col / 3) + x % 3] === num) return false; return true; }
     function shuffle(arr) { for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } }
-    function handleCellClick(row, col) { (activeTool!==null)?(grid[row][col]===0||(grid[row][col]!==0&&activeTool==='erase'))?performAction(activeTool,row,col):(selectTool(null),selectCell(row,col)):selectCell(row,col)}
-    function selectCell(row, col) { clearHighlights();activeCell=[row,col];const e=document.querySelectorAll(".cell");e.forEach((t,n)=>{const l=Math.floor(n/9),s=n%9,c=l===row,r=s===col,o=Math.floor(l/3)===Math.floor(row/3)&&Math.floor(s/3)===Math.floor(col/3);(c||r||o)&&t.classList.add("area-highlight")}),e[9*row+col].classList.add("active-cell"),highlightEnabled&&0!==grid[row][col]&&highlightSimilarNumbers(grid[row][col])}
+    function handleCellClick(row, col) { if (isGameFinished) return; (activeTool!==null)?(grid[row][col]===0||(grid[row][col]!==0&&activeTool==='erase'))?performAction(activeTool,row,col):(selectTool(null),selectCell(row,col)):selectCell(row,col)}
+    function selectCell(row, col) { if (isGameFinished) return; clearHighlights();activeCell=[row,col];const e=document.querySelectorAll(".cell");e.forEach((t,n)=>{const l=Math.floor(n/9),s=n%9,c=l===row,r=s===col,o=Math.floor(l/3)===Math.floor(row/3)&&Math.floor(s/3)===Math.floor(col/3);(c||r||o)&&t.classList.add("area-highlight")}),e[9*row+col].classList.add("active-cell"),highlightEnabled&&0!==grid[row][col]&&highlightSimilarNumbers(grid[row][col])}
     function performAction(action, row, col) { if(givenCells.has(`${row},${col}`)) return; const value = (action === 'erase') ? 0 : action; const prevValue = grid[row][col]; if(prevValue === value) return; undoStack.push({row, col, prevValue, value}); updateUndoButtonState(); const cellElement = document.querySelectorAll(".cell")[row * 9 + col]; grid[row][col] = value; cellElement.querySelector(".cell-content").textContent = value || ''; cellElement.classList.remove('error'); cellElement.classList.toggle('user-input', value !== 0); updateNumberPanelState(); if(highlightEnabled) { clearHighlights(true); if (value !== 0) highlightSimilarNumbers(value); }}
-    function undoLastAction() { if (undoStack.length === 0) return; const lastMove = undoStack.pop(); const {row, col, prevValue} = lastMove; const cellElement = document.querySelectorAll(".cell")[row * 9 + col]; grid[row][col] = prevValue; cellElement.querySelector(".cell-content").textContent = prevValue || ''; cellElement.classList.remove('error'); cellElement.classList.toggle('user-input', prevValue !== 0); updateUndoButtonState(); updateNumberPanelState(); if(activeCell && activeCell[0] === row && activeCell[1] === col) { selectCell(row, col); } }
-    function selectTool(tool) { activeTool = (activeTool === tool) ? null : tool; updateToolSelection(); clearHighlights(); activeCell = null; if (activeTool && activeTool !== 'erase' && highlightEnabled) { highlightSimilarNumbers(activeTool); } }
+    function undoLastAction() { if (isGameFinished || undoStack.length === 0) return; const lastMove = undoStack.pop(); const {row, col, prevValue} = lastMove; const cellElement = document.querySelectorAll(".cell")[row * 9 + col]; grid[row][col] = prevValue; cellElement.querySelector(".cell-content").textContent = prevValue || ''; cellElement.classList.remove('error'); cellElement.classList.toggle('user-input', prevValue !== 0); updateUndoButtonState(); updateNumberPanelState(); if(activeCell && activeCell[0] === row && activeCell[1] === col) { selectCell(row, col); } }
+    function selectTool(tool) { if (isGameFinished) return; activeTool = (activeTool === tool) ? null : tool; updateToolSelection(); clearHighlights(); activeCell = null; if (activeTool && activeTool !== 'erase' && highlightEnabled) { highlightSimilarNumbers(activeTool); } }
     function deselectCell() { activeCell && (clearHighlights(), activeCell = null); if (activeTool !== null) { activeTool = null; updateToolSelection(); } }
     function renderGrid(shouldResetTimer = true) { document.querySelectorAll(".cell").forEach((e,t)=>{const n=Math.floor(t/9),l=t%9;e.querySelector(".cell-content").textContent=grid[n][l]||"",e.className="cell",givenCells.has(`${n},${l}`)?e.classList.add("given"):0!==grid[n][l]&&e.classList.add("user-input")});activeCell=null;activeTool=null;updateToolSelection();clearHighlights();if(shouldResetTimer)resetTimer();updateNumberPanelState();undoStack = []; updateUndoButtonState(); updateHintButtonState();}
     function updateNumberPanelState() { const counts = Array(10).fill(0); for (let row of grid) for (let cell of row) if (cell !== 0) counts[cell]++; elements.numberRow.querySelectorAll(".number-button-wrapper").forEach((wrapper, index) => { if (index < 9) { const num = index + 1; const isExhausted = counts[num] === 9; wrapper.classList.toggle("disabled", isExhausted); if (isExhausted && activeTool === num) { selectTool(null); } } });}
     function updateToolSelection() { document.querySelectorAll('.number-button-wrapper').forEach(btn => btn.classList.toggle('selected', btn.dataset.tool == activeTool)); }
     function updateUndoButtonState() { elements.undoBtn.disabled = undoStack.length === 0; }
     function updateHintButtonState() { const isFull = grid.every(row => row.every(cell => cell !== 0)); elements.hintBtn.disabled = isFull; }
-    function getHint() { clearHintedCells(); const mistakes = []; const emptyCells = []; for (let r = 0; r < 9; r++) for (let c = 0; c < 9; c++) if (!givenCells.has(`${r},${c}`)) { if (grid[r][c] !== 0 && grid[r][c] !== solution[r][c]) mistakes.push([r, c]); else if (grid[r][c] === 0) emptyCells.push([r, c]); } let targetCell; if (mistakes.length > 0) targetCell = mistakes[Math.floor(Math.random() * mistakes.length)]; else if (emptyCells.length > 0) targetCell = emptyCells[Math.floor(Math.random() * emptyCells.length)]; else return; hintCount++; const [row, col] = targetCell; const correctValue = solution[row][col]; performAction(correctValue, row, col); const cellElement = document.querySelectorAll('.cell')[row * 9 + col]; cellElement.classList.add('hinted'); }
+    function getHint() { if (isGameFinished) return; clearHintedCells(); const mistakes = []; const emptyCells = []; for (let r = 0; r < 9; r++) for (let c = 0; c < 9; c++) if (!givenCells.has(`${r},${c}`)) { if (grid[r][c] !== 0 && grid[r][c] !== solution[r][c]) mistakes.push([r, c]); else if (grid[r][c] === 0) emptyCells.push([r, c]); } let targetCell; if (mistakes.length > 0) targetCell = mistakes[Math.floor(Math.random() * mistakes.length)]; else if (emptyCells.length > 0) targetCell = emptyCells[Math.floor(Math.random() * emptyCells.length)]; else return; hintCount++; const [row, col] = targetCell; const correctValue = solution[row][col]; performAction(correctValue, row, col); const cellElement = document.querySelectorAll('.cell')[row * 9 + col]; cellElement.classList.add('hinted'); }
     function highlightSimilarNumbers(e){ if(!e) return; document.querySelectorAll(".cell").forEach((t,n)=>{if(grid[Math.floor(n/9)][n%9]===e)t.classList.add("highlight")})}
     function clearHighlights(keepArea = false){ clearHintedCells(); document.querySelectorAll(".cell").forEach(e=>{e.classList.remove("highlight"),keepArea||e.classList.remove("area-highlight","active-cell")})}
     function clearHintedCells() { document.querySelectorAll('.hinted').forEach(c => c.classList.remove('hinted')); }
     function resetTimer(elapsedSeconds = 0){ clearInterval(timerInterval); startTime = Date.now() - elapsedSeconds * 1000; timerInterval = setInterval(() => { const elapsed = Math.floor((Date.now() - startTime) / 1000); const minutes = String(Math.floor(elapsed / 60)).padStart(2, '0'); const seconds = String(elapsed % 60).padStart(2, '0'); elements.timer.textContent = `${minutes}:${seconds}`; }, 1000); }
     function applyTheme(e){document.body.dataset.theme=e,localStorage.setItem("sudoku-theme",e),document.querySelectorAll(".theme-button").forEach(t=>{t.style.borderColor=t.dataset.theme===e?"var(--primary-color)":"transparent"})}
-    function saveCurrentGame() { if (grid.length === 0 || grid.every(r=>r.every(c=>c===0))) return; const gameState = { grid: grid, solution: solution, givenCells: Array.from(givenCells), time: Math.floor((Date.now() - startTime) / 1000), difficulty: elements.difficulty.value, savedAt: new Date().toISOString() }; let recentGames = JSON.parse(localStorage.getItem('sudoku-recent-games')) || []; recentGames.unshift(gameState); recentGames = recentGames.slice(0, 5); localStorage.setItem('sudoku-recent-games', JSON.stringify(recentGames)); }
+    function saveCurrentGame() { if (isGameFinished || grid.length === 0 || grid.every(r=>r.every(c=>c===0))) return; const gameState = { grid: grid, solution: solution, givenCells: Array.from(givenCells), time: Math.floor((Date.now() - startTime) / 1000), difficulty: elements.difficulty.value, savedAt: new Date().toISOString() }; let recentGames = JSON.parse(localStorage.getItem('sudoku-recent-games')) || []; recentGames.unshift(gameState); recentGames = recentGames.slice(0, 5); localStorage.setItem('sudoku-recent-games', JSON.stringify(recentGames)); }
     function loadGame(gameState) { grid = gameState.grid; solution = gameState.solution; givenCells = new Set(gameState.givenCells); elements.difficulty.value = gameState.difficulty; renderGrid(false); resetTimer(gameState.time); elements.recentGamesModal.classList.add('hidden'); }
     function populateRecentGames() { const games = JSON.parse(localStorage.getItem('sudoku-recent-games')) || []; elements.recentGamesList.innerHTML = ''; if (games.length === 0) { elements.recentGamesList.innerHTML = '<p>Сохранённых игр нет.</p>'; return; } games.forEach(game => { const gameEl = document.createElement('div'); gameEl.className = 'flex items-center gap-4 p-2 rounded-lg border-b border-[var(--grid-line)]'; const time = new Date(game.savedAt); const previewGrid = game.grid.flat().map((cell, i) => `<div class="modal-preview-cell" style="color: ${game.givenCells.includes(`${Math.floor(i/9)},${i%9}`) ? 'var(--given-text)' : 'var(--primary-color)'}; font-weight: ${game.givenCells.includes(`${Math.floor(i/9)},${i%9}`) ? 700 : 500}">${cell || ''}</div>`).join(''); gameEl.innerHTML = ` <div class="modal-preview-grid">${previewGrid}</div> <div class="flex-grow"> <p class="font-bold">${time.toLocaleDateString()} ${time.toLocaleTimeString()}</p> <p class="text-sm opacity-70">${game.difficulty}</p> </div> <div class="flex flex-col gap-1"> <button class="load-game-button main-button text-white px-3 py-1 rounded-lg glow text-xs" data-id="${game.savedAt}">Загрузить</button> <button class="delete-game-button control-button text-red-500 hover:bg-red-500 hover:text-white px-3 py-1 rounded-lg glow text-xs" data-id="${game.savedAt}">Удалить</button> </div> `; elements.recentGamesList.appendChild(gameEl); }); }
     function deleteGame(gameId) { if (!confirm('Вы уверены, что хотите удалить эту игру?')) return; let recentGames = JSON.parse(localStorage.getItem('sudoku-recent-games')) || []; recentGames = recentGames.filter(game => game.savedAt !== gameId); localStorage.setItem('sudoku-recent-games', JSON.stringify(recentGames)); populateRecentGames(); }
@@ -206,8 +228,15 @@
     let currentLesson = 0; let currentStep = 0;
     function playTutorial(lessonIndex, stepIndex) { currentLesson = lessonIndex; currentStep = stepIndex; const lesson = tutorialLessons[currentLesson]; const step = lesson.steps[currentStep]; elements.tutorialTitle.textContent = lesson.title; elements.tutorialText.textContent = step.text; const gridEl = elements.tutorialGrid; gridEl.innerHTML = ''; const cells = []; for (let i = 0; i < 81; i++) { const cell = document.createElement('div'); const content = document.createElement('div'); content.className = 'cell-content'; cell.className = 'tutorial-cell'; cell.appendChild(content); cells.push(cell); gridEl.appendChild(cell); } step.setup(cells); elements.tutorialStepIndicator.textContent = `Шаг ${currentStep + 1} из ${lesson.steps.length}`; elements.tutorialPrevBtn.disabled = currentStep === 0; elements.tutorialNextBtn.textContent = (currentStep === lesson.steps.length - 1) ? 'Завершить' : 'Далее'; }
     
-    // --- ИЗМЕНЕННЫЕ ФУНКЦИИ ДЛЯ РАБОТЫ С FIREBASE ---
+    // --- НОВЫЕ И ИЗМЕНЕННЫЕ ФУНКЦИИ ---
     
+    function showWinModal(difficulty, hints, points) {
+        const difficultyMap = { easy: 'Лёгкий', medium: 'Средний', hard: 'Сложный' };
+        const difficultyText = difficultyMap[difficulty] || difficulty;
+        elements.winModalMessage.innerHTML = `Вы прошли судоку на уровне сложности <b>"${difficultyText}"</b>, использовав <b>${hints}</b> подсказок.<br>+${points} очков!`;
+        elements.winModal.classList.remove('hidden');
+    }
+
     async function addPoints() {
         const difficulty = elements.difficulty.value;
         let basePoints = 0;
@@ -220,7 +249,8 @@
         const totalPoints = Math.max(10, basePoints + timeBonus - hintPenalty);
         currentUser.score += totalPoints;
         await updateUserScore();
-        elements.message.textContent = `Поздравляем! +${totalPoints} очков!`;
+        showWinModal(difficulty, hintCount, totalPoints);
+        elements.message.textContent = ""; 
     }
 
     async function updateUserScore() {
@@ -229,13 +259,11 @@
           console.error("Пользователь не аутентифицирован, счет не может быть сохранен.");
           return; 
         }
-        
         const userDoc = {
             username: currentUser.username,
             avatar: currentUser.avatar,
             score: currentUser.score
         };
-
         try {
             await usersCollection.doc(currentUser.id).set(userDoc, { merge: true });
         } catch (error) {
@@ -251,38 +279,24 @@
                 elements.ratingList.innerHTML = '<p>Рейтинг пуст.</p>';
                 return;
             }
-
             const leaderboard = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             elements.ratingList.innerHTML = '';
-            
             let currentUserInTop10 = false;
             leaderboard.slice(0, 10).forEach((user, index) => {
                 const isCurrentUser = user.id === currentUser.id;
                 if(isCurrentUser) currentUserInTop10 = true;
-                
                 const userEl = document.createElement('div');
                 userEl.className = `flex items-center gap-4 p-2 rounded-lg ${isCurrentUser ? 'bg-[var(--active-cell-bg)]' : ''}`;
-                userEl.innerHTML = `
-                    <span class="font-bold w-6 text-center">${index + 1}</span>
-                    <img src="${user.avatar}" alt="User Avatar" class="w-10 h-10 rounded-full">
-                    <div class="flex-grow"><p class="font-bold">${user.username}</p></div>
-                    <span class="font-bold">${user.score}</span>
-                `;
+                userEl.innerHTML = `<span class="font-bold w-6 text-center">${index + 1}</span><img src="${user.avatar}" alt="User Avatar" class="w-10 h-10 rounded-full"><div class="flex-grow"><p class="font-bold">${user.username}</p></div><span class="font-bold">${user.score}</span>`;
                 elements.ratingList.appendChild(userEl);
             });
-
             const userRankIndex = leaderboard.findIndex(user => user.id === currentUser.id);
             if (!currentUserInTop10 && userRankIndex !== -1) {
                 const user = leaderboard[userRankIndex];
                 elements.ratingList.innerHTML += '<div class="text-center my-2">...</div>';
                 const userEl = document.createElement('div');
                 userEl.className = 'flex items-center gap-4 p-2 rounded-lg bg-[var(--active-cell-bg)]';
-                userEl.innerHTML = `
-                    <span class="font-bold w-6 text-center">${userRankIndex + 1}</span>
-                    <img src="${user.avatar}" alt="User Avatar" class="w-10 h-10 rounded-full">
-                    <div class="flex-grow"><p class="font-bold">${user.username}</p></div>
-                    <span class="font-bold">${user.score}</span>
-                `;
+                userEl.innerHTML = `<span class="font-bold w-6 text-center">${userRankIndex + 1}</span><img src="${user.avatar}" alt="User Avatar" class="w-10 h-10 rounded-full"><div class="flex-grow"><p class="font-bold">${user.username}</p></div><span class="font-bold">${user.score}</span>`;
                 elements.ratingList.appendChild(userEl);
             }
         } catch (error) {
@@ -292,6 +306,8 @@
     }
 
     function checkSolution() {
+        if (isGameFinished) return; // Блокируем повторное нажатие
+
         if (!grid.every(row => row.every(cell => cell))) {
             elements.message.textContent = "Заполните все ячейки.";
             return;
@@ -307,9 +323,11 @@
         });
 
         if (isCorrect) {
+            isGameFinished = true; // Устанавливаем флаг, что игра окончена
             clearInterval(timerInterval);
-            elements.numberRow.querySelectorAll(".number-button-wrapper").forEach(btn => btn.classList.add("disabled"));
+            elements.checkBtn.disabled = true; // Отключаем кнопку
             elements.hintBtn.disabled = true;
+            elements.numberRow.querySelectorAll(".number-button-wrapper").forEach(btn => btn.classList.add("disabled"));
             addPoints();
         } else {
             elements.message.textContent = "В решении есть ошибки.";
@@ -320,10 +338,10 @@
         try {
             const userCredential = await auth.signInAnonymously();
             currentUser.id = userCredential.user.uid;
-            console.log("Анонимный вход успешен, ID пользователя:", currentUser.id);
         } catch (error) {
             console.error("Ошибка анонимной аутентификации:", error);
             alert("Не удалось подключиться к сервису рейтинга. Пожалуйста, перезагрузите игру.");
+            return;
         }
         
         if (window.Telegram && window.Telegram.WebApp) {
@@ -355,7 +373,17 @@
         }
         elements.userScore.textContent = currentUser.score;
 
-        const startNewGame = () => { saveCurrentGame(); createGrid(); createNumberRow(); generatePuzzle(elements.difficulty.value); elements.message.textContent = ""; hintCount = 0; };
+        const startNewGame = () => {
+            isGameFinished = false; 
+            elements.checkBtn.disabled = false;
+            elements.winModal.classList.add('hidden');
+            saveCurrentGame();
+            createGrid();
+            createNumberRow();
+            generatePuzzle(elements.difficulty.value);
+            elements.message.textContent = "";
+            hintCount = 0;
+        };
         
         elements.newGameBtn.addEventListener('click', startNewGame);
         elements.checkBtn.addEventListener('click', checkSolution);
@@ -377,6 +405,10 @@
         document.addEventListener('click', (e) => { if (!elements.gameContainer.contains(e.target) && !elements.recentGamesModal.contains(e.target) && !elements.tutorialModal.contains(e.target) && !elements.ratingModal.contains(e.target)) { deselectCell(); } if (!elements.settingsBtn.contains(e.target) && !elements.themePanel.contains(e.target)) { elements.themePanel.classList.add('hidden'); } });
         window.addEventListener('beforeunload', saveCurrentGame);
         
+        elements.winModalCloseBtn.addEventListener('click', () => {
+            elements.winModal.classList.add('hidden');
+        });
+
         applyTheme(localStorage.getItem('sudoku-theme') || 'purple');
         startNewGame();
     }
