@@ -424,22 +424,22 @@
     function updateSoundButtonVisuals() { if (isSoundEnabled) { elements.soundOnIcon.classList.remove('hidden'); elements.soundOffIcon.classList.add('hidden'); } else { elements.soundOnIcon.classList.add('hidden'); elements.soundOffIcon.classList.remove('hidden'); } }
     function toggleSound() { isSoundEnabled = !isSoundEnabled; localStorage.setItem('sudoku-sound-enabled', isSoundEnabled); updateSoundButtonVisuals(); if (isSoundEnabled) { playSound(); } }
     
-    // Функция форматирования времени
+    // Функция форматирования времени из секунд (например, 125 -> "02:05")
     function formatTime(seconds) {
-      if (!seconds) return '--:--';
+      if (seconds === null || seconds === undefined) return '--:--';
       const minutes = Math.floor(seconds / 60);
       const secs = seconds % 60;
       return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     }
     
-    // Обновление отображения личных рекордов
+    // Обновление отображения личных рекордов на главном экране
     function updatePersonalRecords() {
       document.getElementById('easy-record').textContent = formatTime(currentUser.bestTimes.easy);
       document.getElementById('medium-record').textContent = formatTime(currentUser.bestTimes.medium);
       document.getElementById('hard-record').textContent = formatTime(currentUser.bestTimes.hard);
     }
     
-    // Сохранение рекорда времени
+    // Сохранение рекорда времени в Firebase
     async function saveTimeRecord(difficulty, timeInSeconds) {
       if (!currentUser.id) return false;
       
@@ -453,27 +453,28 @@
       };
       
       try {
-        // Сохраняем в общую коллекцию рекордов
+        // Добавляем новую запись в коллекцию 'timeRecords'
         await recordsCollection.add(recordData);
         
-        // Обновляем личный рекорд пользователя
+        // Проверяем и обновляем личный рекорд пользователя, если текущее время лучше
         if (!currentUser.bestTimes[difficulty] || timeInSeconds < currentUser.bestTimes[difficulty]) {
           currentUser.bestTimes[difficulty] = timeInSeconds;
-          await updateUserData();
-          updatePersonalRecords();
-          return true; // Новый рекорд!
+          await updateUserData(); // Сохраняем обновленные данные пользователя
+          updatePersonalRecords(); // Обновляем отображение на экране
+          return true; // Возвращаем true, если это новый рекорд
         }
       } catch (error) {
         console.error("Ошибка при сохранении рекорда:", error);
       }
-      return false;
+      return false; // Возвращаем false, если это не новый рекорд
     }
     
-    // Загрузка рейтинга по очкам (оригинальная функция)
+    // Загрузка и отображение рейтинга по очкам
     async function populateScoreLeaderboard() {
       elements.ratingList.innerHTML = '<p>Загрузка рейтинга...</p>';
       
       try {
+        // Запрашиваем 100 лучших пользователей, отсортированных по очкам (score)
         const snapshot = await usersCollection.orderBy('score', 'desc').limit(100).get();
         if (snapshot.empty) {
           elements.ratingList.innerHTML = '<p>Рейтинг пуст.</p>';
@@ -484,6 +485,7 @@
         elements.ratingList.innerHTML = '';
         let currentUserInTop10 = false;
         
+        // Отображаем топ-10
         leaderboard.slice(0, 10).forEach((user, index) => {
           const isCurrentUser = String(user.id) === String(currentUser.id);
           if(isCurrentUser) currentUserInTop10 = true;
@@ -505,6 +507,7 @@
           elements.ratingList.appendChild(userEl);
         });
         
+        // Если текущий пользователь не в топ-10, но есть в рейтинге, показываем его позицию
         const userRankIndex = leaderboard.findIndex(user => String(user.id) === String(currentUser.id));
         if (!currentUserInTop10 && userRankIndex !== -1) {
           const user = leaderboard[userRankIndex];
@@ -529,37 +532,42 @@
       }
     }
     
-    // Загрузка рейтинга по времени
+    // Загрузка и отображение рейтинга по времени для определенной сложности
     async function populateTimeLeaderboard(difficulty = 'easy') {
       elements.ratingList.innerHTML = '<p>Загрузка рейтинга...</p>';
       
       try {
+        // ВАЖНО: Для этого запроса требуется составной индекс в Firestore.
+        // Индекс должен включать 'difficulty' (по возрастанию) и 'time' (по возрастанию).
+        // Firestore обычно предлагает создать его автоматически, если он отсутствует.
         const snapshot = await recordsCollection
-          .where('difficulty', '==', difficulty)
-          .orderBy('time', 'asc')
+          .where('difficulty', '==', difficulty) // Фильтруем по сложности
+          .orderBy('time', 'asc')               // Сортируем по времени (от меньшего к большему)
           .limit(100)
           .get();
           
         if (snapshot.empty) {
-          elements.ratingList.innerHTML = '<p>Рейтинг пуст.</p>';
+          elements.ratingList.innerHTML = '<p>Рейтинг для этой сложности пуст.</p>';
           return;
         }
         
-        // Группируем по пользователям и берем лучший результат каждого
+        // Группируем результаты, чтобы у каждого пользователя был только один (лучший) результат
         const userBestTimes = new Map();
         snapshot.docs.forEach(doc => {
           const data = doc.data();
+          // Если пользователя еще нет в карте, или его новое время лучше, чем старое - записываем
           if (!userBestTimes.has(data.userId) || data.time < userBestTimes.get(data.userId).time) {
             userBestTimes.set(data.userId, data);
           }
         });
         
-        // Сортируем по времени
+        // Конвертируем карту в массив и сортируем еще раз на стороне клиента, т.к. после группировки порядок мог сбиться
         const leaderboard = Array.from(userBestTimes.values()).sort((a, b) => a.time - b.time);
         
         elements.ratingList.innerHTML = '';
         let currentUserInTop10 = false;
         
+        // Отображаем топ-10
         leaderboard.slice(0, 10).forEach((record, index) => {
           const isCurrentUser = String(record.userId) === String(currentUser.id);
           if(isCurrentUser) currentUserInTop10 = true;
@@ -604,11 +612,12 @@
         
       } catch (error) {
         console.error("Ошибка при загрузке рейтинга времени:", error);
-        elements.ratingList.innerHTML = '<p>Не удалось загрузить рейтинг.</p>';
+        // Если в консоли ошибка, связанная с индексом, Firestore предоставит ссылку для его создания.
+        elements.ratingList.innerHTML = '<p>Не удалось загрузить рейтинг. Возможно, требуется настройка базы данных (индексы).</p>';
       }
     }
     
-    // Функция для переключения рейтинга
+    // Главная функция для переключения и загрузки рейтинга
     function loadRating() {
       if (currentRatingType === 'score') {
         populateScoreLeaderboard();
@@ -803,7 +812,7 @@
             document.querySelectorAll('.rating-type-tab').forEach(t => t.classList.remove('active'));
             tab.classList.add('active');
             
-            // Показываем/скрываем табы сложности
+            // Показываем/скрываем табы сложности в зависимости от типа рейтинга
             const difficultyTabs = document.getElementById('difficulty-tabs');
             if (currentRatingType === 'time') {
               difficultyTabs.classList.remove('hidden');
@@ -826,7 +835,7 @@
             document.querySelectorAll('.difficulty-tab').forEach(t => t.classList.remove('active'));
             tab.classList.add('active');
             
-            // Загружаем рейтинг для выбранной сложности
+            // Загружаем рейтинг для выбранной сложности, только если выбран рейтинг по времени
             if (currentRatingType === 'time') {
               populateTimeLeaderboard(currentRatingDifficulty);
             }
