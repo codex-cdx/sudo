@@ -23,47 +23,50 @@
       transition: opacity 0.5s ease-out;
     }
 
-    .loading-grid {
-      display: grid;
-      grid-template-columns: repeat(9, 1fr);
-      gap: 2px;
-      width: 200px;
-      height: 200px;
-      margin-bottom: 30px;
-    }
-
-    .loading-cell {
-      background: #333;
-      border-radius: 4px;
+    /* -- НАЧАЛО: Стили для НОВОЙ анимации загрузки -- */
+    .loading-container {
+      position: relative;
+      width: 150px;
+      height: 150px;
       display: flex;
-      align-items: center;
       justify-content: center;
-      color: white;
-      font-weight: bold;
-      font-size: 12px;
-      opacity: 0;
-      animation: cellReveal 0.5s ease-out forwards;
+      align-items: center;
+      margin-bottom: 20px; /* Добавлен отступ снизу */
+    }
+    
+    .ellipse-pit {
+      width: 44px;
+      height: 22px;
+      background-color: #000000;
+      border-radius: 50%;
+      position: absolute;
+      top: 55%; 
+      z-index: 1;
+    }
+    
+    .levitating-box {
+      width: 32px;
+      height: 32px;
+      background-color: #E21D80;
+      position: absolute;
+      z-index: 2;
+      animation: levitate-and-rotate 1.8s infinite;
     }
 
-    @keyframes cellReveal {
+    @keyframes levitate-and-rotate {
       0% {
-        opacity: 0;
-        transform: scale(0.5) rotate(180deg);
-        background: #333;
+        transform: translateY(-30px) rotate(0deg);
+        animation-timing-function: ease-in; 
       }
       50% {
-        opacity: 1;
-        transform: scale(1.1) rotate(90deg);
-        background: #fff;
-        color: #000;
+        transform: translateY(12px) rotate(180deg);
+        animation-timing-function: ease-out;
       }
       100% {
-        opacity: 1;
-        transform: scale(1) rotate(0deg);
-        background: #666;
-        color: #fff;
+        transform: translateY(-30px) rotate(360deg);
       }
     }
+    /* -- КОНЕЦ: Стили для НОВОЙ анимации загрузки -- */
 
     .loading-text {
       color: white;
@@ -244,7 +247,12 @@
   <!-- Экран загрузки -->
   <div id="loading-screen">
     <div class="loading-text">Судоку</div>
-    <div class="loading-grid" id="loading-grid"></div>
+    <!-- НАЧАЛО: Новая разметка для анимации -->
+    <div class="loading-container">
+      <div class="ellipse-pit"></div>
+      <div class="levitating-box"></div>
+    </div>
+    <!-- КОНЕЦ: Новая разметка для анимации -->
     <div class="loading-dots">Загрузка</div>
   </div>
 
@@ -360,24 +368,6 @@
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
 
   <script>
-    // Создание экрана загрузки
-    function createLoadingScreen() {
-      const loadingGrid = document.getElementById('loading-grid');
-      const numbers = [1,2,3,4,5,6,7,8,9];
-      
-      for (let i = 0; i < 81; i++) {
-        const cell = document.createElement('div');
-        cell.className = 'loading-cell';
-        cell.style.animationDelay = `${Math.random() * 2}s`;
-        
-        if (Math.random() > 0.7) {
-          cell.textContent = numbers[Math.floor(Math.random() * numbers.length)];
-        }
-        
-        loadingGrid.appendChild(cell);
-      }
-    }
-
     // Скрытие экрана загрузки
     function hideLoadingScreen() {
       setTimeout(() => {
@@ -388,8 +378,6 @@
         }, 500);
       }, 2000); 
     }
-
-    createLoadingScreen();
 
     const firebaseConfig = {
       apiKey: "AIzaSyBkYQ7tRMrZ-mghBnkJ_EvuzHpjs_p8hOY",
