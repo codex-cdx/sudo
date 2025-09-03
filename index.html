@@ -1,96 +1,4 @@
 <!DOCTYPE html>
-<html>
-<head>
-<title>Correct Box Loading Animation</title>
-<style>
-  body {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    margin: 0;
-    background-color: #ffffff;
-  }
-
-  .loading-container {
-    position: relative;
-    width: 150px;
-    height: 150px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-  
-  /* Черный эллипс ("яма") */
-  .ellipse-pit {
-    width: 44px;
-    height: 22px;
-    background-color: #000000;
-    border-radius: 50%;
-    position: absolute;
-    /* Позиционируем эллипс чуть ниже центра */
-    top: 55%; 
-    z-index: 1; /* Эллипс находится под квадратом */
-  }
-  
-  /* Розовый квадрат */
-  .levitating-box {
-    width: 32px;
-    height: 32px;
-    background-color: #E21D80;
-    position: absolute;
-    z-index: 2; /* Квадрат находится над эллипсом */
-    
-    /* Применяем ОДНУ комбинированную анимацию */
-    animation: levitate-and-rotate 1.8s infinite;
-  }
-  
-
-  /* 
-    Ключевые кадры, которые ОДНОВРЕМЕННО управляют
-    и движением вверх-вниз (translateY), и вращением (rotate).
-  */
-  @keyframes levitate-and-rotate {
-    0% {
-      /* 
-        Начальное положение: ВЕРХНЯЯ точка, без поворота.
-        transform двигает и поворачивает элемент.
-      */
-      transform: translateY(-30px) rotate(0deg);
-      /* Начинаем падать с ускорением */
-      animation-timing-function: ease-in; 
-    }
-    50% {
-      /* 
-        Нижнее положение: квадрат опускается "в" эллипс 
-        и поворачивается на 180 градусов.
-      */
-      transform: translateY(12px) rotate(180deg);
-      /* Начинаем подниматься, замедляясь к верхней точке */
-      animation-timing-function: ease-out;
-    }
-    100% {
-      /* 
-        Возвращаемся в верхнюю точку, завершив полный оборот 
-        на 360 градусов.
-      */
-      transform: translateY(-30px) rotate(360deg);
-    }
-  }
-
-</style>
-</head>
-<body>
-
-  <div class="loading-container">
-    <div class="ellipse-pit"></div>
-    <div class="levitating-box"></div>
-  </div>
-
-</body>
-</html>
-
-в этот код:<!DOCTYPE html>
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
@@ -114,232 +22,231 @@
       z-index: 9999;
       transition: opacity 0.5s ease-out;
     }
+code
+Code
+.loading-grid {
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  gap: 2px;
+  width: 200px;
+  height: 200px;
+  margin-bottom: 30px;
+}
 
-    .loading-grid {
-      display: grid;
-      grid-template-columns: repeat(9, 1fr);
-      gap: 2px;
-      width: 200px;
-      height: 200px;
-      margin-bottom: 30px;
-    }
+.loading-cell {
+  background: #333;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  font-size: 12px;
+  opacity: 0;
+  animation: cellReveal 0.5s ease-out forwards;
+}
 
-    .loading-cell {
-      background: #333;
-      border-radius: 4px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-weight: bold;
-      font-size: 12px;
-      opacity: 0;
-      animation: cellReveal 0.5s ease-out forwards;
-    }
+@keyframes cellReveal {
+  0% {
+    opacity: 0;
+    transform: scale(0.5) rotate(180deg);
+    background: #333;
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1) rotate(90deg);
+    background: #fff;
+    color: #000;
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+    background: #666;
+    color: #fff;
+  }
+}
 
-    @keyframes cellReveal {
-      0% {
-        opacity: 0;
-        transform: scale(0.5) rotate(180deg);
-        background: #333;
-      }
-      50% {
-        opacity: 1;
-        transform: scale(1.1) rotate(90deg);
-        background: #fff;
-        color: #000;
-      }
-      100% {
-        opacity: 1;
-        transform: scale(1) rotate(0deg);
-        background: #666;
-        color: #fff;
-      }
-    }
+.loading-text {
+  color: white;
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 20px;
+  opacity: 0;
+  animation: textFade 1s ease-out 0.5s forwards;
+}
 
-    .loading-text {
-      color: white;
-      font-size: 24px;
-      font-weight: bold;
-      margin-bottom: 20px;
-      opacity: 0;
-      animation: textFade 1s ease-out 0.5s forwards;
-    }
+.loading-dots {
+  color: white;
+  font-size: 20px;
+  opacity: 0;
+  animation: textFade 1s ease-out 1s forwards;
+}
 
-    .loading-dots {
-      color: white;
-      font-size: 20px;
-      opacity: 0;
-      animation: textFade 1s ease-out 1s forwards;
-    }
+.loading-dots::after {
+  content: '';
+  animation: dots 2s infinite;
+}
 
-    .loading-dots::after {
-      content: '';
-      animation: dots 2s infinite;
-    }
+@keyframes textFade {
+  to {
+    opacity: 1;
+  }
+}
 
-    @keyframes textFade {
-      to {
-        opacity: 1;
-      }
-    }
+@keyframes dots {
+  0%, 20% { content: ''; }
+  40% { content: '.'; }
+  60% { content: '..'; }
+  80%, 100% { content: '...'; }
+}
 
-    @keyframes dots {
-      0%, 20% { content: ''; }
-      40% { content: '.'; }
-      60% { content: '..'; }
-      80%, 100% { content: '...'; }
-    }
+/* --- Система тем на CSS-переменных --- */
+:root, body[data-theme="lime"] { --primary-color: #CDFF07; --primary-hover: #b8e600; --text-accent: #69C5F8; --body-bg: #21242c; --container-bg: #313642; --cell-bg: #414550; --grid-line: #525762; --given-text: #ffffff; --error-text: #f87171; --highlight-bg: var(--primary-color); --highlight-text: #313642; --area-highlight-bg: rgba(205, 255, 7, 0.08); --active-cell-bg: rgba(105, 197, 248, 0.12); --hint-bg: #ffffff; --hint-text: #313642; }
+body[data-theme="orange"] { --primary-color: #f97316; --primary-hover: #ea580c; --text-accent: #fb923c; --body-bg: #0c0a09; --container-bg: #1c1917; --cell-bg: #292524; --grid-line: #57534e; --given-text: #ffffff; --error-text: #f87171; --highlight-bg: var(--primary-color); --highlight-text: var(--given-text); --area-highlight-bg: rgba(249, 115, 22, 0.06); --active-cell-bg: rgba(249, 115, 22, 0.12); --hint-bg: #ffffff; --hint-text: #1c1917; }
+body[data-theme="brown"] { --primary-color: #a16207; --primary-hover: #854d0e; --text-accent: #a16207; --body-bg: #f1f5f9; --container-bg: #ffffff; --cell-bg: #f8fafc; --grid-line: #d1d5db; --given-text: #1e293b; --error-text: #dc2626; --highlight-bg: #fde68a; --highlight-text: #1e293b; --area-highlight-bg: rgba(161, 98, 7, 0.08); --active-cell-bg: rgba(161, 98, 7, 0.16); --hint-bg: #1e293b; --hint-text: #ffffff; }
+body[data-theme="black"] { --primary-color: #e5e7eb; --primary-hover: #ffffff; --text-accent: #e5e7eb; --body-bg: #000000; --container-bg: #111111; --cell-bg: #1f1f1f; --grid-line: #333333; --given-text: #ffffff; --error-text: #ef4444; --highlight-bg: #e5e7eb; --highlight-text: #000000; --area-highlight-bg: rgba(229, 231, 235, 0.05); --active-cell-bg: rgba(229, 231, 235, 0.1); --hint-bg: #ffffff; --hint-text: #111111; }
+body[data-theme="terracotta"] { --primary-color: #E39157; --primary-hover: #d17b40; --text-accent: #E39157; --body-bg: #2a2d2b; --container-bg: #4A534C; --cell-bg: #5a645c; --grid-line: #3a423c; --given-text: #FFFFFF; --error-text: #ef4444; --highlight-bg: #E39157; --highlight-text: #FFFFFF; --area-highlight-bg: rgba(227, 145, 87, 0.1); --active-cell-bg: rgba(227, 145, 87, 0.15); --hint-bg: #FFFFFF; --hint-text: #4A534C; }
+body[data-theme="ashRose"] { --primary-color: #D9ADAD; --primary-hover: #c99c9c; --text-accent: #E8C4C4; --body-bg: #2c2c2c; --container-bg: #404040; --cell-bg: #4a4a4a; --grid-line: #2c2c2c; --given-text: #FFFFFF; --error-text: #ff6b6b; --highlight-bg: #D9ADAD; --highlight-text: #2c2c2c; --area-highlight-bg: rgba(217, 173, 173, 0.12); --active-cell-bg: rgba(232, 196, 196, 0.15); --hint-bg: #FFFFFF; --hint-text: #2c2c2c; }
 
-    /* --- Система тем на CSS-переменных --- */
-    :root, body[data-theme="lime"] { --primary-color: #CDFF07; --primary-hover: #b8e600; --text-accent: #69C5F8; --body-bg: #21242c; --container-bg: #313642; --cell-bg: #414550; --grid-line: #525762; --given-text: #ffffff; --error-text: #f87171; --highlight-bg: var(--primary-color); --highlight-text: #313642; --area-highlight-bg: rgba(205, 255, 7, 0.08); --active-cell-bg: rgba(105, 197, 248, 0.12); --hint-bg: #ffffff; --hint-text: #313642; }
-    body[data-theme="orange"] { --primary-color: #f97316; --primary-hover: #ea580c; --text-accent: #fb923c; --body-bg: #0c0a09; --container-bg: #1c1917; --cell-bg: #292524; --grid-line: #57534e; --given-text: #ffffff; --error-text: #f87171; --highlight-bg: var(--primary-color); --highlight-text: var(--given-text); --area-highlight-bg: rgba(249, 115, 22, 0.06); --active-cell-bg: rgba(249, 115, 22, 0.12); --hint-bg: #ffffff; --hint-text: #1c1917; }
-    body[data-theme="brown"] { --primary-color: #a16207; --primary-hover: #854d0e; --text-accent: #a16207; --body-bg: #f1f5f9; --container-bg: #ffffff; --cell-bg: #f8fafc; --grid-line: #d1d5db; --given-text: #1e293b; --error-text: #dc2626; --highlight-bg: #fde68a; --highlight-text: #1e293b; --area-highlight-bg: rgba(161, 98, 7, 0.08); --active-cell-bg: rgba(161, 98, 7, 0.16); --hint-bg: #1e293b; --hint-text: #ffffff; }
-    body[data-theme="black"] { --primary-color: #e5e7eb; --primary-hover: #ffffff; --text-accent: #e5e7eb; --body-bg: #000000; --container-bg: #111111; --cell-bg: #1f1f1f; --grid-line: #333333; --given-text: #ffffff; --error-text: #ef4444; --highlight-bg: #e5e7eb; --highlight-text: #000000; --area-highlight-bg: rgba(229, 231, 235, 0.05); --active-cell-bg: rgba(229, 231, 235, 0.1); --hint-bg: #ffffff; --hint-text: #111111; }
-    body[data-theme="terracotta"] { --primary-color: #E39157; --primary-hover: #d17b40; --text-accent: #E39157; --body-bg: #2a2d2b; --container-bg: #4A534C; --cell-bg: #5a645c; --grid-line: #3a423c; --given-text: #FFFFFF; --error-text: #ef4444; --highlight-bg: #E39157; --highlight-text: #FFFFFF; --area-highlight-bg: rgba(227, 145, 87, 0.1); --active-cell-bg: rgba(227, 145, 87, 0.15); --hint-bg: #FFFFFF; --hint-text: #4A534C; }
-    body[data-theme="ashRose"] { --primary-color: #D9ADAD; --primary-hover: #c99c9c; --text-accent: #E8C4C4; --body-bg: #2c2c2c; --container-bg: #404040; --cell-bg: #4a4a4a; --grid-line: #2c2c2c; --given-text: #FFFFFF; --error-text: #ff6b6b; --highlight-bg: #D9ADAD; --highlight-text: #2c2c2c; --area-highlight-bg: rgba(217, 173, 173, 0.12); --active-cell-bg: rgba(232, 196, 196, 0.15); --hint-bg: #FFFFFF; --hint-text: #2c2c2c; }
+body[data-theme="orange"] .user-input .cell-content, body[data-theme="lime"] .user-input .cell-content, body[data-theme="brown"] .user-input .cell-content, body[data-theme="terracotta"] .user-input .cell-content, body[data-theme="ashRose"] .user-input .cell-content { color: var(--primary-color); }
+body[data-theme="black"] .user-input .cell-content { color: #9ca3af; }
+body { background-color: var(--body-bg); color: var(--text-accent); transition: background-color 0.3s; }
+#game-container { transition: transform 0.2s ease-in-out; background-color: var(--container-bg); width: 100%; max-width: 420px; margin: auto; }
+@media (min-width: 768px) { #game-container { max-width: 600px; } }
+@media (min-width: 1024px) { #game-container { max-width: 640px; } }
+.glow { box-shadow: 0 0 10px color-mix(in srgb, var(--primary-color) 50%, transparent); }
+.title-text { color: var(--primary-color); }
+.control-button, .select-box { background-color: var(--cell-bg); color: var(--text-accent); }
+.main-button { background-color: var(--primary-color); color: white; }
+.main-button:hover { background-color: var(--primary-hover); }
+body[data-theme="black"] .main-button { color: #111111; }
+body[data-theme="lime"] .main-button { color: #313642; }
+body[data-theme="ashRose"] .main-button { color: #2c2c2c; }
+.grid-container { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 2px; position: relative; width: 100%; padding: 3px; border-radius: 12px; background-color: var(--grid-line); }
+.cell { transition: background-color 0.2s ease-in-out; width: 100%; height: 0; padding-bottom: 100%; position: relative; border: none; border-radius: 6px; font-size: clamp(1rem, 4.5vw, 1.75rem); caret-color: transparent; background-color: var(--cell-bg); }
+.cell-content { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+.error .cell-content { color: var(--error-text) !important; font-weight: 700; }
+.given .cell-content { color: var(--given-text); font-weight: 700; }
+.user-input .cell-content { font-weight: 500; }
+.grid-separator { position: absolute; z-index: 1; background-color: var(--primary-color); }
+.v-sep-1 { left: 33.333%; right: 33.333%; top: 3px; bottom: 3px; width: 2px; transform: translateX(-1px); }
+.v-sep-2 { left: 66.666%; right: 0; top: 3px; bottom: 3px; width: 2px; transform: translateX(-1px); }
+.h-sep-1 { top: 33.333%; bottom: 33.333%; left: 3px; right: 3px; height: 2px; transform: translateY(-1px); }
+.h-sep-2 { top: 66.666%; bottom: 0; left: 3px; right: 3px; height: 2px; transform: translateY(-1px); }
+.number-button { width: 100%; height: 0; padding-bottom: 100%; position: relative; }
+.number-button-content { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: clamp(1rem, 4vw, 1.5rem); border-radius: 0.375rem; background-color: var(--cell-bg); color: var(--text-accent); transition: background-color 0.2s; }
+.number-button-wrapper.selected .number-button-content { background-color: var(--primary-color); color: var(--given-text); }
+body[data-theme="lime"] .number-button-wrapper.selected .number-button-content { color: #313642; }
+body[data-theme="ashRose"] .number-button-wrapper.selected .number-button-content { color: #2c2c2c; }
+.number-button-wrapper.disabled .number-button-content { opacity: 0.4; cursor: not-allowed; }
+.area-highlight { background-color: var(--area-highlight-bg); }
+.active-cell { background-color: var(--active-cell-bg) !important; }
+.highlight { background-color: var(--highlight-bg) !important; z-index: 5; }
+.highlight .cell-content { color: var(--highlight-text) !important; font-weight: 700; }
+.hinted { background-color: var(--hint-bg) !important; z-index: 10; }
+.hinted .cell-content { color: var(--hint-text) !important; font-weight: 700; }
+.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.7); display: flex; align-items: center; justify-content: center; z-index: 50; }
+.modal-content { background-color: var(--container-bg); padding: 1.5rem; border-radius: 1rem; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto; }
+.modal-preview-grid { display: grid; grid-template-columns: repeat(9, 1fr); gap: 1px; width: 80px; height: 80px; background-color: var(--grid-line); flex-shrink: 0; }
+.modal-preview-cell { background-color: var(--cell-bg); font-size: 0.5rem; display: flex; align-items: center; justify-content: center; }
+.tutorial-grid { 
+  display: grid; 
+  grid-template-columns: repeat(9, 1fr); 
+  gap: 1px; 
+  background-color: var(--grid-line); 
+  box-shadow: 0 0 0 2px var(--primary-color);
+  width: 100%;
+  aspect-ratio: 1;
+  max-width: 200px;
+  margin: 0 auto;
+}
+.tutorial-cell { 
+  background-color: var(--cell-bg); 
+  color: var(--given-text); 
+  font-size: 0.7rem; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  position: relative; 
+  transition: all 0.3s; 
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 1;
+}
+.tutorial-cell .cell-content {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.tut-highlight { background-color: var(--area-highlight-bg); }
+.tut-conflict { color: var(--error-text); }
+.tut-target { background-color: var(--active-cell-bg); }
+@keyframes pop { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+.tut-placed { animation: pop 0.3s ease-out; color: var(--primary-color); font-weight: 700; }
+#win-modal-content { animation: fadeIn 0.3s ease-out; }
+@keyframes fadeIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
 
-    body[data-theme="orange"] .user-input .cell-content, body[data-theme="lime"] .user-input .cell-content, body[data-theme="brown"] .user-input .cell-content, body[data-theme="terracotta"] .user-input .cell-content, body[data-theme="ashRose"] .user-input .cell-content { color: var(--primary-color); }
-    body[data-theme="black"] .user-input .cell-content { color: #9ca3af; }
-    body { background-color: var(--body-bg); color: var(--text-accent); transition: background-color 0.3s; }
-    #game-container { transition: transform 0.2s ease-in-out; background-color: var(--container-bg); width: 100%; max-width: 420px; margin: auto; }
-    @media (min-width: 768px) { #game-container { max-width: 600px; } }
-    @media (min-width: 1024px) { #game-container { max-width: 640px; } }
-    .glow { box-shadow: 0 0 10px color-mix(in srgb, var(--primary-color) 50%, transparent); }
-    .title-text { color: var(--primary-color); }
-    .control-button, .select-box { background-color: var(--cell-bg); color: var(--text-accent); }
-    .main-button { background-color: var(--primary-color); color: white; }
-    .main-button:hover { background-color: var(--primary-hover); }
-    body[data-theme="black"] .main-button { color: #111111; }
-    body[data-theme="lime"] .main-button { color: #313642; }
-    body[data-theme="ashRose"] .main-button { color: #2c2c2c; }
-    .grid-container { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 2px; position: relative; width: 100%; padding: 3px; border-radius: 12px; background-color: var(--grid-line); }
-    .cell { transition: background-color 0.2s ease-in-out; width: 100%; height: 0; padding-bottom: 100%; position: relative; border: none; border-radius: 6px; font-size: clamp(1rem, 4.5vw, 1.75rem); caret-color: transparent; background-color: var(--cell-bg); }
-    .cell-content { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
-    .error .cell-content { color: var(--error-text) !important; font-weight: 700; }
-    .given .cell-content { color: var(--given-text); font-weight: 700; }
-    .user-input .cell-content { font-weight: 500; }
-    .grid-separator { position: absolute; z-index: 1; background-color: var(--primary-color); }
-    .v-sep-1 { left: 33.333%; right: 33.333%; top: 3px; bottom: 3px; width: 2px; transform: translateX(-1px); }
-    .v-sep-2 { left: 66.666%; right: 0; top: 3px; bottom: 3px; width: 2px; transform: translateX(-1px); }
-    .h-sep-1 { top: 33.333%; bottom: 33.333%; left: 3px; right: 3px; height: 2px; transform: translateY(-1px); }
-    .h-sep-2 { top: 66.666%; bottom: 0; left: 3px; right: 3px; height: 2px; transform: translateY(-1px); }
-    .number-button { width: 100%; height: 0; padding-bottom: 100%; position: relative; }
-    .number-button-content { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: clamp(1rem, 4vw, 1.5rem); border-radius: 0.375rem; background-color: var(--cell-bg); color: var(--text-accent); transition: background-color 0.2s; }
-    .number-button-wrapper.selected .number-button-content { background-color: var(--primary-color); color: var(--given-text); }
-    body[data-theme="lime"] .number-button-wrapper.selected .number-button-content { color: #313642; }
-    body[data-theme="ashRose"] .number-button-wrapper.selected .number-button-content { color: #2c2c2c; }
-    .number-button-wrapper.disabled .number-button-content { opacity: 0.4; cursor: not-allowed; }
-    .area-highlight { background-color: var(--area-highlight-bg); }
-    .active-cell { background-color: var(--active-cell-bg) !important; }
-    .highlight { background-color: var(--highlight-bg) !important; z-index: 5; }
-    .highlight .cell-content { color: var(--highlight-text) !important; font-weight: 700; }
-    .hinted { background-color: var(--hint-bg) !important; z-index: 10; }
-    .hinted .cell-content { color: var(--hint-text) !important; font-weight: 700; }
-    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.7); display: flex; align-items: center; justify-content: center; z-index: 50; }
-    .modal-content { background-color: var(--container-bg); padding: 1.5rem; border-radius: 1rem; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto; }
-    .modal-preview-grid { display: grid; grid-template-columns: repeat(9, 1fr); gap: 1px; width: 80px; height: 80px; background-color: var(--grid-line); flex-shrink: 0; }
-    .modal-preview-cell { background-color: var(--cell-bg); font-size: 0.5rem; display: flex; align-items: center; justify-content: center; }
-    .tutorial-grid { 
-      display: grid; 
-      grid-template-columns: repeat(9, 1fr); 
-      gap: 1px; 
-      background-color: var(--grid-line); 
-      box-shadow: 0 0 0 2px var(--primary-color);
-      width: 100%;
-      aspect-ratio: 1;
-      max-width: 200px;
-      margin: 0 auto;
-    }
-    .tutorial-cell { 
-      background-color: var(--cell-bg); 
-      color: var(--given-text); 
-      font-size: 0.7rem; 
-      display: flex; 
-      align-items: center; 
-      justify-content: center; 
-      position: relative; 
-      transition: all 0.3s; 
-      width: 100%;
-      height: 100%;
-      aspect-ratio: 1;
-    }
-    .tutorial-cell .cell-content {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .tut-highlight { background-color: var(--area-highlight-bg); }
-    .tut-conflict { color: var(--error-text); }
-    .tut-target { background-color: var(--active-cell-bg); }
-    @keyframes pop { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
-    .tut-placed { animation: pop 0.3s ease-out; color: var(--primary-color); font-weight: 700; }
-    #win-modal-content { animation: fadeIn 0.3s ease-out; }
-    @keyframes fadeIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+.hidden { display: none !important; }
 
-    .hidden { display: none !important; }
-    
-    /* Стили для рейтинга */
-    .rating-type-tab {
-      background-color: var(--cell-bg);
-      color: var(--text-accent);
-      padding: 0.5rem 1rem;
-      border-radius: 0.5rem;
-      cursor: pointer;
-      transition: all 0.2s;
-      font-size: 0.875rem;
-    }
-    
-    .rating-type-tab.active {
-      background-color: var(--primary-color);
-      color: var(--highlight-text);
-    }
-    
-    .difficulty-tab {
-      background-color: var(--cell-bg);
-      color: var(--text-accent);
-      padding: 0.5rem 1rem;
-      border-radius: 0.5rem;
-      cursor: pointer;
-      transition: all 0.2s;
-      font-size: 0.75rem;
-    }
-    
-    .difficulty-tab.active {
-      background-color: var(--primary-color);
-      color: var(--highlight-text);
-    }
-    
-    .record-card {
-      background-color: var(--cell-bg);
-      border-radius: 0.5rem;
-      padding: 0.75rem;
-      margin-bottom: 0.5rem;
-    }
-    
-    .personal-record {
-      border: 2px solid var(--primary-color);
-    }
-    
-    .crown-icon {
-      color: #ffd700;
-    }
+/* Стили для рейтинга */
+.rating-type-tab {
+  background-color: var(--cell-bg);
+  color: var(--text-accent);
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.875rem;
+}
+
+.rating-type-tab.active {
+  background-color: var(--primary-color);
+  color: var(--highlight-text);
+}
+
+.difficulty-tab {
+  background-color: var(--cell-bg);
+  color: var(--text-accent);
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.75rem;
+}
+
+.difficulty-tab.active {
+  background-color: var(--primary-color);
+  color: var(--highlight-text);
+}
+
+.record-card {
+  background-color: var(--cell-bg);
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.personal-record {
+  border: 2px solid var(--primary-color);
+}
+
+.crown-icon {
+  color: #ffd700;
+}
   </style>
 </head>
 <body class="flex flex-col items-center justify-center min-h-screen p-2 sm:p-4">
-  
   <!-- Экран загрузки -->
   <div id="loading-screen">
     <div class="loading-text">Судоку</div>
     <div class="loading-grid" id="loading-grid"></div>
     <div class="loading-dots">Загрузка</div>
   </div>
-
   <div id="game-container" class="rounded-2xl p-4 glow">
     <div id="user-info" class="flex items-center mb-4">
       <img id="user-avatar" src="https://t.me/i/userpic/320/default.jpg" alt="User Avatar" class="w-10 h-10 rounded-full mr-3">
@@ -395,33 +302,31 @@
     </div>
     <p id="message" class="mt-4 text-center text-sm h-5"></p>
   </div>
-
   <div id="recent-games-modal" class="modal-overlay hidden"><div class="modal-content"><div class="flex justify-between items-center mb-4"><h2 class="text-xl font-bold title-text">Недавние игры</h2><button id="close-modal-button" class="text-2xl">&times;</button></div><div id="recent-games-list" class="space-y-2"></div></div></div>
-  
   <div id="rating-modal" class="modal-overlay hidden">
     <div class="modal-content">
       <div class="flex justify-between items-center mb-4">
         <h2 class="text-xl font-bold title-text">Рейтинг</h2>
         <button id="close-rating-button" class="text-2xl">&times;</button>
       </div>
-      
-      <!-- Переключатель типа рейтинга -->
-      <div class="flex gap-2 mb-4">
-        <button class="rating-type-tab active" data-type="score">💰 По очкам</button>
-        <button class="rating-type-tab" data-type="time">⏱️ По времени</button>
-      </div>
-      
-      <!-- Табы сложности (только для рейтинга времени) -->
-      <div id="difficulty-tabs" class="hidden flex gap-2 mb-4">
-        <button class="difficulty-tab active" data-difficulty="easy">🏆 Лёгкий</button>
-        <button class="difficulty-tab" data-difficulty="medium">🥈 Средний</button>
-        <button class="difficulty-tab" data-difficulty="hard">🥉 Сложный</button>
-      </div>
-      
-      <div id="rating-list" class="space-y-2"></div>
-    </div>
+code
+Code
+<!-- Переключатель типа рейтинга -->
+  <div class="flex gap-2 mb-4">
+    <button class="rating-type-tab active" data-type="score">💰 По очкам</button>
+    <button class="rating-type-tab" data-type="time">⏱️ По времени</button>
   </div>
   
+  <!-- Табы сложности (только для рейтинга времени) -->
+  <div id="difficulty-tabs" class="hidden flex gap-2 mb-4">
+    <button class="difficulty-tab active" data-difficulty="easy">🏆 Лёгкий</button>
+    <button class="difficulty-tab" data-difficulty="medium">🥈 Средний</button>
+    <button class="difficulty-tab" data-difficulty="hard">🥉 Сложный</button>
+  </div>
+  
+  <div id="rating-list" class="space-y-2"></div>
+</div>
+  </div>
   <div id="tutorial-modal" class="modal-overlay hidden">
     <div class="modal-content">
       <div class="flex justify-between items-center mb-4">
@@ -443,14 +348,11 @@
       </div>
     </div>
   </div>
-
   <div id="win-modal" class="modal-overlay hidden"><div id="win-modal-content" class="modal-content text-center"><h2 class="text-2xl font-bold title-text mb-4">Победа!</h2><p id="win-modal-message" class="mb-6"></p><button id="win-modal-close-btn" class="main-button text-white px-6 py-2 rounded-lg glow">Отлично!</button></div></div>
-
   <!-- СКРИПТЫ FIREBASE -->
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
-
   <script>
     // Создание экрана загрузки
     function createLoadingScreen() {
