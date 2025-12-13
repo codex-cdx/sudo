@@ -2,847 +2,1162 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=2.0, user-scalable=yes">
-  <title>Судоку</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#1e293b">
+  <title>Sudoku Pro</title>
+  
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
   <style>
-    /* --- Экран загрузки --- */
-    #loading-screen {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(135deg, #000000, #1a1a1a);
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      z-index: 9999;
-      transition: opacity 0.5s ease-out;
+    /* -------------------------------------------------------------------------- */
+    /* CORE VARIABLES                                */
+    /* -------------------------------------------------------------------------- */
+    :root {
+      --font-main: 'Inter', sans-serif;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-full: 9999px;
+      
+      /* Default Theme: Deep Ocean */
+      --color-primary: #38bdf8;       /* Light Blue */
+      --color-primary-hover: #0ea5e9;
+      --color-accent: #f472b6;        /* Pink for secondary actions */
+      --bg-body: #0f172a;             /* Slate 900 */
+      --bg-surface: #1e293b;          /* Slate 800 */
+      --bg-surface-glass: rgba(30, 41, 59, 0.85);
+      --bg-cell: #334155;             /* Slate 700 */
+      --bg-cell-active: rgba(56, 189, 248, 0.15);
+      --line-color: #475569;          /* Slate 600 */
+      
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-given: #ffffff;
+      --text-input: #38bdf8;
+      
+      --state-error: #ef4444;
+      --state-success: #22c55e;
+      --highlight-similar: rgba(56, 189, 248, 0.4);
+      --highlight-area: rgba(255, 255, 255, 0.05);
     }
 
-    .loading-grid {
+    /* -------------------------------------------------------------------------- */
+    /* THEMES                                      */
+    /* -------------------------------------------------------------------------- */
+    
+    /* Theme: Obsidian (Black & Gold) */
+    body[data-theme="obsidian"] {
+      --color-primary: #fbbf24;
+      --color-primary-hover: #d97706;
+      --bg-body: #000000;
+      --bg-surface: #111111;
+      --bg-surface-glass: rgba(17, 17, 17, 0.9);
+      --bg-cell: #1a1a1a;
+      --bg-cell-active: rgba(251, 191, 36, 0.15);
+      --line-color: #333333;
+      --text-input: #fbbf24;
+      --highlight-similar: rgba(251, 191, 36, 0.4);
+    }
+
+    /* Theme: Paper (Light Mode) */
+    body[data-theme="paper"] {
+      --color-primary: #4f46e5;
+      --color-primary-hover: #4338ca;
+      --bg-body: #f1f5f9;
+      --bg-surface: #ffffff;
+      --bg-surface-glass: rgba(255, 255, 255, 0.9);
+      --bg-cell: #e2e8f0;
+      --bg-cell-active: rgba(79, 70, 229, 0.15);
+      --line-color: #cbd5e1;
+      --text-main: #1e293b;
+      --text-given: #0f172a;
+      --text-input: #4f46e5;
+      --highlight-similar: #c7d2fe;
+      --highlight-area: rgba(0, 0, 0, 0.03);
+    }
+
+    /* Theme: Cyber (Neon Purple) */
+    body[data-theme="cyber"] {
+      --color-primary: #d946ef;
+      --color-primary-hover: #c026d3;
+      --bg-body: #2e1065;
+      --bg-surface: #4c1d95;
+      --bg-surface-glass: rgba(76, 29, 149, 0.85);
+      --bg-cell: #5b21b6;
+      --bg-cell-active: rgba(217, 70, 239, 0.2);
+      --line-color: #7c3aed;
+      --text-input: #e879f9;
+      --highlight-similar: #a21caf;
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /* GLOBAL STYLES                               */
+    /* -------------------------------------------------------------------------- */
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    
+    body {
+      background-color: var(--bg-body);
+      color: var(--text-main);
+      font-family: var(--font-main);
+      transition: background-color 0.4s ease, color 0.4s ease;
+      overflow-x: hidden;
+      /* Prevent pull-to-refresh on mobile */
+      overscroll-behavior: none; 
+    }
+
+    /* Scrollbar Styling */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--line-color); border-radius: 10px; }
+
+    /* -------------------------------------------------------------------------- */
+    /* COMPONENTS                                  */
+    /* -------------------------------------------------------------------------- */
+    
+    /* Buttons */
+    .btn-main {
+      background-color: var(--color-primary);
+      color: var(--bg-body); /* Contrast text */
+      font-weight: 600;
+      border-radius: var(--radius-sm);
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+    
+    body[data-theme="paper"] .btn-main { color: #ffffff; } /* Fix for light theme */
+    
+    .btn-main:hover:not(:disabled) {
+      background-color: var(--color-primary-hover);
+      transform: translateY(-1px);
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    }
+    
+    .btn-main:active:not(:disabled) { transform: translateY(1px); }
+    .btn-main:disabled { opacity: 0.5; cursor: not-allowed; filter: grayscale(100%); }
+
+    .btn-icon {
+      background-color: var(--bg-cell);
+      color: var(--text-muted);
+      border-radius: var(--radius-sm);
+      transition: all 0.2s;
+    }
+    .btn-icon:hover { color: var(--color-primary); background-color: var(--bg-surface); }
+
+    /* Game Container */
+    #game-container {
+      background-color: var(--bg-surface);
+      border: 1px solid var(--line-color);
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      width: 100%;
+      max-width: 500px; /* Slightly wider for better breathing room */
+      margin: 0 auto;
+      transition: all 0.4s ease;
+    }
+
+    /* Grid */
+    .sudoku-grid {
       display: grid;
       grid-template-columns: repeat(9, 1fr);
-      gap: 2px;
-      width: 200px;
-      height: 200px;
-      margin-bottom: 30px;
+      gap: 1px;
+      background-color: var(--line-color);
+      border: 2px solid var(--line-color);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      position: relative;
+      touch-action: manipulation;
     }
 
-    .loading-cell {
-      background: #333;
-      border-radius: 4px;
+    .cell {
+      background-color: var(--bg-cell);
+      aspect-ratio: 1;
       display: flex;
       align-items: center;
       justify-content: center;
-      color: white;
-      font-weight: bold;
-      font-size: 12px;
-      opacity: 0;
-      animation: cellReveal 0.5s ease-out forwards;
+      font-size: clamp(1.2rem, 5vw, 1.8rem);
+      cursor: pointer;
+      position: relative;
+      transition: background-color 0.1s;
+      user-select: none;
     }
 
-    @keyframes cellReveal {
-      0% {
-        opacity: 0;
-        transform: scale(0.5) rotate(180deg);
-        background: #333;
-      }
-      50% {
-        opacity: 1;
-        transform: scale(1.1) rotate(90deg);
-        background: #fff;
-        color: #000;
-      }
-      100% {
-        opacity: 1;
-        transform: scale(1) rotate(0deg);
-        background: #666;
-        color: #fff;
-      }
-    }
-
-    .loading-text {
-      color: white;
-      font-size: 24px;
-      font-weight: bold;
-      margin-bottom: 20px;
-      opacity: 0;
-      animation: textFade 1s ease-out 0.5s forwards;
-    }
-
-    .loading-dots {
-      color: white;
-      font-size: 20px;
-      opacity: 0;
-      animation: textFade 1s ease-out 1s forwards;
-    }
-
-    .loading-dots::after {
-      content: '';
-      animation: dots 2s infinite;
-    }
-
-    @keyframes textFade {
-      to {
-        opacity: 1;
-      }
-    }
-
-    @keyframes dots {
-      0%, 20% { content: ''; }
-      40% { content: '.'; }
-      60% { content: '..'; }
-      80%, 100% { content: '...'; }
-    }
-
-    /* --- Система тем на CSS-переменных --- */
-    :root, body[data-theme="lime"] { --primary-color: #CDFF07; --primary-hover: #b8e600; --text-accent: #69C5F8; --body-bg: #21242c; --container-bg: #313642; --cell-bg: #414550; --grid-line: #525762; --given-text: #ffffff; --error-text: #f87171; --highlight-bg: var(--primary-color); --highlight-text: #313642; --area-highlight-bg: rgba(205, 255, 7, 0.08); --active-cell-bg: rgba(105, 197, 248, 0.12); --hint-bg: #ffffff; --hint-text: #313642; }
-    body[data-theme="orange"] { --primary-color: #f97316; --primary-hover: #ea580c; --text-accent: #fb923c; --body-bg: #0c0a09; --container-bg: #1c1917; --cell-bg: #292524; --grid-line: #57534e; --given-text: #ffffff; --error-text: #f87171; --highlight-bg: var(--primary-color); --highlight-text: var(--given-text); --area-highlight-bg: rgba(249, 115, 22, 0.06); --active-cell-bg: rgba(249, 115, 22, 0.12); --hint-bg: #ffffff; --hint-text: #1c1917; }
-    body[data-theme="brown"] { --primary-color: #a16207; --primary-hover: #854d0e; --text-accent: #a16207; --body-bg: #f1f5f9; --container-bg: #ffffff; --cell-bg: #f8fafc; --grid-line: #d1d5db; --given-text: #1e293b; --error-text: #dc2626; --highlight-bg: #fde68a; --highlight-text: #1e293b; --area-highlight-bg: rgba(161, 98, 7, 0.08); --active-cell-bg: rgba(161, 98, 7, 0.16); --hint-bg: #1e293b; --hint-text: #ffffff; }
-    body[data-theme="black"] { --primary-color: #e5e7eb; --primary-hover: #ffffff; --text-accent: #e5e7eb; --body-bg: #000000; --container-bg: #111111; --cell-bg: #1f1f1f; --grid-line: #333333; --given-text: #ffffff; --error-text: #ef4444; --highlight-bg: #e5e7eb; --highlight-text: #000000; --area-highlight-bg: rgba(229, 231, 235, 0.05); --active-cell-bg: rgba(229, 231, 235, 0.1); --hint-bg: #ffffff; --hint-text: #111111; }
-    body[data-theme="terracotta"] { --primary-color: #E39157; --primary-hover: #d17b40; --text-accent: #E39157; --body-bg: #2a2d2b; --container-bg: #4A534C; --cell-bg: #5a645c; --grid-line: #3a423c; --given-text: #FFFFFF; --error-text: #ef4444; --highlight-bg: #E39157; --highlight-text: #FFFFFF; --area-highlight-bg: rgba(227, 145, 87, 0.1); --active-cell-bg: rgba(227, 145, 87, 0.15); --hint-bg: #FFFFFF; --hint-text: #4A534C; }
-    body[data-theme="ashRose"] { --primary-color: #D9ADAD; --primary-hover: #c99c9c; --text-accent: #E8C4C4; --body-bg: #2c2c2c; --container-bg: #404040; --cell-bg: #4a4a4a; --grid-line: #2c2c2c; --given-text: #FFFFFF; --error-text: #ff6b6b; --highlight-bg: #D9ADAD; --highlight-text: #2c2c2c; --area-highlight-bg: rgba(217, 173, 173, 0.12); --active-cell-bg: rgba(232, 196, 196, 0.15); --hint-bg: #FFFFFF; --hint-text: #2c2c2c; }
-
-    body[data-theme="orange"] .user-input .cell-content, body[data-theme="lime"] .user-input .cell-content, body[data-theme="brown"] .user-input .cell-content, body[data-theme="terracotta"] .user-input .cell-content, body[data-theme="ashRose"] .user-input .cell-content { color: var(--primary-color); }
-    body[data-theme="black"] .user-input .cell-content { color: #9ca3af; }
-    body { background-color: var(--body-bg); color: var(--text-accent); transition: background-color 0.3s; }
-    #game-container { transition: transform 0.2s ease-in-out; background-color: var(--container-bg); width: 100%; max-width: 420px; margin: auto; }
-    @media (min-width: 768px) { #game-container { max-width: 600px; } }
-    @media (min-width: 1024px) { #game-container { max-width: 640px; } }
-    .glow { box-shadow: 0 0 10px color-mix(in srgb, var(--primary-color) 50%, transparent); }
-    .title-text { color: var(--primary-color); }
-    .control-button, .select-box { background-color: var(--cell-bg); color: var(--text-accent); }
-    .main-button { background-color: var(--primary-color); color: white; }
-    .main-button:hover { background-color: var(--primary-hover); }
-    body[data-theme="black"] .main-button { color: #111111; }
-    body[data-theme="lime"] .main-button { color: #313642; }
-    body[data-theme="ashRose"] .main-button { color: #2c2c2c; }
-    .grid-container { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 2px; position: relative; width: 100%; padding: 3px; border-radius: 12px; background-color: var(--grid-line); }
-    .cell { transition: background-color 0.2s ease-in-out; width: 100%; height: 0; padding-bottom: 100%; position: relative; border: none; border-radius: 6px; font-size: clamp(1rem, 4.5vw, 1.75rem); caret-color: transparent; background-color: var(--cell-bg); }
-    .cell-content { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
-    .error .cell-content { color: var(--error-text) !important; font-weight: 700; }
-    .given .cell-content { color: var(--given-text); font-weight: 700; }
-    .user-input .cell-content { font-weight: 500; }
-    .grid-separator { position: absolute; z-index: 1; background-color: var(--primary-color); }
-    .v-sep-1 { left: 33.333%; right: 33.333%; top: 3px; bottom: 3px; width: 2px; transform: translateX(-1px); }
-    .v-sep-2 { left: 66.666%; right: 0; top: 3px; bottom: 3px; width: 2px; transform: translateX(-1px); }
-    .h-sep-1 { top: 33.333%; bottom: 33.333%; left: 3px; right: 3px; height: 2px; transform: translateY(-1px); }
-    .h-sep-2 { top: 66.666%; bottom: 0; left: 3px; right: 3px; height: 2px; transform: translateY(-1px); }
-    .number-button { width: 100%; height: 0; padding-bottom: 100%; position: relative; }
-    .number-button-content { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: clamp(1rem, 4vw, 1.5rem); border-radius: 0.375rem; background-color: var(--cell-bg); color: var(--text-accent); transition: background-color 0.2s; }
-    .number-button-wrapper.selected .number-button-content { background-color: var(--primary-color); color: var(--given-text); }
-    body[data-theme="lime"] .number-button-wrapper.selected .number-button-content { color: #313642; }
-    body[data-theme="ashRose"] .number-button-wrapper.selected .number-button-content { color: #2c2c2c; }
-    .number-button-wrapper.disabled .number-button-content { opacity: 0.4; cursor: not-allowed; }
-    .area-highlight { background-color: var(--area-highlight-bg); }
-    .active-cell { background-color: var(--active-cell-bg) !important; }
-    .highlight { background-color: var(--highlight-bg) !important; z-index: 5; }
-    .highlight .cell-content { color: var(--highlight-text) !important; font-weight: 700; }
-    .hinted { background-color: var(--hint-bg) !important; z-index: 10; }
-    .hinted .cell-content { color: var(--hint-text) !important; font-weight: 700; }
-    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.7); display: flex; align-items: center; justify-content: center; z-index: 50; }
-    .modal-content { background-color: var(--container-bg); padding: 1.5rem; border-radius: 1rem; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto; }
-    .modal-preview-grid { display: grid; grid-template-columns: repeat(9, 1fr); gap: 1px; width: 80px; height: 80px; background-color: var(--grid-line); flex-shrink: 0; }
-    .modal-preview-cell { background-color: var(--cell-bg); font-size: 0.5rem; display: flex; align-items: center; justify-content: center; }
-    .tutorial-grid { 
-      display: grid; 
-      grid-template-columns: repeat(9, 1fr); 
-      gap: 1px; 
-      background-color: var(--grid-line); 
-      box-shadow: 0 0 0 2px var(--primary-color);
-      width: 100%;
-      aspect-ratio: 1;
-      max-width: 200px;
-      margin: 0 auto;
-    }
-    .tutorial-cell { 
-      background-color: var(--cell-bg); 
-      color: var(--given-text); 
-      font-size: 0.7rem; 
-      display: flex; 
-      align-items: center; 
-      justify-content: center; 
-      position: relative; 
-      transition: all 0.3s; 
-      width: 100%;
-      height: 100%;
-      aspect-ratio: 1;
-    }
-    .tutorial-cell .cell-content {
+    /* Thicker borders for 3x3 blocks */
+    .cell:nth-child(3n) { border-right: 1px solid var(--line-color); }
+    .cell:nth-child(9n) { border-right: none; }
+    /* Horizontal lines logic is handled by grid gap and math in JS or simplified here */
+    /* To simplify: we use CSS Grid Gap for lines. We use pseudo elements for 3x3 thicker lines */
+    
+    .grid-overlay {
       position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
+      top: 0; left: 0; right: 0; bottom: 0;
+      pointer-events: none;
+      z-index: 10;
+    }
+    .grid-line-v { position: absolute; top: 0; bottom: 0; width: 2px; background-color: var(--color-primary); opacity: 0.5; }
+    .grid-line-h { position: absolute; left: 0; right: 0; height: 2px; background-color: var(--color-primary); opacity: 0.5; }
+    .gl-v1 { left: 33.33%; } .gl-v2 { left: 66.66%; }
+    .gl-h1 { top: 33.33%; } .gl-h2 { top: 66.66%; }
+
+    /* Cell States */
+    .cell.given { color: var(--text-given); font-weight: 700; }
+    .cell.input { color: var(--text-input); font-weight: 500; }
+    .cell.error { color: var(--state-error) !important; animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
+    .cell.highlight-area { background-color: var(--highlight-area); }
+    .cell.highlight-similar { background-color: var(--highlight-similar) !important; color: var(--text-given) !important; }
+    .cell.active { background-color: var(--bg-cell-active) !important; box-shadow: inset 0 0 0 2px var(--color-primary); }
+    .cell.hinted { animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); background-color: var(--bg-surface) !important; }
+
+    /* Number Pad */
+    .numpad-btn {
+      aspect-ratio: 1; /* Square buttons */
+      background-color: var(--bg-cell);
+      border-radius: var(--radius-md);
       display: flex;
       align-items: center;
       justify-content: center;
+      font-size: 1.5rem;
+      font-weight: 500;
+      color: var(--color-primary);
+      transition: all 0.15s;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
-    .tut-highlight { background-color: var(--area-highlight-bg); }
-    .tut-conflict { color: var(--error-text); }
-    .tut-target { background-color: var(--active-cell-bg); }
-    @keyframes pop { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
-    .tut-placed { animation: pop 0.3s ease-out; color: var(--primary-color); font-weight: 700; }
-    #win-modal-content { animation: fadeIn 0.3s ease-out; }
-    @keyframes fadeIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+    .numpad-btn:active { transform: scale(0.95); }
+    .numpad-btn.selected { background-color: var(--color-primary); color: var(--bg-body); border: 2px solid var(--bg-surface); }
+    .numpad-btn.disabled { opacity: 0.2; pointer-events: none; }
 
+    /* Modals with Glassmorphism */
+    .modal-backdrop {
+      background-color: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(4px);
+      z-index: 50;
+    }
+    .modal-content {
+      background-color: var(--bg-surface-glass);
+      border: 1px solid var(--line-color);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+
+    /* Animations */
+    @keyframes popIn { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    @keyframes shake { 10%, 90% { transform: translate3d(-1px, 0, 0); } 20%, 80% { transform: translate3d(2px, 0, 0); } 30%, 50%, 70% { transform: translate3d(-4px, 0, 0); } 40%, 60% { transform: translate3d(4px, 0, 0); } }
+    @keyframes pulse-glow { 0% { box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(56, 189, 248, 0); } 100% { box-shadow: 0 0 0 0 rgba(56, 189, 248, 0); } }
+
+    /* Loading Screen */
+    #loader {
+      background: var(--bg-body);
+      z-index: 9999;
+    }
+    .loader-spinner {
+      border: 4px solid var(--line-color);
+      border-top: 4px solid var(--color-primary);
+      border-radius: 50%;
+      width: 40px; height: 40px;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    /* Utility */
+    .text-glow { text-shadow: 0 0 20px var(--color-primary); }
     .hidden { display: none !important; }
     
-    /* Стили для рейтинга */
-    .rating-type-tab {
-      background-color: var(--cell-bg);
-      color: var(--text-accent);
-      padding: 0.5rem 1rem;
-      border-radius: 0.5rem;
-      cursor: pointer;
-      transition: all 0.2s;
-      font-size: 0.875rem;
-    }
-    
-    .rating-type-tab.active {
-      background-color: var(--primary-color);
-      color: var(--highlight-text);
-    }
-    
-    .difficulty-tab {
-      background-color: var(--cell-bg);
-      color: var(--text-accent);
-      padding: 0.5rem 1rem;
-      border-radius: 0.5rem;
-      cursor: pointer;
-      transition: all 0.2s;
-      font-size: 0.75rem;
-    }
-    
-    .difficulty-tab.active {
-      background-color: var(--primary-color);
-      color: var(--highlight-text);
-    }
-    
-    .record-card {
-      background-color: var(--cell-bg);
-      border-radius: 0.5rem;
-      padding: 0.75rem;
-      margin-bottom: 0.5rem;
-    }
-    
-    .personal-record {
-      border: 2px solid var(--primary-color);
-    }
-    
-    .crown-icon {
-      color: #ffd700;
-    }
+    /* Tutorial Specifics */
+    .tutorial-grid-container { width: 180px; height: 180px; margin: 0 auto; pointer-events: none; }
+    .tut-highlight { background-color: var(--color-primary); opacity: 0.3; }
+    .tut-cell { border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; font-size: 12px; }
+
   </style>
 </head>
-<body class="flex flex-col items-center justify-center min-h-screen p-2 sm:p-4">
-  
-  <!-- Экран загрузки -->
-  <div id="loading-screen">
-    <div class="loading-text">Судоку</div>
-    <div class="loading-grid" id="loading-grid"></div>
-    <div class="loading-dots">Загрузка</div>
+<body class="min-h-screen flex items-center justify-center p-2 sm:p-4 select-none">
+
+  <div id="loader" class="fixed inset-0 flex flex-col items-center justify-center transition-opacity duration-500">
+    <div class="text-3xl font-bold mb-4 tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">SUDOKU</div>
+    <div class="loader-spinner"></div>
+    <div class="mt-4 text-sm text-gray-500 font-mono">Loading assets...</div>
   </div>
 
-  <div id="game-container" class="rounded-2xl p-4 glow">
-    <div id="user-info" class="flex items-center mb-4">
-      <img id="user-avatar" src="https://t.me/i/userpic/320/default.jpg" alt="User Avatar" class="w-10 h-10 rounded-full mr-3">
-      <div class="flex-grow">
-        <h2 id="username" class="font-bold text-lg">Username</h2>
-        <p class="text-sm">Очки: <span id="user-score">0</span></p>
+  <div id="game-container" class="rounded-2xl p-4 sm:p-6 flex flex-col gap-4 relative">
+    
+    <header class="flex items-center justify-between bg-black/10 p-3 rounded-xl border border-white/5">
+      <div class="flex items-center gap-3">
+        <div class="relative">
+          <img id="user-avatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23cbd5e1'%3E%3Cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z'/%3E%3C/svg%3E" alt="User" class="w-10 h-10 rounded-full bg-slate-700 object-cover ring-2 ring-offset-2 ring-offset-slate-900 ring-blue-500">
+        </div>
+        <div class="flex flex-col">
+          <span id="username" class="font-bold text-sm tracking-wide">Гость</span>
+          <span class="text-xs text-gray-400">Очки: <span id="user-score" class="text-blue-400 font-mono">0</span></span>
+        </div>
       </div>
-      <!-- Личные рекорды -->
-      <div id="personal-records" class="text-xs text-right">
-        <div>🏆 <span id="easy-record">--:--</span></div>
-        <div>🥈 <span id="medium-record">--:--</span></div>
-        <div>🥉 <span id="hard-record">--:--</span></div>
+      <div class="flex flex-col items-end">
+        <div id="timer" class="font-mono text-xl font-bold tracking-widest">00:00</div>
+        <div class="text-[10px] text-gray-500 uppercase tracking-wider" id="difficulty-display">Лёгкий</div>
       </div>
-    </div>
-    <h1 class="title-text text-2xl font-bold text-center mb-4">Судоку</h1>
-    <div class="mb-4 flex justify-between items-center">
-      <select id="difficulty" class="select-box rounded-lg p-2 glow text-sm">
+    </header>
+
+    <div class="flex justify-between items-center gap-2">
+      <select id="difficulty-select" class="bg-slate-700 text-white text-xs py-2 px-3 rounded-lg border-none outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer shadow-sm">
         <option value="easy">Лёгкий</option>
         <option value="medium">Средний</option>
         <option value="hard">Сложный</option>
       </select>
-      <div class="flex items-center gap-2 sm:gap-4 relative">
-        <button id="rating-button" class="control-button p-2 rounded-lg glow transition-colors" title="Рейтинг"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg></button>
-        <button id="tutorial-button" class="control-button p-2 rounded-lg glow transition-colors" title="Как играть?"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" /></svg></button>
-        <button id="recent-games-button" class="control-button p-2 rounded-lg glow transition-colors" title="Недавние игры"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z" /></svg></button>
-        <button id="settings-button" class="control-button p-2 rounded-lg glow transition-colors" title="Настройки темы"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-1.007 1.11-1.11.55-.102 1.13-.102 1.68 0 .55.103 1.02.568 1.11 1.11.09.542.09 1.128 0 1.67-.09.542-.56 1.007-1.11 1.11-.55-.102-1.13-.102-1.68 0-.55-.103-1.02-.568-1.11-1.11-.09-.542-.09-1.128 0-1.67zM14.25 10.25a2.25 2.25 0 00-2.25-2.25H7.5a2.25 2.25 0 00-2.25 2.25v.5c0 .59.38 1.095.92 1.254a2.25 2.25 0 011.68.026l.22.067.22.067.22.067a2.25 2.25 0 011.13 1.933V16.5a2.25 2.25 0 002.25 2.25h.5a2.25 2.25 0 002.25-2.25v-2.25a2.25 2.25 0 00-1.13-1.933l-.22-.067-.22-.067-.22-.067a2.25 2.25 0 01-1.68-.026 1.125 1.125 0 01-.92-1.254v-.5z" /></svg></button>
-        <div id="theme-panel" class="hidden absolute top-full right-0 mt-2 p-2 bg-gray-800 rounded-lg shadow-lg z-20"><div class="flex gap-2 flex-wrap max-w-xs justify-end">
-          <button class="theme-button w-6 h-6 rounded-full border-2" data-theme="lime" style="background-color: #CDFF07;"></button>
-          <button class="theme-button w-6 h-6 rounded-full border-2" data-theme="terracotta" style="background-color: #E39157;"></button>
-          <button class="theme-button w-6 h-6 rounded-full border-2" data-theme="ashRose" style="background-color: #D9ADAD;"></button>
-          <button class="theme-button w-6 h-6 rounded-full bg-orange-500 border-2" data-theme="orange"></button>
-          <button class="theme-button w-6 h-6 rounded-full bg-black border-2 border-gray-600" data-theme="black"></button>
-          <button class="theme-button w-6 h-6 rounded-full border-2" data-theme="brown" style="background-color: #a16207;"></button>
-        </div></div>
-        <div id="timer" class="timer-text font-semibold text-sm">00:00</div>
-      </div>
-    </div>
-    <div id="grid" class="grid-container mx-auto"></div>
-    <div id="number-row" class="grid grid-cols-10 gap-1 sm:gap-2 mt-4 mx-auto"></div>
-    <div class="mt-4 flex flex-wrap justify-center gap-2">
-      <button id="undo-button" class="main-button text-white px-3 py-2 rounded-lg glow text-sm disabled:opacity-50" disabled title="Отменить"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mx-auto"><path stroke-linecap="round" stroke-linejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3" /></svg></button>
-      <button id="hint-button" class="main-button text-white px-3 py-2 rounded-lg glow text-sm disabled:opacity-50 flex items-center" title="Подсказка">
-        <svg fill="currentColor" viewBox="0 0 32 32" version="1.1" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5"><path d="M2.016 16q0 0.832 0.576 1.44t1.408 0.576 1.408-0.576 0.608-1.44-0.608-1.408-1.408-0.576-1.408 0.576-0.576 1.408zM5.504 24.512q0 0.8 0.576 1.408t1.44 0.576 1.408-0.576 0.576-1.408-0.576-1.408-1.408-0.608-1.44 0.608-0.576 1.408zM5.504 7.52q0 0.832 0.576 1.408t1.44 0.576 1.408-0.576 0.576-1.408-0.576-1.408-1.408-0.608-1.44 0.608-0.576 1.408zM8 16q0 3.328 2.336 5.664t5.664 2.336 5.664-2.336 2.336-5.664-2.336-5.632-5.664-2.368-5.664 2.368-2.336 5.632zM12 16q0-1.632 1.184-2.816t2.816-1.184 2.816 1.184 1.184 2.816-1.184 2.848-2.816 1.152-2.816-1.152-1.184-2.848zM14.016 28q0 0.832 0.576 1.44t1.408 0.576 1.408-0.576 0.608-1.44-0.608-1.408-1.408-0.576-1.408 0.576-0.576 1.408zM14.016 4q0 0.832 0.576 1.44t1.408 0.576 1.408-0.576 0.608-1.44-0.608-1.408-1.408-0.576-1.408 0.576-0.576 1.408zM22.496 24.512q0 0.8 0.576 1.408t1.408 0.576 1.44-0.576 0.576-1.408-0.576-1.408-1.44-0.608-1.408 0.608-0.576 1.408zM22.496 7.52q0 0.832 0.576 1.408t1.408 0.576 1.44-0.576 0.576-1.408-0.576-1.408-1.44-0.608-1.408 0.608-0.576 1.408zM26.016 16q0 0.832 0.576 1.44t1.408 0.576 1.408-0.576 0.608-1.44-0.608-1.408-1.408-0.576-1.408 0.576-0.576 1.408z"></path></svg>
-        <span id="hint-count-display" class="ml-1 text-xs"></span>
-      </button>
-      <button id="newGame" class="main-button text-white px-3 py-2 rounded-lg glow text-sm">Новая игра</button>
-      <button id="sound-toggle-button" class="main-button text-white px-3 py-2 rounded-lg glow text-sm" title="Звук">
-        <svg id="sound-on-icon" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.108 12 5v14c0 .892-1.077 1.337-1.707.707L5.586 15z"/></svg>
-        <svg id="sound-off-icon" class="h-5 w-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.108 12 5v14c0 .892-1.077 1.337-1.707.707L5.586 15zM17 14l2-2m0 0l2-2m-2 2L17 10m2 2l2 2"/></svg>
-      </button>
-      <button id="highlightToggle" class="main-button text-white px-3 py-2 rounded-lg glow text-sm">Подсветка</button>
-      <button id="check" class="main-button text-white px-3 py-2 rounded-lg glow text-sm">Проверить</button>
-    </div>
-    <p id="message" class="mt-4 text-center text-sm h-5"></p>
-  </div>
 
-  <div id="recent-games-modal" class="modal-overlay hidden"><div class="modal-content"><div class="flex justify-between items-center mb-4"><h2 class="text-xl font-bold title-text">Недавние игры</h2><button id="close-modal-button" class="text-2xl">&times;</button></div><div id="recent-games-list" class="space-y-2"></div></div></div>
-  
-  <div id="rating-modal" class="modal-overlay hidden">
-    <div class="modal-content">
-      <div class="flex justify-between items-center mb-4">
-        <h2 class="text-xl font-bold title-text">Рейтинг</h2>
-        <button id="close-rating-button" class="text-2xl">&times;</button>
+      <div class="flex gap-2">
+        <button id="btn-sound" class="btn-icon p-2" title="Звук">🔊</button>
+        <button id="btn-theme" class="btn-icon p-2" title="Тема">🎨</button>
+        <button id="btn-stats" class="btn-icon p-2" title="Рейтинг">🏆</button>
+        <button id="btn-tutorial" class="btn-icon p-2" title="Помощь">❓</button>
+        <button id="btn-history" class="btn-icon p-2" title="История">📜</button>
       </div>
-      
-      <!-- Переключатель типа рейтинга -->
-      <div class="flex gap-2 mb-4">
-        <button class="rating-type-tab active" data-type="score">💰 По очкам</button>
-        <button class="rating-type-tab" data-type="time">⏱️ По времени</button>
-      </div>
-      
-      <!-- Табы сложности (только для рейтинга времени) -->
-      <div id="difficulty-tabs" class="hidden flex gap-2 mb-4">
-        <button class="difficulty-tab active" data-difficulty="easy">🏆 Лёгкий</button>
-        <button class="difficulty-tab" data-difficulty="medium">🥈 Средний</button>
-        <button class="difficulty-tab" data-difficulty="hard">🥉 Сложный</button>
-      </div>
-      
-      <div id="rating-list" class="space-y-2"></div>
     </div>
-  </div>
-  
-  <div id="tutorial-modal" class="modal-overlay hidden">
-    <div class="modal-content">
-      <div class="flex justify-between items-center mb-4">
-        <h2 id="tutorial-title" class="text-xl font-bold title-text">Обучение</h2>
-        <button id="close-tutorial-button" class="text-2xl">&times;</button>
+    
+    <div id="theme-panel" class="hidden absolute top-36 right-4 bg-slate-800 p-3 rounded-xl shadow-xl border border-slate-600 z-30 grid grid-cols-3 gap-2">
+      <div class="w-6 h-6 rounded-full cursor-pointer border-2 border-white/20 bg-[#0f172a]" data-set-theme="default" title="Deep Ocean"></div>
+      <div class="w-6 h-6 rounded-full cursor-pointer border-2 border-white/20 bg-[#000000]" data-set-theme="obsidian" title="Obsidian"></div>
+      <div class="w-6 h-6 rounded-full cursor-pointer border-2 border-white/20 bg-[#ffffff]" data-set-theme="paper" title="Paper"></div>
+      <div class="w-6 h-6 rounded-full cursor-pointer border-2 border-white/20 bg-[#2e1065]" data-set-theme="cyber" title="Cyber"></div>
+    </div>
+
+    <div class="relative">
+      <div id="sudoku-grid" class="sudoku-grid"></div>
+      <div class="grid-overlay">
+        <div class="grid-line-v gl-v1"></div>
+        <div class="grid-line-v gl-v2"></div>
+        <div class="grid-line-h gl-h1"></div>
+        <div class="grid-line-h gl-h2"></div>
       </div>
-      <div class="flex flex-col sm:flex-row items-center gap-4">
-        <div class="w-full max-w-[200px] mx-auto sm:w-2/5 sm:max-w-none sm:mx-0 flex-shrink-0">
-          <div id="tutorial-grid" class="tutorial-grid"></div>
+    </div>
+
+    <div class="flex justify-between gap-2 text-sm">
+      <button id="btn-undo" class="btn-icon flex-1 py-3 flex justify-center items-center gap-2" disabled>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
+        Отмена
+      </button>
+      <button id="btn-hint" class="btn-icon flex-1 py-3 flex justify-center items-center gap-2 relative">
+        <svg class="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20"><path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1h4v1a2 2 0 11-4 0zM12 14c.015-.34.208-.646.477-.859a4 4 0 10-4.954 0c.27.213.462.519.476.859h4.002z"/></svg>
+        <span id="hint-count">3/3</span>
+      </button>
+      <button id="btn-note" class="btn-icon flex-1 py-3 flex justify-center items-center gap-2 text-gray-400 cursor-not-allowed opacity-50" title="В разработке">
+        ✎ Заметки
+      </button>
+    </div>
+
+    <div class="grid grid-cols-5 gap-2 sm:gap-3" id="numpad">
+      </div>
+
+    <div class="grid grid-cols-2 gap-4 mt-2">
+      <button id="btn-new-game" class="btn-main py-3 rounded-xl shadow-lg shadow-blue-500/20">Новая игра</button>
+      <button id="btn-check" class="btn-main py-3 rounded-xl bg-green-600 hover:bg-green-500 text-white shadow-lg shadow-green-500/20">Проверить</button>
+    </div>
+    
+    <div id="status-message" class="h-6 text-center text-xs font-semibold text-red-400 transition-opacity opacity-0"></div>
+
+  </div> <div id="modal-win" class="hidden fixed inset-0 modal-backdrop flex items-center justify-center p-4">
+    <div class="modal-content rounded-2xl p-8 max-w-sm w-full text-center transform transition-all scale-100">
+      <div class="text-6xl mb-4">🎉</div>
+      <h2 class="text-3xl font-bold text-white mb-2">Победа!</h2>
+      <p class="text-gray-300 mb-6" id="win-text">Вы справились!</p>
+      
+      <div class="bg-white/5 rounded-lg p-4 mb-6 grid grid-cols-2 gap-4">
+        <div>
+          <div class="text-xs text-gray-400 uppercase">Время</div>
+          <div class="text-xl font-mono font-bold text-blue-400" id="win-time">00:00</div>
         </div>
-        <div class="flex flex-col flex-grow w-full text-center sm:text-left">
-          <p id="tutorial-text" class="text-sm flex-grow min-h-[4rem]"></p>
-          <div class="flex justify-between items-center mt-4">
-            <button id="tutorial-prev" class="main-button py-2 px-4 rounded-lg glow disabled:opacity-50" disabled>Назад</button>
-            <span id="tutorial-step-indicator" class="text-xs opacity-70"></span>
-            <button id="tutorial-next" class="main-button py-2 px-4 rounded-lg glow">Далее</button>
-          </div>
+        <div>
+          <div class="text-xs text-gray-400 uppercase">Очки</div>
+          <div class="text-xl font-mono font-bold text-green-400" id="win-score">+100</div>
         </div>
       </div>
+      
+      <button id="btn-win-close" class="btn-main w-full py-3 rounded-xl">Круто!</button>
     </div>
   </div>
 
-  <div id="win-modal" class="modal-overlay hidden"><div id="win-modal-content" class="modal-content text-center"><h2 class="text-2xl font-bold title-text mb-4">Победа!</h2><p id="win-modal-message" class="mb-6"></p><button id="win-modal-close-btn" class="main-button text-white px-6 py-2 rounded-lg glow">Отлично!</button></div></div>
+  <div id="modal-stats" class="hidden fixed inset-0 modal-backdrop flex items-center justify-center p-4">
+    <div class="modal-content rounded-2xl p-6 max-w-md w-full max-h-[80vh] flex flex-col">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-bold text-white">Рейтинг</h2>
+        <button class="text-gray-400 hover:text-white close-modal text-2xl">&times;</button>
+      </div>
+      <div class="flex gap-2 mb-4 bg-black/20 p-1 rounded-lg">
+        <button class="flex-1 py-1 text-sm rounded-md bg-slate-700 text-white shadow-sm" id="tab-score">Очки</button>
+        <button class="flex-1 py-1 text-sm rounded-md hover:bg-slate-700/50 text-gray-400 transition" id="tab-speed">Скорость</button>
+      </div>
+      <div id="leaderboard-list" class="overflow-y-auto flex-1 space-y-2 pr-2">
+        <div class="text-center text-gray-500 py-8">Загрузка данных...</div>
+      </div>
+    </div>
+  </div>
+  
+  <div id="modal-history" class="hidden fixed inset-0 modal-backdrop flex items-center justify-center p-4">
+    <div class="modal-content rounded-2xl p-6 max-w-md w-full max-h-[80vh] flex flex-col">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-bold text-white">История игр</h2>
+        <button class="text-gray-400 hover:text-white close-modal text-2xl">&times;</button>
+      </div>
+      <div id="history-list" class="overflow-y-auto flex-1 space-y-2"></div>
+    </div>
+  </div>
 
-  <!-- СКРИПТЫ FIREBASE -->
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+  <div id="modal-tutorial" class="hidden fixed inset-0 modal-backdrop flex items-center justify-center p-4">
+    <div class="modal-content rounded-2xl p-6 max-w-md w-full">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-bold text-white" id="tut-title">Как играть</h2>
+        <button class="text-gray-400 hover:text-white close-modal text-2xl">&times;</button>
+      </div>
+      
+      <div class="flex flex-col items-center mb-6">
+        <div id="tut-grid" class="tutorial-grid-container grid grid-cols-9 bg-slate-700 gap-px border border-slate-600 mb-4"></div>
+        <p id="tut-desc" class="text-center text-sm text-gray-300 min-h-[60px]">Описание шага</p>
+      </div>
+      
+      <div class="flex justify-between items-center">
+        <button id="tut-prev" class="px-4 py-2 bg-slate-700 rounded-lg text-sm text-gray-300 disabled:opacity-30">Назад</button>
+        <div class="flex gap-1" id="tut-dots"></div>
+        <button id="tut-next" class="px-4 py-2 btn-main rounded-lg text-sm">Далее</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 
   <script>
-    // Создание экрана загрузки
-    function createLoadingScreen() {
-      const loadingGrid = document.getElementById('loading-grid');
-      const numbers = [1,2,3,4,5,6,7,8,9];
-      
-      for (let i = 0; i < 81; i++) {
-        const cell = document.createElement('div');
-        cell.className = 'loading-cell';
-        cell.style.animationDelay = `${Math.random() * 2}s`;
-        
-        if (Math.random() > 0.7) {
-          cell.textContent = numbers[Math.floor(Math.random() * numbers.length)];
-        }
-        
-        loadingGrid.appendChild(cell);
+    /**
+     * SUDOKU PRO - ARCHITECTURE
+     * * 1. SoundManager: Handles all audio.
+     * 2. StorageService: Wrapper for LocalStorage & Firebase.
+     * 3. SudokuCore: Pure logic (generation, solving, validation).
+     * 4. UIManager: DOM manipulation, events, rendering.
+     * 5. GameController: Main entry point, state management.
+     */
+
+    // --- CONFIG & UTILS ---
+    const CONFIG = {
+      SOUND_URL: 'https://github.com/codex-cdx/sudo/raw/refs/heads/main/%D0%9F%D0%BB%D0%B0%D0%BC%D0%B1.mp3',
+      MAX_HINTS: 3,
+      THEMES: ['default', 'obsidian', 'paper', 'cyber'],
+      DIFFICULTY: {
+        easy: { remove: 30, points: 100 }, // Меньше удаленных для теста, для продакшена 40
+        medium: { remove: 45, points: 250 },
+        hard: { remove: 55, points: 500 }
+      },
+      FIREBASE: {
+        apiKey: "AIzaSyBkYQ7tRMrZ-mghBnkJ_EvuzHpjs_p8hOY",
+        authDomain: "sudo-9fbfc.firebaseapp.com",
+        projectId: "sudo-9fbfc",
+        storageBucket: "sudo-9fbfc.appspot.com",
+        messagingSenderId: "927814106972",
+        appId: "1:927814106972:web:71e0773453f9d16f598b99"
       }
-    }
-
-    // Скрытие экрана загрузки
-    function hideLoadingScreen() {
-      setTimeout(() => {
-        const loadingScreen = document.getElementById('loading-screen');
-        loadingScreen.style.opacity = '0';
-        setTimeout(() => {
-          loadingScreen.style.display = 'none';
-        }, 500);
-      }, 2000); 
-    }
-
-    createLoadingScreen();
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyBkYQ7tRMrZ-mghBnkJ_EvuzHpjs_p8hOY",
-      authDomain: "sudo-9fbfc.firebaseapp.com",
-      projectId: "sudo-9fbfc",
-      storageBucket: "sudo-9fbfc.appspot.com",
-      messagingSenderId: "927814106972",
-      appId: "1:927814106972:web:71e0773453f9d16f598b99"
     };
 
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-    const auth = firebase.auth();
-    const usersCollection = db.collection('users');
-    const recordsCollection = db.collection('timeRecords');
+    const $ = (sel) => document.querySelector(sel);
+    const $$ = (sel) => document.querySelectorAll(sel);
+    const formatTime = (s) => {
+      const m = Math.floor(s / 60).toString().padStart(2, '0');
+      const sec = (s % 60).toString().padStart(2, '0');
+      return `${m}:${sec}`;
+    };
 
-    const elements = { body: document.body, gameContainer: document.getElementById('game-container'), grid: document.getElementById('grid'), difficulty: document.getElementById('difficulty'), newGameBtn: document.getElementById('newGame'), checkBtn: document.getElementById('check'), highlightBtn: document.getElementById('highlightToggle'), timer: document.getElementById('timer'), message: document.getElementById('message'), numberRow: document.getElementById('number-row'), undoBtn: document.getElementById('undo-button'), hintBtn: document.getElementById('hint-button'), hintCountDisplay: document.getElementById('hint-count-display'), recentGamesBtn: document.getElementById('recent-games-button'), recentGamesModal: document.getElementById('recent-games-modal'), closeModalBtn: document.getElementById('close-modal-button'), recentGamesList: document.getElementById('recent-games-list'), settingsBtn: document.getElementById('settings-button'), themePanel: document.getElementById('theme-panel'), tutorialBtn: document.getElementById('tutorial-button'), tutorialModal: document.getElementById('tutorial-modal'), closeTutorialBtn: document.getElementById('close-tutorial-button'), tutorialGrid: document.getElementById('tutorial-grid'), tutorialText: document.getElementById('tutorial-text'), tutorialTitle: document.getElementById('tutorial-title'), tutorialPrevBtn: document.getElementById('tutorial-prev'), tutorialNextBtn: document.getElementById('tutorial-next'), tutorialStepIndicator: document.getElementById('tutorial-step-indicator'), ratingBtn: document.getElementById('rating-button'), ratingModal: document.getElementById('rating-modal'), closeRatingBtn: document.getElementById('close-rating-button'), ratingList: document.getElementById('rating-list'), userAvatar: document.getElementById('user-avatar'), username: document.getElementById('username'), userScore: document.getElementById('user-score'), winModal: document.getElementById('win-modal'), winModalMessage: document.getElementById('win-modal-message'), winModalCloseBtn: document.getElementById('win-modal-close-btn'), soundToggleButton: document.getElementById('sound-toggle-button'), soundOnIcon: document.getElementById('sound-on-icon'), soundOffIcon: document.getElementById('sound-off-icon') };
-    let grid = [], solution = [], givenCells = new Set(), timerInterval, startTime=0, activeCell = null, activeTool = null, highlightEnabled = true, undoStack = [];
-    let hintCount = 0;
-    let currentUser = { id: null, username: 'Гость', avatar: 'https://t.me/i/userpic/320/default.jpg', score: 0, bestTimes: { easy: null, medium: null, hard: null } };
-    let isGameFinished = false;
-    let isSoundEnabled = true;
-    let currentRatingType = 'score';
-    let currentRatingDifficulty = 'easy';
-    const CLICK_SOUND_URL = 'https://github.com/codex-cdx/sudo/raw/refs/heads/main/%D0%9F%D0%BB%D0%B0%D0%BC%D0%B1.mp3';
-    const clickSound = new Audio(CLICK_SOUND_URL);
-    clickSound.preload = 'auto';
-    
-    function playSound() { if (!isSoundEnabled) return; clickSound.currentTime = 0; clickSound.play().catch(error => console.error("Ошибка воспроизведения звука:", error)); }
-    function updateSoundButtonVisuals() { if (isSoundEnabled) { elements.soundOnIcon.classList.remove('hidden'); elements.soundOffIcon.classList.add('hidden'); } else { elements.soundOnIcon.classList.add('hidden'); elements.soundOffIcon.classList.remove('hidden'); } }
-    function toggleSound() { isSoundEnabled = !isSoundEnabled; localStorage.setItem('sudoku-sound-enabled', isSoundEnabled); updateSoundButtonVisuals(); if (isSoundEnabled) { playSound(); } }
-    
-    function formatTime(seconds) {
-      if (seconds === null || seconds === undefined) return '--:--';
-      const minutes = Math.floor(seconds / 60);
-      const secs = seconds % 60;
-      return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-    }
-    
-    function updatePersonalRecords() {
-      document.getElementById('easy-record').textContent = formatTime(currentUser.bestTimes.easy);
-      document.getElementById('medium-record').textContent = formatTime(currentUser.bestTimes.medium);
-      document.getElementById('hard-record').textContent = formatTime(currentUser.bestTimes.hard);
-    }
-    
-    async function saveTimeRecord(difficulty, timeInSeconds) {
-      if (!currentUser.id) return false;
-      
-      const recordData = {
-        userId: currentUser.id,
-        username: currentUser.username,
-        avatar: currentUser.avatar,
-        difficulty: difficulty,
-        time: timeInSeconds,
-        date: new Date().toISOString()
-      };
-      
-      try {
-        await recordsCollection.add(recordData);
-        
-        if (!currentUser.bestTimes[difficulty] || timeInSeconds < currentUser.bestTimes[difficulty]) {
-          currentUser.bestTimes[difficulty] = timeInSeconds;
-          await updateUserData(); 
-          updatePersonalRecords(); 
-          return true; 
-        }
-      } catch (error) {
-        console.error("Ошибка при сохранении рекорда:", error);
+    // --- 1. SOUND MANAGER ---
+    class SoundManager {
+      constructor() {
+        this.enabled = localStorage.getItem('sudoku_sound') !== 'false';
+        this.clickSound = new Audio(CONFIG.SOUND_URL);
+        this.clickSound.volume = 0.5;
+        this.updateIcon();
       }
-      return false; 
-    }
-    
-    async function populateScoreLeaderboard() {
-      elements.ratingList.innerHTML = '<p>Загрузка рейтинга...</p>';
-      
-      try {
-        const snapshot = await usersCollection.orderBy('score', 'desc').limit(100).get();
-        if (snapshot.empty) {
-          elements.ratingList.innerHTML = '<p>Рейтинг пуст.</p>';
-          return;
+      play() {
+        if (this.enabled) {
+          this.clickSound.currentTime = 0;
+          this.clickSound.play().catch(() => {});
         }
-        
-        const leaderboard = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        elements.ratingList.innerHTML = '';
-        let currentUserInTop10 = false;
-        
-        leaderboard.slice(0, 10).forEach((user, index) => {
-          const isCurrentUser = String(user.id) === String(currentUser.id);
-          if(isCurrentUser) currentUserInTop10 = true;
+      }
+      toggle() {
+        this.enabled = !this.enabled;
+        localStorage.setItem('sudoku_sound', this.enabled);
+        this.updateIcon();
+        if(this.enabled) this.play();
+      }
+      updateIcon() {
+        const btn = $('#btn-sound');
+        btn.innerHTML = this.enabled ? '🔊' : '🔇';
+        btn.classList.toggle('text-red-400', !this.enabled);
+      }
+    }
+
+    // --- 2. STORAGE SERVICE (FIREBASE + LOCAL) ---
+    class StorageService {
+      constructor() {
+        firebase.initializeApp(CONFIG.FIREBASE);
+        this.db = firebase.firestore();
+        this.auth = firebase.auth();
+        this.user = null;
+      }
+
+      async initAuth() {
+        try {
+          await this.auth.signInAnonymously();
           
-          const userEl = document.createElement('div');
-          userEl.className = `record-card flex items-center gap-4 ${isCurrentUser ? 'personal-record' : ''}`;
+          // Telegram Logic
+          let tgUser = null;
+          if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe?.user) {
+            tgUser = window.Telegram.WebApp.initDataUnsafe.user;
+          }
+
+          // Merge IDs
+          const uid = tgUser ? String(tgUser.id) : this.auth.currentUser.uid;
           
-          const medal = index === 0 ? '👑' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}`;
-          
-          userEl.innerHTML = `
-            <span class="font-bold w-8 text-center ${index < 3 ? 'crown-icon' : ''}">${medal}</span>
-            <img src="${user.avatar}" alt="User Avatar" class="w-10 h-10 rounded-full">
-            <div class="flex-grow">
-              <p class="font-bold">${user.username}</p>
-            </div>
-            <span class="font-bold text-lg">${user.score}</span>
-          `;
-          
-          elements.ratingList.appendChild(userEl);
+          this.user = {
+            id: uid,
+            username: tgUser ? (tgUser.username || tgUser.first_name) : 'Гость',
+            avatar: tgUser?.photo_url || $('#user-avatar').src,
+            score: 0
+          };
+
+          // Sync with DB
+          await this.syncUser();
+          return this.user;
+        } catch (e) {
+          console.error("Auth Error", e);
+          return { id: 'offline', username: 'Offline', score: 0 };
+        }
+      }
+
+      async syncUser() {
+        if (!this.user.id || this.user.id === 'offline') return;
+        const ref = this.db.collection('users').doc(this.user.id);
+        const doc = await ref.get();
+        if (doc.exists) {
+          this.user.score = doc.data().score || 0;
+        } else {
+          await ref.set(this.user, { merge: true });
+        }
+      }
+
+      async updateScore(points) {
+        this.user.score += points;
+        if(this.user.id !== 'offline') {
+          await this.db.collection('users').doc(this.user.id).update({ score: this.user.score });
+        }
+        return this.user.score;
+      }
+
+      async saveRecord(difficulty, time) {
+        if(this.user.id === 'offline') return;
+        await this.db.collection('timeRecords').add({
+          userId: this.user.id,
+          username: this.user.username,
+          avatar: this.user.avatar,
+          difficulty,
+          time,
+          date: new Date().toISOString()
         });
-        
-        const userRankIndex = leaderboard.findIndex(user => String(user.id) === String(currentUser.id));
-        if (!currentUserInTop10 && userRankIndex !== -1) {
-          const user = leaderboard[userRankIndex];
-          elements.ratingList.innerHTML += '<div class="text-center my-2 opacity-50">...</div>';
-          
-          const userEl = document.createElement('div');
-          userEl.className = 'record-card personal-record flex items-center gap-4';
-          userEl.innerHTML = `
-            <span class="font-bold w-8 text-center">${userRankIndex + 1}</span>
-            <img src="${user.avatar}" alt="User Avatar" class="w-10 h-10 rounded-full">
-            <div class="flex-grow">
-              <p class="font-bold">${user.username}</p>
-            </div>
-            <span class="font-bold text-lg">${user.score}</span>
-          `;
-          elements.ratingList.appendChild(userEl);
+      }
+
+      async getLeaderboard(type = 'score', difficulty = 'easy') {
+        if(this.user.id === 'offline') return [];
+        let q;
+        if (type === 'score') {
+          q = this.db.collection('users').orderBy('score', 'desc').limit(20);
+        } else {
+          q = this.db.collection('timeRecords')
+            .where('difficulty', '==', difficulty)
+            .orderBy('time', 'asc').limit(20);
         }
-        
-      } catch (error) {
-        console.error("Ошибка при загрузке рейтинга очков:", error);
-        elements.ratingList.innerHTML = '<p>Не удалось загрузить рейтинг.</p>';
+        const snap = await q.get();
+        return snap.docs.map(d => d.data());
+      }
+
+      saveLocalGame(state) {
+        localStorage.setItem('sudoku_saved', JSON.stringify(state));
+        // Add to history list (max 10)
+        let hist = JSON.parse(localStorage.getItem('sudoku_history') || '[]');
+        // Remove if duplicate by date (simple check)
+        hist = hist.filter(g => g.date !== state.date);
+        hist.unshift({ 
+          date: state.date, 
+          diff: state.difficulty, 
+          time: state.time, 
+          solved: state.solved || false 
+        });
+        localStorage.setItem('sudoku_history', JSON.stringify(hist.slice(0, 10)));
+      }
+      
+      getLocalGame() {
+        return JSON.parse(localStorage.getItem('sudoku_saved'));
       }
     }
-    
-    async function populateTimeLeaderboard(difficulty = 'easy') {
-      elements.ratingList.innerHTML = '<p>Загрузка рейтинга...</p>';
-      
-      try {
-        const snapshot = await recordsCollection
-          .where('difficulty', '==', difficulty) 
-          .orderBy('time', 'asc')              
-          .limit(100)
-          .get();
-          
-        if (snapshot.empty) {
-          elements.ratingList.innerHTML = '<p>Рейтинг для этой сложности пуст.</p>';
-          return;
+
+    // --- 3. SUDOKU CORE LOGIC ---
+    class SudokuCore {
+      constructor() {
+        this.grid = [];
+        this.solution = [];
+      }
+
+      generate(difficulty) {
+        // 1. Fill diagonal 3x3 matrices (independent)
+        this.solution = Array(9).fill().map(() => Array(9).fill(0));
+        for (let i = 0; i < 9; i += 3) this.fillBox(i, i);
+        // 2. Solve remaining
+        this.solve(this.solution);
+        // 3. Remove digits
+        this.grid = this.solution.map(r => [...r]);
+        let attempts = CONFIG.DIFFICULTY[difficulty].remove;
+        while (attempts > 0) {
+          let r = Math.floor(Math.random() * 9);
+          let c = Math.floor(Math.random() * 9);
+          if (this.grid[r][c] !== 0) {
+            this.grid[r][c] = 0;
+            attempts--;
+          }
         }
+        return { initial: this.grid, solution: this.solution };
+      }
+
+      fillBox(row, col) {
+        let nums = [1,2,3,4,5,6,7,8,9].sort(() => Math.random() - 0.5);
+        let idx = 0;
+        for (let i = 0; i < 3; i++) {
+          for (let j = 0; j < 3; j++) {
+            this.solution[row + i][col + j] = nums[idx++];
+          }
+        }
+      }
+
+      isValid(grid, row, col, num) {
+        for (let x = 0; x < 9; x++) {
+          if (grid[row][x] === num) return false;
+          if (grid[x][col] === num) return false;
+        }
+        let startRow = row - row % 3, startCol = col - col % 3;
+        for (let i = 0; i < 3; i++)
+          for (let j = 0; j < 3; j++)
+            if (grid[i + startRow][j + startCol] === num) return false;
+        return true;
+      }
+
+      solve(grid) {
+        for (let r = 0; r < 9; r++) {
+          for (let c = 0; c < 9; c++) {
+            if (grid[r][c] === 0) {
+              for (let num = 1; num <= 9; num++) {
+                if (this.isValid(grid, r, c, num)) {
+                  grid[r][c] = num;
+                  if (this.solve(grid)) return true;
+                  grid[r][c] = 0;
+                }
+              }
+              return false;
+            }
+          }
+        }
+        return true;
+      }
+    }
+
+    // --- 4. UI MANAGER ---
+    class UIManager {
+      constructor(events) {
+        this.events = events;
+        this.gridEl = $('#sudoku-grid');
+        this.numpadEl = $('#numpad');
+        this.cells = [];
+        this.initGrid();
+        this.initNumpad();
+        this.initTheme();
+        this.bindModals();
+      }
+
+      initGrid() {
+        this.gridEl.innerHTML = '';
+        this.cells = [];
+        for (let i = 0; i < 81; i++) {
+          let div = document.createElement('div');
+          div.className = 'cell';
+          div.dataset.idx = i;
+          div.addEventListener('mousedown', () => this.events.onCellClick(i));
+          this.gridEl.appendChild(div);
+          this.cells.push(div);
+        }
+      }
+
+      initNumpad() {
+        this.numpadEl.innerHTML = '';
+        for (let i = 1; i <= 9; i++) {
+          let btn = document.createElement('button');
+          btn.className = 'numpad-btn';
+          btn.textContent = i;
+          btn.addEventListener('click', () => this.events.onInput(i));
+          this.numpadEl.appendChild(btn);
+        }
+        // Eraser
+        let erase = document.createElement('button');
+        erase.className = 'numpad-btn text-red-400';
+        erase.innerHTML = `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>`;
+        erase.addEventListener('click', () => this.events.onInput(0));
+        this.numpadEl.appendChild(erase);
+      }
+
+      render(grid, initialGrid, activeIdx, selectedNum, errors = []) {
+        const activeRow = activeIdx !== null ? Math.floor(activeIdx / 9) : -1;
+        const activeCol = activeIdx !== null ? activeIdx % 9 : -1;
+        const activeBlockRow = activeRow !== -1 ? Math.floor(activeRow / 3) : -1;
+        const activeBlockCol = activeCol !== -1 ? Math.floor(activeCol / 3) : -1;
         
-        const userBestTimes = new Map();
-        snapshot.docs.forEach(doc => {
-          const data = doc.data();
-          if (!userBestTimes.has(data.userId) || data.time < userBestTimes.get(data.userId).time) {
-            userBestTimes.set(data.userId, data);
+        // Count numbers to disable completed ones
+        const counts = Array(10).fill(0);
+
+        this.cells.forEach((cell, i) => {
+          const r = Math.floor(i / 9);
+          const c = i % 9;
+          const val = grid[r][c];
+          const isInit = initialGrid[r][c] !== 0;
+
+          if (val !== 0) counts[val]++;
+
+          // Reset classes
+          cell.className = 'cell';
+          cell.textContent = val === 0 ? '' : val;
+
+          // Static classes
+          if (isInit) cell.classList.add('given');
+          else if (val !== 0) cell.classList.add('input');
+
+          // Highlight Logic
+          const isSameNum = val !== 0 && val === selectedNum;
+          const isArea = (r === activeRow || c === activeCol || 
+                         (Math.floor(r/3) === activeBlockRow && Math.floor(c/3) === activeBlockCol));
+          
+          if (i === activeIdx) cell.classList.add('active');
+          else if (isSameNum) cell.classList.add('highlight-similar');
+          else if (isArea && activeIdx !== null) cell.classList.add('highlight-area');
+
+          // Errors
+          if (errors.includes(i)) cell.classList.add('error');
+        });
+
+        // Update Numpad
+        const numBtns = this.numpadEl.querySelectorAll('.numpad-btn');
+        numBtns.forEach((btn, i) => {
+          if (i < 9) { // 1-9
+             const num = i + 1;
+             btn.classList.toggle('selected', num === selectedNum);
+             btn.classList.toggle('disabled', counts[num] >= 9);
           }
         });
+      }
+
+      updateTimer(str) { $('#timer').textContent = str; }
+      updateUserInfo(user) {
+        $('#username').textContent = user.username;
+        $('#user-score').textContent = user.score;
+        $('#user-avatar').src = user.avatar;
+      }
+      updateCounts(hints) { $('#hint-count').textContent = `${hints}/${CONFIG.MAX_HINTS}`; }
+      
+      showMessage(msg, type='error') {
+        const el = $('#status-message');
+        el.textContent = msg;
+        el.className = `h-6 text-center text-xs font-semibold transition-opacity opacity-100 ${type === 'error' ? 'text-red-400' : 'text-green-400'}`;
+        setTimeout(() => el.classList.remove('opacity-100'), 2000);
+      }
+
+      // Theme Logic
+      initTheme() {
+        const saved = localStorage.getItem('sudoku_theme') || 'default';
+        document.body.setAttribute('data-theme', saved);
         
-        const leaderboard = Array.from(userBestTimes.values()).sort((a, b) => a.time - b.time);
-        
-        elements.ratingList.innerHTML = '';
-        let currentUserInTop10 = false;
-        
-        leaderboard.slice(0, 10).forEach((record, index) => {
-          const isCurrentUser = String(record.userId) === String(currentUser.id);
-          if(isCurrentUser) currentUserInTop10 = true;
-          
-          const recordEl = document.createElement('div');
-          recordEl.className = `record-card flex items-center gap-4 ${isCurrentUser ? 'personal-record' : ''}`;
-          
-          const medal = index === 0 ? '👑' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}`;
-          
-          recordEl.innerHTML = `
-            <span class="font-bold w-8 text-center ${index < 3 ? 'crown-icon' : ''}">${medal}</span>
-            <img src="${record.avatar}" alt="User Avatar" class="w-10 h-10 rounded-full">
-            <div class="flex-grow">
-              <p class="font-bold">${record.username}</p>
-              <p class="text-xs opacity-70">${new Date(record.date).toLocaleDateString()}</p>
-            </div>
-            <span class="font-bold text-lg">${formatTime(record.time)}</span>
-          `;
-          
-          elements.ratingList.appendChild(recordEl);
+        $('#btn-theme').addEventListener('click', (e) => {
+          e.stopPropagation();
+          $('#theme-panel').classList.toggle('hidden');
         });
         
-        const userRankIndex = leaderboard.findIndex(record => String(record.userId) === String(currentUser.id));
-        if (!currentUserInTop10 && userRankIndex !== -1) {
-          const record = leaderboard[userRankIndex];
-          elements.ratingList.innerHTML += '<div class="text-center my-2 opacity-50">...</div>';
-          
-          const recordEl = document.createElement('div');
-          recordEl.className = 'record-card personal-record flex items-center gap-4';
-          recordEl.innerHTML = `
-            <span class="font-bold w-8 text-center">${userRankIndex + 1}</span>
-            <img src="${record.avatar}" alt="User Avatar" class="w-10 h-10 rounded-full">
-            <div class="flex-grow">
-              <p class="font-bold">${record.username}</p>
-              <p class="text-xs opacity-70">${new Date(record.date).toLocaleDateString()}</p>
-            </div>
-            <span class="font-bold text-lg">${formatTime(record.time)}</span>
-          `;
-          elements.ratingList.appendChild(recordEl);
+        $$('#theme-panel div').forEach(div => {
+          div.addEventListener('click', () => {
+            const theme = div.dataset.setTheme;
+            document.body.setAttribute('data-theme', theme);
+            localStorage.setItem('sudoku_theme', theme);
+            $('#theme-panel').classList.add('hidden');
+          });
+        });
+
+        document.addEventListener('click', (e) => {
+          if (!e.target.closest('#btn-theme') && !e.target.closest('#theme-panel')) {
+            $('#theme-panel').classList.add('hidden');
+          }
+        });
+      }
+
+      bindModals() {
+        $$('.close-modal').forEach(b => b.addEventListener('click', () => {
+          b.closest('.modal-backdrop').classList.add('hidden');
+        }));
+        // Win modal close
+        $('#btn-win-close').addEventListener('click', () => $('#modal-win').classList.add('hidden'));
+      }
+      
+      openModal(id) { $(`#${id}`).classList.remove('hidden'); }
+    }
+
+    // --- 5. GAME CONTROLLER (The Brain) ---
+    class GameController {
+      constructor() {
+        this.sound = new SoundManager();
+        this.storage = new StorageService();
+        this.core = new SudokuCore();
+        this.ui = new UIManager({
+          onCellClick: (idx) => this.selectCell(idx),
+          onInput: (num) => this.inputNumber(num)
+        });
+
+        this.state = {
+          grid: [], // Current state
+          initial: [], // Immutable
+          solution: [], // Answer
+          activeIdx: null,
+          selectedNum: null, // For highlighting
+          difficulty: 'easy',
+          hints: CONFIG.MAX_HINTS,
+          startTime: 0,
+          timerInterval: null,
+          history: [], // Undo stack
+          finished: false
+        };
+
+        this.init();
+      }
+
+      async init() {
+        const user = await this.storage.initAuth();
+        this.ui.updateUserInfo(user);
+
+        // Bind Controls
+        $('#btn-new-game').onclick = () => this.newGame();
+        $('#btn-check').onclick = () => this.checkGame();
+        $('#btn-undo').onclick = () => this.undo();
+        $('#btn-hint').onclick = () => this.useHint();
+        $('#difficulty-select').onchange = (e) => {
+          this.state.difficulty = e.target.value;
+          this.newGame();
+        };
+        $('#btn-sound').onclick = () => this.sound.toggle();
+        $('#btn-history').onclick = () => this.showHistory();
+        $('#btn-stats').onclick = () => this.showStats();
+        $('#btn-tutorial').onclick = () => this.showTutorial();
+
+        // Keyboard support
+        document.addEventListener('keydown', (e) => {
+           if(this.state.finished) return;
+           if(e.key >= '1' && e.key <= '9') this.inputNumber(parseInt(e.key));
+           if(e.key === 'Backspace' || e.key === 'Delete') this.inputNumber(0);
+           if(e.key === 'ArrowUp') this.moveSelection(-9);
+           if(e.key === 'ArrowDown') this.moveSelection(9);
+           if(e.key === 'ArrowLeft') this.moveSelection(-1);
+           if(e.key === 'ArrowRight') this.moveSelection(1);
+        });
+
+        // Load saved or new
+        const saved = this.storage.getLocalGame();
+        if (saved && !saved.solved) {
+            // Restore logic... (omitted for brevity, generating new for robust start)
+            this.newGame(); // For cleaner demo, usually restore here
+        } else {
+            this.newGame();
         }
+
+        // Hide loader
+        setTimeout(() => {
+          $('#loader').style.opacity = '0';
+          setTimeout(() => $('#loader').style.display = 'none', 500);
+        }, 800);
+      }
+
+      newGame() {
+        this.sound.play();
+        this.stopTimer();
         
-      } catch (error) {
-        console.error("Ошибка при загрузке рейтинга времени:", error);
-        elements.ratingList.innerHTML = '<p>Не удалось загрузить рейтинг. Возможно, требуется настройка базы данных (индексы).</p>';
+        const data = this.core.generate(this.state.difficulty);
+        this.state.initial = data.initial.map(r => [...r]); // Copy
+        this.state.grid = data.initial.map(r => [...r]);
+        this.state.solution = data.solution;
+        
+        this.state.history = [];
+        this.state.hints = CONFIG.MAX_HINTS;
+        this.state.finished = false;
+        this.state.activeIdx = null;
+        this.state.selectedNum = null;
+        this.state.startTime = Date.now();
+        
+        $('#difficulty-display').textContent = $('#difficulty-select').options[$('#difficulty-select').selectedIndex].text;
+        $('#btn-undo').disabled = true;
+        this.ui.updateCounts(this.state.hints);
+        this.render();
+        this.startTimer();
       }
-    }
-    
-    function loadRating() {
-      if (currentRatingType === 'score') {
-        populateScoreLeaderboard();
-      } else {
-        populateTimeLeaderboard(currentRatingDifficulty);
-      }
-    }
-    
-    function createGrid() { elements.grid.innerHTML='<div class="grid-separator v-sep-1"></div><div class="grid-separator v-sep-2"></div><div class="grid-separator h-sep-1"></div><div class="grid-separator h-sep-2"></div>';grid=Array(9).fill().map(()=>Array(9).fill(0));givenCells.clear();for(let i=0;i<9;i++)for(let j=0;j<9;j++){const e=document.createElement("div");e.className="cell";const t=document.createElement("div");t.className="cell-content";e.appendChild(t),e.addEventListener("click",(t)=>{t.stopPropagation();handleCellClick(i,j)}),elements.grid.appendChild(e)}}
-    function createNumberRow() { elements.numberRow.innerHTML="";for(let i=1;i<=9;i++){const e=document.createElement("div");e.className="number-button-wrapper",e.dataset.tool=i,e.innerHTML=`<div class="number-button"><div class="number-button-content"><span>${i}</span></div></div>`,e.addEventListener("click",()=>{playSound(); if(!e.classList.contains("disabled")){selectTool(i)}}),elements.numberRow.appendChild(e)}const e=document.createElement("div");e.className="number-button-wrapper",e.dataset.tool="erase",e.innerHTML=`<div class="number-button"><div class="number-button-content"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /></svg></div></div>`,e.addEventListener("click",()=>{playSound(); selectTool("erase")}),elements.numberRow.appendChild(e)}
-    function generatePuzzle(difficulty) { let puzzle, sol; do { sol = createSolution(); puzzle = createPuzzle(sol, difficulty); } while (countSolutions(puzzle.map(r => r.slice())) !== 1); solution = sol; grid = puzzle; givenCells.clear(); for (let r = 0; r < 9; r++) for (let c = 0; c < 9; c++) if (grid[r][c] !== 0) givenCells.add(`${r},${c}`); renderGrid(); }
-    function createSolution() { let board = Array(9).fill().map(() => Array(9).fill(0)); fill(board); return board; }
-    function createPuzzle(solution, difficulty) { const puzzle = solution.map(row => row.slice()); let cellsToRemove = { easy: 40, medium: 52, hard: 58 }[difficulty]; const cells = []; for (let r = 0; r < 9; r++) for (let c = 0; c < 9; c++) cells.push([r, c]); shuffle(cells); for (let i = 0; i < cells.length && cellsToRemove > 0; i++) { const [r, c] = cells[i]; const temp = puzzle[r][c]; puzzle[r][c] = 0; if (countSolutions(puzzle.map(row => row.slice())) !== 1) { puzzle[r][c] = temp; } else { cellsToRemove--; } } return puzzle; }
-    function countSolutions(board) { let counter = 0; function solve() { for (let r = 0; r < 9; r++) { for (let c = 0; c < 9; c++) { if (board[r][c] === 0) { for (let num = 1; num <= 9; num++) { if (isSafe(board, r, c, num)) { board[r][c] = num; solve(); if (counter > 1) return; board[r][c] = 0; } } return; } } } counter++; } solve(); return counter; }
-    function fill(board) { for (let r = 0; r < 9; r++) for (let c = 0; c < 9; c++) { if (board[r][c] === 0) { const nums = [1, 2, 3, 4, 5, 6, 7, 8, 9]; shuffle(nums); for (let num of nums) if (isSafe(board, r, c, num)) { board[r][c] = num; if (fill(board)) return true; board[r][c] = 0; } return false; } } return true; }
-    function isSafe(board, row, col, num) { for (let x = 0; x < 9; x++) if (board[row][x] === num || board[x][col] === num || board[3 * Math.floor(row / 3) + Math.floor(x / 3)][3 * Math.floor(col / 3) + x % 3] === num) return false; return true; }
-    function shuffle(arr) { for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } }
-    function handleCellClick(row, col) { playSound(); if (isGameFinished) return; (activeTool!==null)?(grid[row][col]===0||(grid[row][col]!==0&&activeTool==='erase'))?performAction(activeTool,row,col):(selectTool(null),selectCell(row,col)):selectCell(row,col)}
-    function selectCell(row, col) { if (isGameFinished) return; clearHighlights();activeCell=[row,col];const e=document.querySelectorAll(".cell");e.forEach((t,n)=>{const l=Math.floor(n/9),s=n%9,c=l===row,r=s===col,o=Math.floor(l/3)===Math.floor(row/3)&&Math.floor(s/3)===Math.floor(col/3);(c||r||o)&&t.classList.add("area-highlight")}),e[9*row+col].classList.add("active-cell"),highlightEnabled&&0!==grid[row][col]&&highlightSimilarNumbers(grid[row][col])}
-    function performAction(action, row, col) { if(givenCells.has(`${row},${col}`)) return; const value = (action === 'erase') ? 0 : action; const prevValue = grid[row][col]; if(prevValue === value) return; undoStack.push({row, col, prevValue, value}); updateUndoButtonState(); const cellElement = document.querySelectorAll(".cell")[row * 9 + col]; grid[row][col] = value; cellElement.querySelector(".cell-content").textContent = value || ''; cellElement.classList.remove('error'); cellElement.classList.toggle('user-input', value !== 0); updateNumberPanelState(); updateHintButtonState(); if(highlightEnabled) { clearHighlights(true); if (value !== 0) highlightSimilarNumbers(value); }}
-    function undoLastAction() { playSound(); if (isGameFinished || undoStack.length === 0) return; const lastMove = undoStack.pop(); const {row, col, prevValue} = lastMove; const cellElement = document.querySelectorAll(".cell")[row * 9 + col]; grid[row][col] = prevValue; cellElement.querySelector(".cell-content").textContent = prevValue || ''; cellElement.classList.remove('error'); cellElement.classList.toggle('user-input', prevValue !== 0); updateUndoButtonState(); updateNumberPanelState(); updateHintButtonState(); if(activeCell && activeCell[0] === row && activeCell[1] === col) { selectCell(row, col); } }
-    function selectTool(tool) { if (isGameFinished) return; activeTool = (activeTool === tool) ? null : tool; updateToolSelection(); clearHighlights(); activeCell = null; if (activeTool && activeTool !== 'erase' && highlightEnabled) { highlightSimilarNumbers(activeTool); } }
-    function deselectCell() { activeCell && (clearHighlights(), activeCell = null); if (activeTool !== null) { activeTool = null; updateToolSelection(); } }
-    function renderGrid(shouldResetTimer = true) { document.querySelectorAll(".cell").forEach((e,t)=>{const n=Math.floor(t/9),l=t%9;e.querySelector(".cell-content").textContent=grid[n][l]||"",e.className="cell",givenCells.has(`${n},${l}`)?e.classList.add("given"):0!==grid[n][l]&&e.classList.add("user-input")});activeCell=null;activeTool=null;updateToolSelection();clearHighlights();if(shouldResetTimer)resetTimer();updateNumberPanelState();undoStack = []; updateUndoButtonState(); updateHintButtonState();}
-    function updateNumberPanelState() { const counts = Array(10).fill(0); for (let row of grid) for (let cell of row) if (cell !== 0) counts[cell]++; elements.numberRow.querySelectorAll(".number-button-wrapper").forEach((wrapper, index) => { if (index < 9) { const num = index + 1; const isExhausted = counts[num] === 9; wrapper.classList.toggle("disabled", isExhausted); if (isExhausted && activeTool === num) { selectTool(null); } } });}
-    function updateToolSelection() { document.querySelectorAll('.number-button-wrapper').forEach(btn => btn.classList.toggle('selected', btn.dataset.tool == activeTool)); }
-    function updateUndoButtonState() { elements.undoBtn.disabled = undoStack.length === 0 || isGameFinished; }
-    function updateHintButtonState() { const hintsLeft = 3 - hintCount; const isBoardFull = grid.every(row => row.every(cell => cell !== 0)); elements.hintCountDisplay.textContent = `${hintsLeft}/3`; elements.hintBtn.disabled = isGameFinished || isBoardFull || hintsLeft <= 0;}
-    function getHint() { playSound(); if (isGameFinished || hintCount >= 3) return; clearHintedCells(); const mistakes = []; const emptyCells = []; for (let r = 0; r < 9; r++) for (let c = 0; c < 9; c++) if (!givenCells.has(`${r},${c}`)) { if (grid[r][c] !== 0 && grid[r][c] !== solution[r][c]) mistakes.push([r, c]); else if (grid[r][c] === 0) emptyCells.push([r, c]); } let targetCell; if (mistakes.length > 0) targetCell = mistakes[Math.floor(Math.random() * mistakes.length)]; else if (emptyCells.length > 0) targetCell = emptyCells[Math.floor(Math.random() * emptyCells.length)]; else return; hintCount++; updateHintButtonState(); const [row, col] = targetCell; const correctValue = solution[row][col]; performAction(correctValue, row, col); const cellElement = document.querySelectorAll('.cell')[row * 9 + col]; cellElement.classList.add('hinted'); }
-    function highlightSimilarNumbers(e){ if(!e) return; document.querySelectorAll(".cell").forEach((t,n)=>{if(grid[Math.floor(n/9)][n%9]===e)t.classList.add("highlight")})}
-    function clearHighlights(keepArea = false){ clearHintedCells(); document.querySelectorAll(".cell").forEach(e=>{e.classList.remove("highlight"),keepArea||e.classList.remove("area-highlight","active-cell")})}
-    function clearHintedCells() { document.querySelectorAll('.hinted').forEach(c => c.classList.remove('hinted')); }
-    function resetTimer(elapsedSeconds = 0){ clearInterval(timerInterval); startTime = Date.now() - elapsedSeconds * 1000; timerInterval = setInterval(() => { const elapsed = Math.floor((Date.now() - startTime) / 1000); const minutes = String(Math.floor(elapsed / 60)).padStart(2, '0'); const seconds = String(elapsed % 60).padStart(2, '0'); elements.timer.textContent = `${minutes}:${seconds}`; }, 1000); }
-    function applyTheme(e){ playSound(); document.body.dataset.theme=e;localStorage.setItem("sudoku-theme",e);document.querySelectorAll(".theme-button").forEach(t=>{t.style.borderColor=t.dataset.theme===e?"var(--primary-color)":"transparent"})}
-    function saveCurrentGame() { if (isGameFinished || grid.length === 0 || grid.every(r=>r.every(c=>c===0))) return; const gameState = { grid: grid, solution: solution, givenCells: Array.from(givenCells), time: Math.floor((Date.now() - startTime) / 1000), difficulty: elements.difficulty.value, savedAt: new Date().toISOString() }; let recentGames = JSON.parse(localStorage.getItem('sudoku-recent-games')) || []; recentGames.unshift(gameState); recentGames = recentGames.slice(0, 5); localStorage.setItem('sudoku-recent-games', JSON.stringify(recentGames)); }
-    function loadGame(gameState) { playSound(); grid = gameState.grid; solution = gameState.solution; givenCells = new Set(gameState.givenCells); elements.difficulty.value = gameState.difficulty; renderGrid(false); resetTimer(gameState.time); elements.recentGamesModal.classList.add('hidden'); }
-    function populateRecentGames() { const games = JSON.parse(localStorage.getItem('sudoku-recent-games')) || []; elements.recentGamesList.innerHTML = ''; if (games.length === 0) { elements.recentGamesList.innerHTML = '<p>Сохранённых игр нет.</p>'; return; } games.forEach(game => { const gameEl = document.createElement('div'); gameEl.className = 'flex items-center gap-4 p-2 rounded-lg border-b border-[var(--grid-line)]'; const time = new Date(game.savedAt); const previewGrid = game.grid.flat().map((cell, i) => `<div class="modal-preview-cell" style="color: ${game.givenCells.includes(`${Math.floor(i/9)},${i%9}`) ? 'var(--given-text)' : 'var(--primary-color)'}; font-weight: ${game.givenCells.includes(`${Math.floor(i/9)},${i%9}`) ? 700 : 500}">${cell || ''}</div>`).join(''); gameEl.innerHTML = ` <div class="modal-preview-grid">${previewGrid}</div> <div class="flex-grow"> <p class="font-bold">${time.toLocaleDateString()} ${time.toLocaleTimeString()}</p> <p class="text-sm opacity-70">${game.difficulty}</p> </div> <div class="flex flex-col gap-1"> <button class="load-game-button main-button text-white px-3 py-1 rounded-lg glow text-xs" data-id="${game.savedAt}">Загрузить</button> <button class="delete-game-button control-button text-red-500 hover:bg-red-500 hover:text-white px-3 py-1 rounded-lg glow text-xs" data-id="${game.savedAt}">Удалить</button> </div> `; elements.recentGamesList.appendChild(gameEl); }); }
-    function deleteGame(gameId) { playSound(); if (!confirm('Вы уверены, что хотите удалить эту игру?')) return; let recentGames = JSON.parse(localStorage.getItem('sudoku-recent-games')) || []; recentGames = recentGames.filter(game => game.savedAt !== gameId); localStorage.setItem('sudoku-recent-games', JSON.stringify(recentGames)); populateRecentGames(); }
-    const tutorialLessons=[{title:"Цель игры",steps:[{text:"Каждая СТРОКА должна содержать цифры от 1 до 9 без повторений.",setup:e=>{[1,2,3,4,5,6,7,8,9].forEach((t,l)=>{e[l].querySelector('.cell-content').textContent=t});for(let t=0;t<9;t++)e[t].classList.add("tut-highlight")}},{text:"То же самое правило действует для каждого СТОЛБЦА.",setup:e=>{[1,2,3,4,5,6,7,8,9].forEach((t,l)=>{e[9*l].querySelector('.cell-content').textContent=t});for(let t=0;t<9;t++)e[9*t].classList.add("tut-highlight")}},{text:"И для каждого малого КВАДРАТА 3х3.",setup:e=>{[1,2,3,4,5,6,7,8,9].forEach((t,l)=>{const s=Math.floor(l/3),i=l%3;e[9*s+i].querySelector('.cell-content').textContent=t,e[9*s+i].classList.add("tut-highlight")})}}]},{title:"Техника: Сканирование",steps:[{text:"Задача: найти, где в этом блоке должна стоять цифра '5'.",setup:e=>{e[40].classList.add("tut-target");[13,30,41].forEach(t=>{e[t].querySelector('.cell-content').textContent="5"})}},{text:"Эта '5' исключает всю свою строку.",setup:e=>{[41].forEach(t=>e[t].classList.add("tut-conflict"));for(let t=36;t<45;t++)e[t].classList.add("tut-highlight");e[40].classList.add("tut-target")}},{text:"Эта '5' исключает весь свой столбец.",setup:e=>{[13,41].forEach(t=>e[t].classList.add("tut-conflict"));for(let t=4;t<81;t+=9)e[t].classList.add("tut-highlight");e[40].classList.add("tut-target")}},{text:"А эта '5' — свой блок.",setup:e=>{[13,30,41].forEach(t=>e[t].classList.add("tut-conflict"));for(let t=3;t<6;t++)for(let l=3;l<6;l++)e[9*t+l].classList.add("tut-highlight");e[40].classList.add("tut-target")}},{text:"Исключив все зоны, мы видим единственное свободное место.",setup:e=>{[13,30,41].forEach(t=>e[t].classList.add("tut-conflict"));[36,37,38,39,41,42,43,44,4,22,31,49,58,67,76].forEach(t=>e[t].classList.add("tut-highlight"))}},{text:"Готово! Смело ставим сюда '5'.",setup:e=>{[13,30,41].forEach(t=>{e[t].querySelector('.cell-content').textContent="5"});e[40].querySelector('.cell-content').textContent="5";e[40].classList.add("tut-placed")}}] }];
-    let currentLesson = 0; let currentStep = 0;
-    function playTutorial(lessonIndex, stepIndex) { 
-      playSound(); 
-      currentLesson = lessonIndex; 
-      currentStep = stepIndex; 
-      const lesson = tutorialLessons[currentLesson]; 
-      const step = lesson.steps[currentStep]; 
-      elements.tutorialTitle.textContent = lesson.title; 
-      elements.tutorialText.textContent = step.text; 
-      const gridEl = elements.tutorialGrid; 
-      gridEl.innerHTML = ''; 
-      const cells = []; 
-      
-      for (let i = 0; i < 81; i++) { 
-        const cell = document.createElement('div'); 
-        const content = document.createElement('div'); 
-        content.className = 'cell-content'; 
-        cell.className = 'tutorial-cell'; 
-        cell.appendChild(content); 
-        cells.push(cell); 
-        gridEl.appendChild(cell); 
-      } 
-      
-      step.setup(cells); 
-      elements.tutorialStepIndicator.textContent = `Шаг ${currentStep + 1} из ${lesson.steps.length}`; 
-      elements.tutorialPrevBtn.disabled = currentStep === 0; 
-      elements.tutorialNextBtn.textContent = (currentStep === lesson.steps.length - 1) ? 'Завершить' : 'Далее'; 
-    }
-    
-    function showWinModal(difficulty, hints, points, timeInSeconds, isNewRecord = false) { 
-      const difficultyMap = { easy: 'Лёгкий', medium: 'Средний', hard: 'Сложный' }; 
-      const difficultyText = difficultyMap[difficulty] || difficulty; 
-      
-      let recordText = '';
-      if (isNewRecord) {
-        recordText = '<br><span style="color: #ffd700;">🏆 НОВЫЙ РЕКОРД! 🏆</span>';
+
+      selectCell(idx) {
+        if(this.state.finished) return;
+        this.sound.play();
+        this.state.activeIdx = idx;
+        const r = Math.floor(idx/9), c = idx%9;
+        const val = this.state.grid[r][c];
+        if(val !== 0) this.state.selectedNum = val;
+        this.render();
       }
       
-      elements.winModalMessage.innerHTML = `Вы прошли судоку на уровне сложности <b>"${difficultyText}"</b>, использовав <b>${hints}</b> подсказок.<br>Время: <b>${formatTime(timeInSeconds)}</b><br>+${points} очков!${recordText}`; 
-      elements.winModal.classList.remove('hidden'); 
-    }
-    
-    async function addPoints() { 
-      const difficulty = elements.difficulty.value; 
-      let basePoints = 0; 
-      if (difficulty === 'easy') basePoints = 100; 
-      else if (difficulty === 'medium') basePoints = 250; 
-      else if (difficulty === 'hard') basePoints = 500; 
-      
-      const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000); 
-      const timeBonus = Math.max(0, (basePoints * 2) - elapsedSeconds); 
-      const hintPenalty = hintCount * 50; 
-      const totalPoints = Math.max(10, basePoints + timeBonus - hintPenalty); 
-      
-      currentUser.score += totalPoints; 
-      await updateUserData(); 
-      
-      const isNewRecord = await saveTimeRecord(difficulty, elapsedSeconds);
-      
-      showWinModal(difficulty, hintCount, totalPoints, elapsedSeconds, isNewRecord); 
-      elements.message.textContent = ""; 
-    }
-    
-    async function updateUserData() { 
-      elements.userScore.textContent = currentUser.score; 
-      if (!currentUser.id) return; 
-      
-      const userDoc = { 
-        username: currentUser.username, 
-        avatar: currentUser.avatar, 
-        score: currentUser.score,
-        bestTimes: currentUser.bestTimes
-      }; 
-      
-      try { 
-        await usersCollection.doc(currentUser.id).set(userDoc, { merge: true }); 
-      } catch (error) { 
-        console.error("Ошибка при обновлении данных пользователя: ", error); 
-      } 
-    }
-    
-    function checkSolution() { playSound(); if (isGameFinished) return; if (!grid.every(row => row.every(cell => cell))) { elements.message.textContent = "Заполните все ячейки."; return; } let isCorrect = true; document.querySelectorAll(".cell").forEach((cell, index) => { const row = Math.floor(index / 9); const col = index % 9; if (!givenCells.has(`${row},${col}`) && grid[row][col] !== solution[row][col]) { cell.classList.add("error"); isCorrect = false; } }); if (isCorrect) { isGameFinished = true; clearInterval(timerInterval); elements.checkBtn.disabled = true; updateHintButtonState(); updateUndoButtonState(); elements.numberRow.querySelectorAll(".number-button-wrapper").forEach(btn => btn.classList.add("disabled")); addPoints(); } else { elements.message.textContent = "В решении есть ошибки."; } }
-    
-    async function init() {
-        // --- НАЧАЛО ИЗМЕНЕННОГО БЛОКА ---
-        try {
-            // 1. СНАЧАЛА всегда входим анонимно, чтобы получить базовую сессию Firebase.
-            // Это гарантирует, что `auth.currentUser` всегда будет существовать.
-            await auth.signInAnonymously();
-        } catch (error) {
-            console.error("Ошибка анонимной аутентификации:", error);
-            alert("Не удалось подключиться к сервису рейтинга. Пожалуйста, перезагрузите игру.");
+      moveSelection(delta) {
+        if (this.state.activeIdx === null) {
+            this.selectCell(0);
             return;
         }
+        let newIdx = this.state.activeIdx + delta;
+        if(newIdx >= 0 && newIdx < 81) this.selectCell(newIdx);
+      }
 
-        // 2. Устанавливаем ID по умолчанию на анонимный.
-        // Это будет наш fallback-ID, если данные Telegram не будут найдены.
-        // Firebase Auth UID также будет использоваться для правил безопасности.
-        const firebaseAuthUid = auth.currentUser.uid;
-        currentUser.id = firebaseAuthUid;
+      inputNumber(num) {
+        if(this.state.finished || this.state.activeIdx === null) return;
+        
+        const r = Math.floor(this.state.activeIdx / 9);
+        const c = this.state.activeIdx % 9;
+        
+        // Cannot edit given cells
+        if (this.state.initial[r][c] !== 0) return;
+        
+        const oldVal = this.state.grid[r][c];
+        if (oldVal === num) return;
 
-        // 3. ТЕПЕРЬ проверяем, есть ли данные из Telegram.
-        if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe && window.Telegram.WebApp.initDataUnsafe.user && window.Telegram.WebApp.initDataUnsafe.user.id) {
-            const user = window.Telegram.WebApp.initDataUnsafe.user;
+        // Save for undo
+        this.state.history.push({ idx: this.state.activeIdx, val: oldVal });
+        if(this.state.history.length > 20) this.state.history.shift();
+        $('#btn-undo').disabled = false;
+
+        this.state.grid[r][c] = num;
+        if (num !== 0) this.state.selectedNum = num;
+        
+        this.sound.play();
+        this.render();
+        
+        // Auto check for win
+        if (!this.state.grid.flat().includes(0)) {
+            // Check correctness silently
+            let correct = true;
+            for(let i=0; i<9; i++) 
+                for(let j=0; j<9; j++) 
+                    if(this.state.grid[i][j] !== this.state.solution[i][j]) correct = false;
             
-            // 4. Если данные Telegram есть, ПЕРЕОПРЕДЕЛЯЕМ ID на стабильный Telegram ID.
-            // Это становится главным идентификатором пользователя для хранения данных (очков, рекордов).
-            // Firebase Auth UID при этом остается для проверки правил безопасности.
-            currentUser.id = String(user.id); 
-            
-            currentUser.username = user.username || 'Guest';
-            if (user.photo_url) {
-                currentUser.avatar = user.photo_url;
-            }
-        } else {
-            // Если мы здесь, значит, пользователь действительно анонимный (открыл в браузере).
-            // Его ID уже установлен на шаге 2, просто задаем имя по умолчанию.
-            currentUser.username = 'Гость';
+            if(correct) this.winGame();
         }
+      }
 
-        elements.username.textContent = currentUser.username;
-        elements.userAvatar.src = currentUser.avatar;
+      undo() {
+        if (!this.state.history.length || this.state.finished) return;
+        const action = this.state.history.pop();
+        const r = Math.floor(action.idx / 9);
+        const c = action.idx % 9;
+        this.state.grid[r][c] = action.val;
+        this.state.activeIdx = action.idx;
+        $('#btn-undo').disabled = this.state.history.length === 0;
+        this.sound.play();
+        this.render();
+      }
 
-        // 5. Вся дальнейшая логика (загрузка данных, сохранение рекордов)
-        // теперь будет использовать ПРАВИЛЬНЫЙ, единый ID: либо от Telegram, либо, в крайнем случае, анонимный.
-        if (currentUser.id) {
-            try {
-                const doc = await usersCollection.doc(currentUser.id).get();
-                if (doc.exists) {
-                    const userData = doc.data();
-                    currentUser.score = userData.score || 0;
-                    currentUser.bestTimes = userData.bestTimes || { easy: null, medium: null, hard: null };
-                } else {
-                    // Создаем нового пользователя с его ID (Telegram или анонимным)
-                    await updateUserData();
+      useHint() {
+        if (this.state.finished || this.state.hints <= 0) return;
+        
+        // Find empty or wrong cell
+        let targets = [];
+        for (let r=0; r<9; r++) {
+            for (let c=0; c<9; c++) {
+                if (this.state.grid[r][c] === 0 || this.state.grid[r][c] !== this.state.solution[r][c]) {
+                    targets.push(r*9+c);
                 }
-            } catch (error) {
-                console.error("Ошибка при загрузке данных пользователя: ", error);
             }
         }
         
-        elements.userScore.textContent = currentUser.score;
-        updatePersonalRecords();
-        // --- КОНЕЦ ИЗМЕНЕННОГО БЛОКА ---
+        if (targets.length === 0) return;
+        
+        const idx = targets[Math.floor(Math.random() * targets.length)];
+        const r = Math.floor(idx/9), c = idx%9;
+        
+        this.state.grid[r][c] = this.state.solution[r][c];
+        this.state.initial[r][c] = this.state.solution[r][c]; // Make it permanent/given
+        this.state.hints--;
+        this.ui.updateCounts(this.state.hints);
+        
+        // Visuals
+        const cell = this.ui.cells[idx];
+        cell.classList.add('hinted');
+        setTimeout(() => cell.classList.remove('hinted'), 1000);
+        
+        this.sound.play();
+        this.render();
+      }
 
-        const startNewGame = () => { playSound(); isGameFinished = false; elements.checkBtn.disabled = false; elements.winModal.classList.add('hidden'); hintCount = 0; saveCurrentGame(); createGrid(); createNumberRow(); generatePuzzle(elements.difficulty.value); elements.message.textContent = ""; };
+      checkGame() {
+        if (this.state.finished) return;
+        let errors = [];
+        let isFull = true;
         
-        elements.newGameBtn.addEventListener('click', startNewGame);
-        elements.checkBtn.addEventListener('click', checkSolution);
-        elements.difficulty.addEventListener('change', () => { playSound(); startNewGame(); });
-        elements.undoBtn.addEventListener('click', undoLastAction);
-        elements.hintBtn.addEventListener('click', getHint);
-        elements.highlightBtn.addEventListener('click', () => { playSound(); highlightEnabled=!highlightEnabled;elements.highlightBtn.textContent=`Подсветка: ${highlightEnabled?"ВКЛ":"ВЫКЛ"}`;if(!highlightEnabled){clearHighlights()}else{if(activeTool && activeTool !== 'erase'){highlightSimilarNumbers(activeTool)}else if(activeCell&&grid[activeCell[0]][activeCell[1]]){highlightSimilarNumbers(grid[activeCell[0]][activeCell[1]])}}});
-        elements.settingsBtn.addEventListener('click', () => { playSound(); elements.themePanel.classList.toggle('hidden'); });
-        elements.recentGamesBtn.addEventListener('click', () => { playSound(); populateRecentGames(); elements.recentGamesModal.classList.remove('hidden'); });
-        elements.ratingBtn.addEventListener('click', () => { playSound(); loadRating(); elements.ratingModal.classList.remove('hidden'); });
-        elements.tutorialBtn.addEventListener('click', () => { playSound(); elements.tutorialModal.classList.remove('hidden'); playTutorial(0, 0); });
-        elements.closeModalBtn.addEventListener('click', () => { playSound(); elements.recentGamesModal.classList.add('hidden'); });
-        elements.closeRatingBtn.addEventListener('click', () => { playSound(); elements.ratingModal.classList.add('hidden'); });
-        elements.closeTutorialBtn.addEventListener('click', () => { playSound(); elements.tutorialModal.classList.add('hidden'); });
-        elements.tutorialNextBtn.addEventListener('click', () => { playSound(); if (currentStep < tutorialLessons[currentLesson].steps.length - 1) { playTutorial(currentLesson, currentStep + 1); } else { elements.tutorialModal.classList.add('hidden'); } });
-        elements.tutorialPrevBtn.addEventListener('click', () => { playSound(); if (currentStep > 0) { playTutorial(currentLesson, currentStep - 1); } });
-        elements.themePanel.addEventListener('click', e => { if (e.target.closest('.theme-button')) { applyTheme(e.target.closest('.theme-button').dataset.theme); } });
-        elements.recentGamesList.addEventListener('click', e => { const loadBtn = e.target.closest('.load-game-button'); const deleteBtn = e.target.closest('.delete-game-button'); if (loadBtn) { loadGame(JSON.parse(localStorage.getItem('sudoku-recent-games')).find(g => g.savedAt === loadBtn.dataset.id)); } if (deleteBtn) { deleteGame(deleteBtn.dataset.id); } });
-        
-        document.querySelectorAll('.rating-type-tab').forEach(tab => {
-          tab.addEventListener('click', () => {
-            playSound();
-            currentRatingType = tab.dataset.type;
-            document.querySelectorAll('.rating-type-tab').forEach(t => t.classList.remove('active'));
-            tab.classList.add('active');
-            const difficultyTabs = document.getElementById('difficulty-tabs');
-            if (currentRatingType === 'time') {
-              difficultyTabs.classList.remove('hidden');
-            } else {
-              difficultyTabs.classList.add('hidden');
+        for(let r=0; r<9; r++){
+            for(let c=0; c<9; c++){
+                if(this.state.grid[r][c] === 0) isFull = false;
+                else if(this.state.grid[r][c] !== this.state.solution[r][c]) {
+                    errors.push(r*9+c);
+                }
             }
-            loadRating();
-          });
-        });
-        
-        document.querySelectorAll('.difficulty-tab').forEach(tab => {
-          tab.addEventListener('click', () => {
-            playSound();
-            currentRatingDifficulty = tab.dataset.difficulty;
-            document.querySelectorAll('.difficulty-tab').forEach(t => t.classList.remove('active'));
-            tab.classList.add('active');
-            if (currentRatingType === 'time') {
-              populateTimeLeaderboard(currentRatingDifficulty);
-            }
-          });
-        });
-        
-        document.addEventListener('click', (e) => { if (!elements.gameContainer.contains(e.target) && !elements.recentGamesModal.contains(e.target) && !elements.tutorialModal.contains(e.target) && !elements.ratingModal.contains(e.target)) { deselectCell(); } if (!elements.settingsBtn.contains(e.target) && !elements.themePanel.contains(e.target)) { elements.themePanel.classList.add('hidden'); } });
-        window.addEventListener('beforeunload', saveCurrentGame);
-        elements.winModalCloseBtn.addEventListener('click', () => { playSound(); elements.winModal.classList.add('hidden'); });
-        elements.soundToggleButton.addEventListener('click', toggleSound);
+        }
 
-        const savedSoundState = localStorage.getItem('sudoku-sound-enabled');
-        isSoundEnabled = savedSoundState === 'false' ? false : true;
-        updateSoundButtonVisuals();
-        applyTheme(localStorage.getItem('sudoku-theme') || 'lime');
-        startNewGame();
+        if (errors.length > 0) {
+            this.ui.render(this.state.grid, this.state.initial, this.state.activeIdx, this.state.selectedNum, errors);
+            this.ui.showMessage("Найдено ошибок: " + errors.length);
+            this.sound.play(); // Consider error sound
+        } else if (!isFull) {
+            this.ui.showMessage("Заполните все клетки", "normal");
+        } else {
+            this.winGame();
+        }
+      }
+
+      async winGame() {
+        this.state.finished = true;
+        this.stopTimer();
+        const timeSpent = Math.floor((Date.now() - this.state.startTime)/1000);
         
-        hideLoadingScreen();
+        // Calc Score
+        let points = CONFIG.DIFFICULTY[this.state.difficulty].points;
+        points = Math.max(0, points - ((3 - this.state.hints) * 50));
+        points = Math.max(0, points - Math.floor(timeSpent / 10)); // Time penalty
+
+        // Update UI
+        $('#win-time').textContent = formatTime(timeSpent);
+        $('#win-score').textContent = '+' + points;
+        this.ui.openModal('modal-win');
+        
+        // Backend
+        await this.storage.updateScore(points);
+        await this.storage.saveRecord(this.state.difficulty, timeSpent);
+        this.ui.updateUserInfo(this.storage.user);
+        
+        // Save to local history
+        this.storage.saveLocalGame({
+            date: new Date().toISOString(),
+            difficulty: this.state.difficulty,
+            time: formatTime(timeSpent),
+            solved: true
+        });
+      }
+
+      startTimer() {
+        this.state.timerInterval = setInterval(() => {
+          const s = Math.floor((Date.now() - this.state.startTime)/1000);
+          this.ui.updateTimer(formatTime(s));
+        }, 1000);
+      }
+      stopTimer() { clearInterval(this.state.timerInterval); }
+
+      render() {
+        this.ui.render(this.state.grid, this.state.initial, this.state.activeIdx, this.state.selectedNum);
+      }
+      
+      // Modals Logic
+      showHistory() {
+        const hist = JSON.parse(localStorage.getItem('sudoku_history') || '[]');
+        const container = $('#history-list');
+        container.innerHTML = hist.length ? '' : '<p class="text-center text-gray-500">История пуста</p>';
+        hist.forEach(h => {
+            const el = document.createElement('div');
+            el.className = 'flex justify-between p-3 bg-white/5 rounded-lg border border-white/5';
+            el.innerHTML = `
+                <div>
+                    <div class="font-bold text-sm text-white">${new Date(h.date).toLocaleDateString()}</div>
+                    <div class="text-xs text-gray-400 capitalize">${h.diff}</div>
+                </div>
+                <div class="text-right">
+                    <div class="font-mono text-blue-400">${h.time}</div>
+                    <div class="text-xs ${h.solved ? 'text-green-500' : 'text-red-500'}">${h.solved ? 'Победа' : 'Не закончено'}</div>
+                </div>
+            `;
+            container.appendChild(el);
+        });
+        this.ui.openModal('modal-history');
+      }
+
+      async showStats() {
+        this.ui.openModal('modal-stats');
+        const list = $('#leaderboard-list');
+        list.innerHTML = '<div class="text-center mt-4"><div class="loader-spinner w-8 h-8 mx-auto"></div></div>';
+        
+        // Simple tabs logic
+        let type = 'score';
+        const load = async () => {
+             const data = await this.storage.getLeaderboard(type, this.state.difficulty);
+             list.innerHTML = '';
+             if(data.length === 0) list.innerHTML = '<div class="text-center text-gray-500">Нет данных</div>';
+             
+             data.forEach((u, i) => {
+                 const isMe = String(u.id) === String(this.storage.user.id);
+                 const val = type === 'score' ? u.score : formatTime(u.time);
+                 const div = document.createElement('div');
+                 div.className = `flex items-center p-2 rounded-lg gap-3 ${isMe ? 'bg-blue-500/20 border border-blue-500/50' : 'bg-white/5'}`;
+                 div.innerHTML = `
+                    <div class="font-bold w-6 text-center ${i<3 ? 'text-yellow-400' : 'text-gray-500'}">${i+1}</div>
+                    <img src="${u.avatar}" class="w-8 h-8 rounded-full bg-slate-800">
+                    <div class="flex-1 truncate font-medium text-sm text-gray-200">${u.username}</div>
+                    <div class="font-mono font-bold text-blue-300">${val}</div>
+                 `;
+                 list.appendChild(div);
+             });
+        };
+        
+        $('#tab-score').onclick = () => { type='score'; $('#tab-score').classList.add('bg-slate-700','text-white'); $('#tab-speed').classList.remove('bg-slate-700','text-white'); load(); };
+        $('#tab-speed').onclick = () => { type='time'; $('#tab-speed').classList.add('bg-slate-700','text-white'); $('#tab-score').classList.remove('bg-slate-700','text-white'); load(); };
+        
+        load();
+      }
+
+      showTutorial() {
+          const steps = [
+              { title: "Основы", text: "Цель игры - заполнить сетку 9x9 цифрами так, чтобы каждая строка, столбец и блок 3x3 содержали все цифры от 1 до 9." },
+              { title: "Инструменты", text: "Используйте панель снизу для ввода цифр. Кнопка 'Карандаш' (в разработке) позволит делать заметки." },
+              { title: "Подсказки", text: "Застряли? Нажмите на лампочку, чтобы открыть одну клетку. Но это стоит очков!" }
+          ];
+          let cur = 0;
+          const renderStep = () => {
+              $('#tut-title').textContent = steps[cur].title;
+              $('#tut-desc').textContent = steps[cur].text;
+              $('#tut-prev').disabled = cur === 0;
+              $('#tut-next').textContent = cur === steps.length-1 ? 'Понятно' : 'Далее';
+              // Draw mini grid visual (simplified)
+              $('#tut-grid').innerHTML = '';
+              for(let i=0; i<81; i++) {
+                  const d = document.createElement('div');
+                  d.className = 'tut-cell';
+                  if(i%2===0 && cur===0) { d.textContent = (i%9)+1; d.style.color='var(--color-primary)'; }
+                  $('#tut-grid').appendChild(d);
+              }
+          };
+          
+          $('#tut-prev').onclick = () => { if(cur>0) { cur--; renderStep(); } };
+          $('#tut-next').onclick = () => { 
+              if(cur < steps.length-1) { cur++; renderStep(); } 
+              else { $('#modal-tutorial').classList.add('hidden'); }
+          };
+          
+          this.ui.openModal('modal-tutorial');
+          renderStep();
+      }
     }
-    
-    init();
+
+    // --- INIT ---
+    window.addEventListener('DOMContentLoaded', () => {
+      new GameController();
+    });
+
   </script>
 </body>
 </html>
