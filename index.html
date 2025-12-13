@@ -2,612 +2,743 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="theme-color" content="#1e293b">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#0f172a">
+  <meta name="description" content="Профессиональный Судоку с рейтингом и облачным сохранением">
   <title>Sudoku Pro</title>
   
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
   <style>
-    /* -------------------------------------------------------------------------- */
-    /* CORE VARIABLES                                */
-    /* -------------------------------------------------------------------------- */
+    /* =========================================
+       CORE VARIABLES & THEMES
+       ========================================= */
     :root {
-      --font-main: 'Inter', sans-serif;
-      --radius-sm: 8px;
-      --radius-md: 12px;
-      --radius-lg: 16px;
-      --radius-full: 9999px;
+      /* Базовые размеры и отступы */
+      --header-height: 60px;
+      --controls-height: 180px;
+      --board-max-size: min(100vw - 20px, 60vh);
       
-      /* Default Theme: Deep Ocean */
-      --color-primary: #38bdf8;       /* Light Blue */
-      --color-primary-hover: #0ea5e9;
-      --color-accent: #f472b6;        /* Pink for secondary actions */
-      --bg-body: #0f172a;             /* Slate 900 */
-      --bg-surface: #1e293b;          /* Slate 800 */
-      --bg-surface-glass: rgba(30, 41, 59, 0.85);
-      --bg-cell: #334155;             /* Slate 700 */
-      --bg-cell-active: rgba(56, 189, 248, 0.15);
-      --line-color: #475569;          /* Slate 600 */
-      
+      /* Анимации */
+      --transition-fast: 0.15s ease;
+      --transition-medium: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      --transition-bounce: 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+    }
+
+    /* --- THEME: CYBER (Default) --- */
+    body[data-theme="cyber"] {
+      --bg-app: #0f172a;
+      --bg-panel: rgba(30, 41, 59, 0.7);
+      --bg-cell: #1e293b;
+      --bg-cell-active: rgba(99, 102, 241, 0.2);
       --text-main: #f8fafc;
       --text-muted: #94a3b8;
-      --text-given: #ffffff;
-      --text-input: #38bdf8;
-      
-      --state-error: #ef4444;
-      --state-success: #22c55e;
-      --highlight-similar: rgba(56, 189, 248, 0.4);
-      --highlight-area: rgba(255, 255, 255, 0.05);
+      --color-primary: #6366f1; /* Indigo-500 */
+      --color-primary-hover: #4f46e5;
+      --color-accent: #38bdf8; /* Sky-400 */
+      --grid-border: #334155;
+      --grid-border-thick: #6366f1;
+      --digit-given: #e2e8f0;
+      --digit-user: #818cf8;
+      --color-error: #ef4444;
+      --color-success: #22c55e;
+      --shadow-glow: 0 0 15px rgba(99, 102, 241, 0.3);
     }
 
-    /* -------------------------------------------------------------------------- */
-    /* THEMES                                      */
-    /* -------------------------------------------------------------------------- */
-    
-    /* Theme: Obsidian (Black & Gold) */
-    body[data-theme="obsidian"] {
-      --color-primary: #fbbf24;
-      --color-primary-hover: #d97706;
-      --bg-body: #000000;
-      --bg-surface: #111111;
-      --bg-surface-glass: rgba(17, 17, 17, 0.9);
-      --bg-cell: #1a1a1a;
-      --bg-cell-active: rgba(251, 191, 36, 0.15);
-      --line-color: #333333;
-      --text-input: #fbbf24;
-      --highlight-similar: rgba(251, 191, 36, 0.4);
+    /* --- THEME: SUNSET (Orange/Warm) --- */
+    body[data-theme="sunset"] {
+      --bg-app: #1c1917;
+      --bg-panel: rgba(41, 37, 36, 0.8);
+      --bg-cell: #292524;
+      --bg-cell-active: rgba(249, 115, 22, 0.15);
+      --text-main: #fafaf9;
+      --text-muted: #a8a29e;
+      --color-primary: #f97316;
+      --color-primary-hover: #ea580c;
+      --color-accent: #fbbf24;
+      --grid-border: #44403c;
+      --grid-border-thick: #f97316;
+      --digit-given: #fafaf9;
+      --digit-user: #fb923c;
+      --color-error: #ef4444;
+      --color-success: #16a34a;
+      --shadow-glow: 0 0 15px rgba(249, 115, 22, 0.2);
     }
 
-    /* Theme: Paper (Light Mode) */
-    body[data-theme="paper"] {
-      --color-primary: #4f46e5;
-      --color-primary-hover: #4338ca;
-      --bg-body: #f1f5f9;
-      --bg-surface: #ffffff;
-      --bg-surface-glass: rgba(255, 255, 255, 0.9);
-      --bg-cell: #e2e8f0;
-      --bg-cell-active: rgba(79, 70, 229, 0.15);
-      --line-color: #cbd5e1;
-      --text-main: #1e293b;
-      --text-given: #0f172a;
-      --text-input: #4f46e5;
-      --highlight-similar: #c7d2fe;
-      --highlight-area: rgba(0, 0, 0, 0.03);
+    /* --- THEME: MONO (Black & White) --- */
+    body[data-theme="mono"] {
+      --bg-app: #ffffff;
+      --bg-panel: rgba(243, 244, 246, 0.9);
+      --bg-cell: #ffffff;
+      --bg-cell-active: rgba(0, 0, 0, 0.1);
+      --text-main: #111827;
+      --text-muted: #6b7280;
+      --color-primary: #111827;
+      --color-primary-hover: #374151;
+      --color-accent: #4b5563;
+      --grid-border: #d1d5db;
+      --grid-border-thick: #111827;
+      --digit-given: #000000;
+      --digit-user: #4b5563;
+      --color-error: #dc2626;
+      --color-success: #16a34a;
+      --shadow-glow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     }
 
-    /* Theme: Cyber (Neon Purple) */
-    body[data-theme="cyber"] {
-      --color-primary: #d946ef;
-      --color-primary-hover: #c026d3;
-      --bg-body: #2e1065;
-      --bg-surface: #4c1d95;
-      --bg-surface-glass: rgba(76, 29, 149, 0.85);
-      --bg-cell: #5b21b6;
-      --bg-cell-active: rgba(217, 70, 239, 0.2);
-      --line-color: #7c3aed;
-      --text-input: #e879f9;
-      --highlight-similar: #a21caf;
+    /* --- THEME: SAKURA (Pink/Soft) --- */
+    body[data-theme="sakura"] {
+      --bg-app: #2a2528;
+      --bg-panel: rgba(60, 50, 55, 0.7);
+      --bg-cell: #352f32;
+      --bg-cell-active: rgba(244, 114, 182, 0.15);
+      --text-main: #fce7f3;
+      --text-muted: #dbb4c5;
+      --color-primary: #f472b6;
+      --color-primary-hover: #db2777;
+      --color-accent: #fbcfe8;
+      --grid-border: #503d46;
+      --grid-border-thick: #f472b6;
+      --digit-given: #ffffff;
+      --digit-user: #f9a8d4;
+      --color-error: #fb7185;
+      --color-success: #4ade80;
+      --shadow-glow: 0 0 15px rgba(244, 114, 182, 0.25);
     }
 
-    /* -------------------------------------------------------------------------- */
-    /* GLOBAL STYLES                               */
-    /* -------------------------------------------------------------------------- */
-    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-    
+    /* =========================================
+       GLOBAL STYLES
+       ========================================= */
     body {
-      background-color: var(--bg-body);
+      background-color: var(--bg-app);
       color: var(--text-main);
-      font-family: var(--font-main);
-      transition: background-color 0.4s ease, color 0.4s ease;
-      overflow-x: hidden;
-      /* Prevent pull-to-refresh on mobile */
-      overscroll-behavior: none; 
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      overflow: hidden; /* Предотвращаем скролл всей страницы */
+      touch-action: manipulation;
+      transition: background-color var(--transition-medium), color var(--transition-medium);
+      -webkit-font-smoothing: antialiased;
+      height: 100dvh; /* Dynamic Viewport Height */
+      width: 100vw;
+      display: flex;
+      flex-direction: column;
     }
 
-    /* Scrollbar Styling */
+    /* Скроллбар для модальных окон */
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: var(--line-color); border-radius: 10px; }
+    ::-webkit-scrollbar-thumb { background: var(--grid-border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--color-primary); }
 
-    /* -------------------------------------------------------------------------- */
-    /* COMPONENTS                                  */
-    /* -------------------------------------------------------------------------- */
-    
-    /* Buttons */
-    .btn-main {
-      background-color: var(--color-primary);
-      color: var(--bg-body); /* Contrast text */
-      font-weight: 600;
-      border-radius: var(--radius-sm);
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    /* =========================================
+       COMPONENT: LOADING SCREEN
+       ========================================= */
+    #loading-screen {
+      position: fixed;
+      inset: 0;
+      background: var(--bg-app);
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.5s ease;
+    }
+
+    .loader-ring {
+      width: 64px;
+      height: 64px;
+      border: 4px solid var(--bg-cell);
+      border-top-color: var(--color-primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
     }
     
-    body[data-theme="paper"] .btn-main { color: #ffffff; } /* Fix for light theme */
-    
-    .btn-main:hover:not(:disabled) {
-      background-color: var(--color-primary-hover);
-      transform: translateY(-1px);
-      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-    }
-    
-    .btn-main:active:not(:disabled) { transform: translateY(1px); }
-    .btn-main:disabled { opacity: 0.5; cursor: not-allowed; filter: grayscale(100%); }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
 
-    .btn-icon {
-      background-color: var(--bg-cell);
-      color: var(--text-muted);
-      border-radius: var(--radius-sm);
-      transition: all 0.2s;
-    }
-    .btn-icon:hover { color: var(--color-primary); background-color: var(--bg-surface); }
-
-    /* Game Container */
-    #game-container {
-      background-color: var(--bg-surface);
-      border: 1px solid var(--line-color);
-      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    /* =========================================
+       LAYOUT CONTAINERS
+       ========================================= */
+    .app-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 10px;
       width: 100%;
-      max-width: 500px; /* Slightly wider for better breathing room */
+      max-width: 600px;
       margin: 0 auto;
-      transition: all 0.4s ease;
+      position: relative;
     }
 
-    /* Grid */
+    /* Header Section */
+    .header-section {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      margin-bottom: 10px;
+    }
+
+    .user-pill {
+      display: flex;
+      align-items: center;
+      background: var(--bg-panel);
+      backdrop-filter: blur(10px);
+      padding: 6px 12px;
+      border-radius: 20px;
+      border: 1px solid var(--grid-border);
+      gap: 10px;
+    }
+    
+    .user-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid var(--color-primary);
+    }
+
+    /* =========================================
+       COMPONENT: SUDOKU GRID
+       ========================================= */
+    .game-board-wrapper {
+      position: relative;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      /* Адаптивный размер доски: ширина экрана или 60% высоты */
+      aspect-ratio: 1;
+      max-height: 60vh;
+      max-width: 60vh;
+    }
+
     .sudoku-grid {
       display: grid;
       grid-template-columns: repeat(9, 1fr);
+      grid-template-rows: repeat(9, 1fr);
+      width: 100%;
+      height: 100%;
+      background-color: var(--grid-border);
       gap: 1px;
-      background-color: var(--line-color);
-      border: 2px solid var(--line-color);
-      border-radius: var(--radius-sm);
+      border: 2px solid var(--grid-border-thick);
+      border-radius: 8px;
       overflow: hidden;
-      position: relative;
-      touch-action: manipulation;
+      box-shadow: var(--shadow-glow);
     }
 
     .cell {
       background-color: var(--bg-cell);
-      aspect-ratio: 1;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: clamp(1.2rem, 5vw, 1.8rem);
+      font-size: clamp(14px, 5vw, 28px);
       cursor: pointer;
-      position: relative;
-      transition: background-color 0.1s;
       user-select: none;
+      position: relative;
+      transition: background-color 0.1s, color 0.1s;
     }
 
-    /* Thicker borders for 3x3 blocks */
-    .cell:nth-child(3n) { border-right: 1px solid var(--line-color); }
-    .cell:nth-child(9n) { border-right: none; }
-    /* Horizontal lines logic is handled by grid gap and math in JS or simplified here */
-    /* To simplify: we use CSS Grid Gap for lines. We use pseudo elements for 3x3 thicker lines */
-    
-    .grid-overlay {
-      position: absolute;
-      top: 0; left: 0; right: 0; bottom: 0;
-      pointer-events: none;
-      z-index: 10;
-    }
-    .grid-line-v { position: absolute; top: 0; bottom: 0; width: 2px; background-color: var(--color-primary); opacity: 0.5; }
-    .grid-line-h { position: absolute; left: 0; right: 0; height: 2px; background-color: var(--color-primary); opacity: 0.5; }
-    .gl-v1 { left: 33.33%; } .gl-v2 { left: 66.66%; }
-    .gl-h1 { top: 33.33%; } .gl-h2 { top: 66.66%; }
+    /* Borders for 3x3 Blocks */
+    .cell:nth-child(3n) { border-right: 2px solid var(--grid-border-thick); margin-right: -1px; z-index: 1; }
+    .cell:nth-child(9n) { border-right: none; margin-right: 0; }
+    .cell:nth-child(n+19):nth-child(-n+27),
+    .cell:nth-child(n+46):nth-child(-n+54) { border-bottom: 2px solid var(--grid-border-thick); margin-bottom: -1px; z-index: 1; }
 
     /* Cell States */
-    .cell.given { color: var(--text-given); font-weight: 700; }
-    .cell.input { color: var(--text-input); font-weight: 500; }
-    .cell.error { color: var(--state-error) !important; animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
-    .cell.highlight-area { background-color: var(--highlight-area); }
-    .cell.highlight-similar { background-color: var(--highlight-similar) !important; color: var(--text-given) !important; }
-    .cell.active { background-color: var(--bg-cell-active) !important; box-shadow: inset 0 0 0 2px var(--color-primary); }
-    .cell.hinted { animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); background-color: var(--bg-surface) !important; }
+    .cell.given { color: var(--digit-given); font-weight: 800; }
+    .cell.user-input { color: var(--digit-user); font-weight: 500; }
+    
+    .cell.selected { background-color: var(--color-primary) !important; color: #fff !important; }
+    .cell.highlighted { background-color: var(--bg-cell-active); }
+    .cell.same-number { background-color: rgba(99, 102, 241, 0.4) !important; color: #fff; font-weight: bold;}
+    
+    .cell.error {
+      color: var(--color-error) !important;
+      animation: shake 0.4s ease-in-out;
+    }
+    
+    .cell.hint-anim {
+      animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      background-color: var(--color-success);
+    }
 
-    /* Number Pad */
+    @keyframes shake { 0%, 100% {transform: translateX(0);} 25% {transform: translateX(-4px);} 75% {transform: translateX(4px);} }
+    @keyframes popIn { 0% {transform: scale(0); opacity: 0;} 100% {transform: scale(1); opacity: 1;} }
+
+    /* =========================================
+       COMPONENT: CONTROLS
+       ========================================= */
+    .controls-area {
+      width: 100%;
+      margin-top: auto; /* Push to bottom */
+      padding-bottom: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .info-bar {
+      display: flex;
+      justify-content: space-between;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      padding: 0 10px;
+    }
+
+    .numpad {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr); /* 2 rows of 5 */
+      gap: 8px;
+    }
+    
     .numpad-btn {
-      aspect-ratio: 1; /* Square buttons */
-      background-color: var(--bg-cell);
-      border-radius: var(--radius-md);
+      aspect-ratio: 1.5; /* Rectangular-ish */
+      background: var(--bg-panel);
+      border: 1px solid var(--grid-border);
+      border-radius: 12px;
+      color: var(--text-main);
+      font-size: 1.5rem;
+      font-weight: 600;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.5rem;
-      font-weight: 500;
-      color: var(--color-primary);
-      transition: all 0.15s;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      position: relative;
     }
-    .numpad-btn:active { transform: scale(0.95); }
-    .numpad-btn.selected { background-color: var(--color-primary); color: var(--bg-body); border: 2px solid var(--bg-surface); }
-    .numpad-btn.disabled { opacity: 0.2; pointer-events: none; }
-
-    /* Modals with Glassmorphism */
-    .modal-backdrop {
-      background-color: rgba(0, 0, 0, 0.6);
-      backdrop-filter: blur(4px);
-      z-index: 50;
-    }
-    .modal-content {
-      background-color: var(--bg-surface-glass);
-      border: 1px solid var(--line-color);
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-    }
-
-    /* Animations */
-    @keyframes popIn { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-    @keyframes shake { 10%, 90% { transform: translate3d(-1px, 0, 0); } 20%, 80% { transform: translate3d(2px, 0, 0); } 30%, 50%, 70% { transform: translate3d(-4px, 0, 0); } 40%, 60% { transform: translate3d(4px, 0, 0); } }
-    @keyframes pulse-glow { 0% { box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(56, 189, 248, 0); } 100% { box-shadow: 0 0 0 0 rgba(56, 189, 248, 0); } }
-
-    /* Loading Screen */
-    #loader {
-      background: var(--bg-body);
-      z-index: 9999;
-    }
-    .loader-spinner {
-      border: 4px solid var(--line-color);
-      border-top: 4px solid var(--color-primary);
-      border-radius: 50%;
-      width: 40px; height: 40px;
-      animation: spin 1s linear infinite;
-    }
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-    /* Utility */
-    .text-glow { text-shadow: 0 0 20px var(--color-primary); }
-    .hidden { display: none !important; }
     
-    /* Tutorial Specifics */
-    .tutorial-grid-container { width: 180px; height: 180px; margin: 0 auto; pointer-events: none; }
-    .tut-highlight { background-color: var(--color-primary); opacity: 0.3; }
-    .tut-cell { border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; font-size: 12px; }
+    .numpad-btn:active { transform: scale(0.92); }
+    .numpad-btn.active-tool { background: var(--color-primary); border-color: var(--color-primary); color: #fff; }
+    .numpad-btn.exhausted { opacity: 0.3; pointer-events: none; }
+    
+    /* Action Buttons (Undo, Erase, Hint, Note) */
+    .actions-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    
+    .action-btn {
+      flex: 1;
+      padding: 12px;
+      border-radius: 12px;
+      background: var(--bg-panel);
+      border: 1px solid var(--grid-border);
+      color: var(--text-main);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      gap: 4px;
+      transition: background var(--transition-fast);
+    }
+    
+    .action-btn svg { width: 24px; height: 24px; }
+    .action-btn:hover { background: var(--grid-border); }
+    
+    /* Badge for hint count */
+    .badge {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      background: var(--color-primary);
+      color: white;
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 10px;
+    }
+
+    /* =========================================
+       COMPONENT: MODALS (Glassmorphism)
+       ========================================= */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+    
+    .modal-overlay.open { opacity: 1; pointer-events: auto; }
+    
+    .modal-card {
+      background: var(--bg-panel);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      width: 90%;
+      max-width: 400px;
+      max-height: 85vh;
+      border-radius: 24px;
+      padding: 24px;
+      transform: translateY(20px);
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      color: var(--text-main);
+    }
+    
+    .modal-overlay.open .modal-card { transform: translateY(0); }
+    
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .modal-title { font-size: 1.5rem; font-weight: 700; color: var(--color-primary); }
+    .close-btn { background: none; border: none; font-size: 1.5rem; color: var(--text-muted); cursor: pointer; }
+    
+    .btn-primary {
+      background: var(--color-primary);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 12px;
+      font-weight: 600;
+      width: 100%;
+      margin-top: 10px;
+      transition: background var(--transition-fast);
+    }
+    .btn-primary:hover { background: var(--color-primary-hover); }
+
+    /* Theme Select Grid */
+    .theme-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .theme-option {
+      padding: 15px;
+      border-radius: 12px;
+      border: 2px solid transparent;
+      background: rgba(0,0,0,0.2);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .theme-option.active { border-color: var(--color-primary); background: rgba(99, 102, 241, 0.1); }
+    .color-dot { width: 20px; height: 20px; border-radius: 50%; }
+
+    /* Leaderboard Styles */
+    .leaderboard-list { overflow-y: auto; max-height: 300px; padding-right: 5px; }
+    .rank-item { display: flex; align-items: center; padding: 10px; border-bottom: 1px solid var(--grid-border); gap: 10px; }
+    .rank-num { font-weight: bold; width: 25px; color: var(--color-accent); }
+    .rank-score { margin-left: auto; font-family: monospace; font-weight: bold; }
 
   </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-2 sm:p-4 select-none">
+<body data-theme="cyber">
 
-  <div id="loader" class="fixed inset-0 flex flex-col items-center justify-center transition-opacity duration-500">
-    <div class="text-3xl font-bold mb-4 tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">SUDOKU</div>
-    <div class="loader-spinner"></div>
-    <div class="mt-4 text-sm text-gray-500 font-mono">Loading assets...</div>
+  <div id="loading-screen">
+    <div class="loader-ring"></div>
+    <div class="mt-4 font-bold text-lg tracking-wider" style="color:var(--color-primary)">SUDOKU PRO</div>
   </div>
 
-  <div id="game-container" class="rounded-2xl p-4 sm:p-6 flex flex-col gap-4 relative">
+  <div class="app-container">
     
-    <header class="flex items-center justify-between bg-black/10 p-3 rounded-xl border border-white/5">
-      <div class="flex items-center gap-3">
-        <div class="relative">
-          <img id="user-avatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23cbd5e1'%3E%3Cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z'/%3E%3C/svg%3E" alt="User" class="w-10 h-10 rounded-full bg-slate-700 object-cover ring-2 ring-offset-2 ring-offset-slate-900 ring-blue-500">
-        </div>
-        <div class="flex flex-col">
-          <span id="username" class="font-bold text-sm tracking-wide">Гость</span>
-          <span class="text-xs text-gray-400">Очки: <span id="user-score" class="text-blue-400 font-mono">0</span></span>
+    <header class="header-section">
+      <div class="user-pill" id="user-profile-btn">
+        <img id="user-avatar" src="https://t.me/i/userpic/320/default.jpg" alt="Ava" class="user-avatar">
+        <div class="flex flex-col leading-none">
+          <span id="username" class="text-xs font-bold text-[var(--text-main)]">Гость</span>
+          <span class="text-[10px] text-[var(--text-muted)]">Очки: <span id="score-display">0</span></span>
         </div>
       </div>
-      <div class="flex flex-col items-end">
-        <div id="timer" class="font-mono text-xl font-bold tracking-widest">00:00</div>
-        <div class="text-[10px] text-gray-500 uppercase tracking-wider" id="difficulty-display">Лёгкий</div>
+
+      <div class="flex gap-2">
+        <button class="action-btn p-2" id="btn-rating" title="Рейтинг">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
+        </button>
+        <button class="action-btn p-2" id="btn-settings" title="Настройки">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+        </button>
       </div>
     </header>
 
-    <div class="flex justify-between items-center gap-2">
-      <select id="difficulty-select" class="bg-slate-700 text-white text-xs py-2 px-3 rounded-lg border-none outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer shadow-sm">
-        <option value="easy">Лёгкий</option>
-        <option value="medium">Средний</option>
-        <option value="hard">Сложный</option>
-      </select>
-
-      <div class="flex gap-2">
-        <button id="btn-sound" class="btn-icon p-2" title="Звук">🔊</button>
-        <button id="btn-theme" class="btn-icon p-2" title="Тема">🎨</button>
-        <button id="btn-stats" class="btn-icon p-2" title="Рейтинг">🏆</button>
-        <button id="btn-tutorial" class="btn-icon p-2" title="Помощь">❓</button>
-        <button id="btn-history" class="btn-icon p-2" title="История">📜</button>
+    <div class="info-bar mb-2 w-full">
+      <div class="flex items-center gap-2">
+        <select id="difficulty-select" class="bg-transparent border border-[var(--grid-border)] text-[var(--text-main)] rounded px-2 py-1 text-xs outline-none">
+          <option value="easy">Лёгкий</option>
+          <option value="medium">Средний</option>
+          <option value="hard">Сложный</option>
+        </select>
       </div>
-    </div>
-    
-    <div id="theme-panel" class="hidden absolute top-36 right-4 bg-slate-800 p-3 rounded-xl shadow-xl border border-slate-600 z-30 grid grid-cols-3 gap-2">
-      <div class="w-6 h-6 rounded-full cursor-pointer border-2 border-white/20 bg-[#0f172a]" data-set-theme="default" title="Deep Ocean"></div>
-      <div class="w-6 h-6 rounded-full cursor-pointer border-2 border-white/20 bg-[#000000]" data-set-theme="obsidian" title="Obsidian"></div>
-      <div class="w-6 h-6 rounded-full cursor-pointer border-2 border-white/20 bg-[#ffffff]" data-set-theme="paper" title="Paper"></div>
-      <div class="w-6 h-6 rounded-full cursor-pointer border-2 border-white/20 bg-[#2e1065]" data-set-theme="cyber" title="Cyber"></div>
+      <div id="timer" class="font-mono text-lg font-bold text-[var(--color-primary)]">00:00</div>
     </div>
 
-    <div class="relative">
-      <div id="sudoku-grid" class="sudoku-grid"></div>
-      <div class="grid-overlay">
-        <div class="grid-line-v gl-v1"></div>
-        <div class="grid-line-v gl-v2"></div>
-        <div class="grid-line-h gl-h1"></div>
-        <div class="grid-line-h gl-h2"></div>
-      </div>
-    </div>
-
-    <div class="flex justify-between gap-2 text-sm">
-      <button id="btn-undo" class="btn-icon flex-1 py-3 flex justify-center items-center gap-2" disabled>
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
-        Отмена
-      </button>
-      <button id="btn-hint" class="btn-icon flex-1 py-3 flex justify-center items-center gap-2 relative">
-        <svg class="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20"><path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1h4v1a2 2 0 11-4 0zM12 14c.015-.34.208-.646.477-.859a4 4 0 10-4.954 0c.27.213.462.519.476.859h4.002z"/></svg>
-        <span id="hint-count">3/3</span>
-      </button>
-      <button id="btn-note" class="btn-icon flex-1 py-3 flex justify-center items-center gap-2 text-gray-400 cursor-not-allowed opacity-50" title="В разработке">
-        ✎ Заметки
-      </button>
-    </div>
-
-    <div class="grid grid-cols-5 gap-2 sm:gap-3" id="numpad">
-      </div>
-
-    <div class="grid grid-cols-2 gap-4 mt-2">
-      <button id="btn-new-game" class="btn-main py-3 rounded-xl shadow-lg shadow-blue-500/20">Новая игра</button>
-      <button id="btn-check" class="btn-main py-3 rounded-xl bg-green-600 hover:bg-green-500 text-white shadow-lg shadow-green-500/20">Проверить</button>
-    </div>
-    
-    <div id="status-message" class="h-6 text-center text-xs font-semibold text-red-400 transition-opacity opacity-0"></div>
-
-  </div> <div id="modal-win" class="hidden fixed inset-0 modal-backdrop flex items-center justify-center p-4">
-    <div class="modal-content rounded-2xl p-8 max-w-sm w-full text-center transform transition-all scale-100">
-      <div class="text-6xl mb-4">🎉</div>
-      <h2 class="text-3xl font-bold text-white mb-2">Победа!</h2>
-      <p class="text-gray-300 mb-6" id="win-text">Вы справились!</p>
-      
-      <div class="bg-white/5 rounded-lg p-4 mb-6 grid grid-cols-2 gap-4">
-        <div>
-          <div class="text-xs text-gray-400 uppercase">Время</div>
-          <div class="text-xl font-mono font-bold text-blue-400" id="win-time">00:00</div>
+    <div class="game-board-wrapper">
+      <div id="grid" class="sudoku-grid">
         </div>
-        <div>
-          <div class="text-xs text-gray-400 uppercase">Очки</div>
-          <div class="text-xl font-mono font-bold text-green-400" id="win-score">+100</div>
+    </div>
+
+    <div class="controls-area">
+      
+      <div class="actions-row px-2">
+        <button class="action-btn" id="btn-undo">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" /></svg>
+          <span>Отмена</span>
+        </button>
+        <button class="action-btn" id="btn-erase">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+          <span>Стереть</span>
+        </button>
+        <button class="action-btn relative" id="btn-hint">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548 5.478A1 1 0 0114.435 21H9.565a1 1 0 01-.995-1.102l.548-5.478z" /></svg>
+          <span>Подсказка</span>
+          <div class="badge" id="hint-badge">3</div>
+        </button>
+        <button class="action-btn" id="btn-new-game" style="color: var(--color-primary)">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+          <span>Новая</span>
+        </button>
+      </div>
+
+      <div class="numpad px-2" id="numpad">
+        </div>
+
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal-settings">
+    <div class="modal-card">
+      <div class="modal-header">
+        <span class="modal-title">Настройки</span>
+        <button class="close-btn" data-close="modal-settings">&times;</button>
+      </div>
+      
+      <h3 class="font-bold mb-3 text-sm uppercase text-[var(--text-muted)]">Тема оформления</h3>
+      <div class="theme-grid mb-6">
+        <div class="theme-option active" data-set-theme="cyber">
+          <div class="color-dot" style="background: #6366f1"></div>
+          <span>Cyber Blue</span>
+        </div>
+        <div class="theme-option" data-set-theme="sunset">
+          <div class="color-dot" style="background: #f97316"></div>
+          <span>Sunset</span>
+        </div>
+        <div class="theme-option" data-set-theme="sakura">
+          <div class="color-dot" style="background: #f472b6"></div>
+          <span>Sakura</span>
+        </div>
+        <div class="theme-option" data-set-theme="mono">
+          <div class="color-dot" style="background: #111827; border:1px solid #fff"></div>
+          <span>Mono</span>
         </div>
       </div>
-      
-      <button id="btn-win-close" class="btn-main w-full py-3 rounded-xl">Круто!</button>
-    </div>
-  </div>
 
-  <div id="modal-stats" class="hidden fixed inset-0 modal-backdrop flex items-center justify-center p-4">
-    <div class="modal-content rounded-2xl p-6 max-w-md w-full max-h-[80vh] flex flex-col">
-      <div class="flex justify-between items-center mb-4">
-        <h2 class="text-xl font-bold text-white">Рейтинг</h2>
-        <button class="text-gray-400 hover:text-white close-modal text-2xl">&times;</button>
-      </div>
-      <div class="flex gap-2 mb-4 bg-black/20 p-1 rounded-lg">
-        <button class="flex-1 py-1 text-sm rounded-md bg-slate-700 text-white shadow-sm" id="tab-score">Очки</button>
-        <button class="flex-1 py-1 text-sm rounded-md hover:bg-slate-700/50 text-gray-400 transition" id="tab-speed">Скорость</button>
-      </div>
-      <div id="leaderboard-list" class="overflow-y-auto flex-1 space-y-2 pr-2">
-        <div class="text-center text-gray-500 py-8">Загрузка данных...</div>
-      </div>
-    </div>
-  </div>
-  
-  <div id="modal-history" class="hidden fixed inset-0 modal-backdrop flex items-center justify-center p-4">
-    <div class="modal-content rounded-2xl p-6 max-w-md w-full max-h-[80vh] flex flex-col">
-      <div class="flex justify-between items-center mb-4">
-        <h2 class="text-xl font-bold text-white">История игр</h2>
-        <button class="text-gray-400 hover:text-white close-modal text-2xl">&times;</button>
-      </div>
-      <div id="history-list" class="overflow-y-auto flex-1 space-y-2"></div>
-    </div>
-  </div>
-
-  <div id="modal-tutorial" class="hidden fixed inset-0 modal-backdrop flex items-center justify-center p-4">
-    <div class="modal-content rounded-2xl p-6 max-w-md w-full">
-      <div class="flex justify-between items-center mb-4">
-        <h2 class="text-xl font-bold text-white" id="tut-title">Как играть</h2>
-        <button class="text-gray-400 hover:text-white close-modal text-2xl">&times;</button>
-      </div>
-      
-      <div class="flex flex-col items-center mb-6">
-        <div id="tut-grid" class="tutorial-grid-container grid grid-cols-9 bg-slate-700 gap-px border border-slate-600 mb-4"></div>
-        <p id="tut-desc" class="text-center text-sm text-gray-300 min-h-[60px]">Описание шага</p>
-      </div>
-      
-      <div class="flex justify-between items-center">
-        <button id="tut-prev" class="px-4 py-2 bg-slate-700 rounded-lg text-sm text-gray-300 disabled:opacity-30">Назад</button>
-        <div class="flex gap-1" id="tut-dots"></div>
-        <button id="tut-next" class="px-4 py-2 btn-main rounded-lg text-sm">Далее</button>
+      <div class="flex items-center justify-between mb-4 p-3 bg-[rgba(0,0,0,0.1)] rounded-xl">
+        <span>Звуковые эффекты</span>
+        <button id="toggle-sound" class="text-[var(--color-primary)] font-bold">ВКЛ</button>
       </div>
     </div>
   </div>
 
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <div class="modal-overlay" id="modal-victory">
+    <div class="modal-card text-center">
+      <div class="text-6xl mb-4">🏆</div>
+      <h2 class="text-2xl font-bold text-[var(--color-primary)] mb-2">Победа!</h2>
+      <p class="mb-4">Сложность: <span id="vic-diff" class="font-bold"></span></p>
+      
+      <div class="grid grid-cols-2 gap-4 mb-6">
+        <div class="bg-[rgba(0,0,0,0.2)] p-3 rounded-xl">
+          <div class="text-xs text-[var(--text-muted)]">Время</div>
+          <div id="vic-time" class="font-mono text-xl font-bold">00:00</div>
+        </div>
+        <div class="bg-[rgba(0,0,0,0.2)] p-3 rounded-xl">
+          <div class="text-xs text-[var(--text-muted)]">Очки</div>
+          <div id="vic-score" class="font-mono text-xl font-bold">0</div>
+        </div>
+      </div>
+      
+      <button class="btn-primary" id="btn-victory-close">Отлично!</button>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal-rating">
+    <div class="modal-card">
+      <div class="modal-header">
+        <span class="modal-title">Топ игроков</span>
+        <button class="close-btn" data-close="modal-rating">&times;</button>
+      </div>
+      <div id="rating-list" class="leaderboard-list">
+        <p class="text-center text-[var(--text-muted)]">Загрузка...</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
 
   <script>
-    /**
-     * SUDOKU PRO - ARCHITECTURE
-     * * 1. SoundManager: Handles all audio.
-     * 2. StorageService: Wrapper for LocalStorage & Firebase.
-     * 3. SudokuCore: Pure logic (generation, solving, validation).
-     * 4. UIManager: DOM manipulation, events, rendering.
-     * 5. GameController: Main entry point, state management.
-     */
+    'use strict';
 
-    // --- CONFIG & UTILS ---
+    /* =========================================
+       CONFIG & FIREBASE
+       ========================================= */
     const CONFIG = {
-      SOUND_URL: 'https://github.com/codex-cdx/sudo/raw/refs/heads/main/%D0%9F%D0%BB%D0%B0%D0%BC%D0%B1.mp3',
-      MAX_HINTS: 3,
-      THEMES: ['default', 'obsidian', 'paper', 'cyber'],
-      DIFFICULTY: {
-        easy: { remove: 30, points: 100 }, // Меньше удаленных для теста, для продакшена 40
-        medium: { remove: 45, points: 250 },
-        hard: { remove: 55, points: 500 }
-      },
-      FIREBASE: {
+      firebase: {
         apiKey: "AIzaSyBkYQ7tRMrZ-mghBnkJ_EvuzHpjs_p8hOY",
         authDomain: "sudo-9fbfc.firebaseapp.com",
         projectId: "sudo-9fbfc",
         storageBucket: "sudo-9fbfc.appspot.com",
         messagingSenderId: "927814106972",
         appId: "1:927814106972:web:71e0773453f9d16f598b99"
+      },
+      sounds: {
+        click: 'https://github.com/codex-cdx/sudo/raw/refs/heads/main/%D0%9F%D0%BB%D0%B0%D0%BC%D0%B1.mp3'
+      },
+      difficulties: {
+        easy: { remove: 30, points: 100 },
+        medium: { remove: 45, points: 250 },
+        hard: { remove: 56, points: 500 }
       }
     };
 
-    const $ = (sel) => document.querySelector(sel);
-    const $$ = (sel) => document.querySelectorAll(sel);
-    const formatTime = (s) => {
-      const m = Math.floor(s / 60).toString().padStart(2, '0');
-      const sec = (s % 60).toString().padStart(2, '0');
-      return `${m}:${sec}`;
-    };
-
-    // --- 1. SOUND MANAGER ---
-    class SoundManager {
+    /* =========================================
+       CLASS: NETWORK MANAGER (Firebase)
+       ========================================= */
+    class NetworkManager {
       constructor() {
-        this.enabled = localStorage.getItem('sudoku_sound') !== 'false';
-        this.clickSound = new Audio(CONFIG.SOUND_URL);
-        this.clickSound.volume = 0.5;
-        this.updateIcon();
-      }
-      play() {
-        if (this.enabled) {
-          this.clickSound.currentTime = 0;
-          this.clickSound.play().catch(() => {});
-        }
-      }
-      toggle() {
-        this.enabled = !this.enabled;
-        localStorage.setItem('sudoku_sound', this.enabled);
-        this.updateIcon();
-        if(this.enabled) this.play();
-      }
-      updateIcon() {
-        const btn = $('#btn-sound');
-        btn.innerHTML = this.enabled ? '🔊' : '🔇';
-        btn.classList.toggle('text-red-400', !this.enabled);
-      }
-    }
-
-    // --- 2. STORAGE SERVICE (FIREBASE + LOCAL) ---
-    class StorageService {
-      constructor() {
-        firebase.initializeApp(CONFIG.FIREBASE);
-        this.db = firebase.firestore();
-        this.auth = firebase.auth();
-        this.user = null;
+        this.db = null;
+        this.auth = null;
+        this.user = { id: null, name: 'Гость', avatar: 'https://t.me/i/userpic/320/default.jpg', score: 0 };
+        this.initFirebase();
       }
 
-      async initAuth() {
+      initFirebase() {
         try {
-          await this.auth.signInAnonymously();
-          
-          // Telegram Logic
-          let tgUser = null;
-          if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe?.user) {
-            tgUser = window.Telegram.WebApp.initDataUnsafe.user;
-          }
-
-          // Merge IDs
-          const uid = tgUser ? String(tgUser.id) : this.auth.currentUser.uid;
-          
-          this.user = {
-            id: uid,
-            username: tgUser ? (tgUser.username || tgUser.first_name) : 'Гость',
-            avatar: tgUser?.photo_url || $('#user-avatar').src,
-            score: 0
-          };
-
-          // Sync with DB
-          await this.syncUser();
-          return this.user;
+          firebase.initializeApp(CONFIG.firebase);
+          this.db = firebase.firestore();
+          this.auth = firebase.auth();
+          this.authenticate();
         } catch (e) {
-          console.error("Auth Error", e);
-          return { id: 'offline', username: 'Offline', score: 0 };
+          console.error("Firebase Init Error:", e);
         }
       }
 
-      async syncUser() {
-        if (!this.user.id || this.user.id === 'offline') return;
-        const ref = this.db.collection('users').doc(this.user.id);
-        const doc = await ref.get();
-        if (doc.exists) {
-          this.user.score = doc.data().score || 0;
-        } else {
-          await ref.set(this.user, { merge: true });
+      async authenticate() {
+        try {
+          // Попытка получить данные Telegram
+          if (window.Telegram?.WebApp?.initDataUnsafe?.user) {
+            const tgUser = window.Telegram.WebApp.initDataUnsafe.user;
+            this.user.id = String(tgUser.id);
+            this.user.name = tgUser.username || tgUser.first_name || 'Player';
+            if (tgUser.photo_url) this.user.avatar = tgUser.photo_url;
+            
+            // Нужно войти анонимно для прав доступа, но используем ID телеграма как ключ дока
+            await this.auth.signInAnonymously();
+          } else {
+            // Фолбек на анонимную авторизацию
+            const userCred = await this.auth.signInAnonymously();
+            this.user.id = userCred.user.uid;
+          }
+          
+          this.syncUserData();
+        } catch (e) {
+          console.warn("Auth failed, playing offline mode");
         }
+      }
+
+      async syncUserData() {
+        if (!this.db || !this.user.id) return;
+        
+        const userRef = this.db.collection('users').doc(this.user.id);
+        const doc = await userRef.get();
+        
+        if (doc.exists) {
+          const data = doc.data();
+          this.user.score = data.score || 0;
+        } else {
+          await userRef.set({
+            username: this.user.name,
+            avatar: this.user.avatar,
+            score: 0,
+            createdAt: new Date().toISOString()
+          });
+        }
+        
+        document.dispatchEvent(new CustomEvent('userDataUpdated', { detail: this.user }));
       }
 
       async updateScore(points) {
+        if (!this.db || !this.user.id) {
+          this.user.score += points; // Offline update
+          return;
+        }
+        
         this.user.score += points;
-        if(this.user.id !== 'offline') {
-          await this.db.collection('users').doc(this.user.id).update({ score: this.user.score });
-        }
-        return this.user.score;
+        document.dispatchEvent(new CustomEvent('userDataUpdated', { detail: this.user }));
+        
+        try {
+          await this.db.collection('users').doc(this.user.id).update({
+            score: firebase.firestore.FieldValue.increment(points)
+          });
+        } catch (e) { console.error("Score sync failed", e); }
       }
 
-      async saveRecord(difficulty, time) {
-        if(this.user.id === 'offline') return;
-        await this.db.collection('timeRecords').add({
-          userId: this.user.id,
-          username: this.user.username,
-          avatar: this.user.avatar,
-          difficulty,
-          time,
-          date: new Date().toISOString()
-        });
-      }
-
-      async getLeaderboard(type = 'score', difficulty = 'easy') {
-        if(this.user.id === 'offline') return [];
-        let q;
-        if (type === 'score') {
-          q = this.db.collection('users').orderBy('score', 'desc').limit(20);
-        } else {
-          q = this.db.collection('timeRecords')
-            .where('difficulty', '==', difficulty)
-            .orderBy('time', 'asc').limit(20);
-        }
-        const snap = await q.get();
-        return snap.docs.map(d => d.data());
-      }
-
-      saveLocalGame(state) {
-        localStorage.setItem('sudoku_saved', JSON.stringify(state));
-        // Add to history list (max 10)
-        let hist = JSON.parse(localStorage.getItem('sudoku_history') || '[]');
-        // Remove if duplicate by date (simple check)
-        hist = hist.filter(g => g.date !== state.date);
-        hist.unshift({ 
-          date: state.date, 
-          diff: state.difficulty, 
-          time: state.time, 
-          solved: state.solved || false 
-        });
-        localStorage.setItem('sudoku_history', JSON.stringify(hist.slice(0, 10)));
-      }
-      
-      getLocalGame() {
-        return JSON.parse(localStorage.getItem('sudoku_saved'));
+      async getLeaderboard() {
+        if (!this.db) return [];
+        try {
+          const snap = await this.db.collection('users').orderBy('score', 'desc').limit(20).get();
+          return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        } catch (e) { return []; }
       }
     }
 
-    // --- 3. SUDOKU CORE LOGIC ---
-    class SudokuCore {
+    /* =========================================
+       CLASS: SUDOKU LOGIC (Engine)
+       ========================================= */
+    class SudokuEngine {
       constructor() {
         this.grid = [];
         this.solution = [];
       }
 
-      generate(difficulty) {
-        // 1. Fill diagonal 3x3 matrices (independent)
+      // Генерация полной сетки
+      generateSolution() {
         this.solution = Array(9).fill().map(() => Array(9).fill(0));
-        for (let i = 0; i < 9; i += 3) this.fillBox(i, i);
-        // 2. Solve remaining
-        this.solve(this.solution);
-        // 3. Remove digits
-        this.grid = this.solution.map(r => [...r]);
-        let attempts = CONFIG.DIFFICULTY[difficulty].remove;
+        this.fillGrid(this.solution);
+      }
+
+      fillGrid(grid) {
+        for (let r = 0; r < 9; r++) {
+          for (let c = 0; c < 9; c++) {
+            if (grid[r][c] === 0) {
+              const nums = [1, 2, 3, 4, 5, 6, 7, 8, 9].sort(() => Math.random() - 0.5);
+              for (let num of nums) {
+                if (this.isValid(grid, r, c, num)) {
+                  grid[r][c] = num;
+                  if (this.fillGrid(grid)) return true;
+                  grid[r][c] = 0;
+                }
+              }
+              return false;
+            }
+          }
+        }
+        return true;
+      }
+
+      isValid(grid, row, col, num) {
+        for (let i = 0; i < 9; i++) {
+          if (grid[row][i] === num && i !== col) return false;
+          if (grid[i][col] === num && i !== row) return false;
+          const boxR = 3 * Math.floor(row / 3) + Math.floor(i / 3);
+          const boxC = 3 * Math.floor(col / 3) + i % 3;
+          if (grid[boxR][boxC] === num && (boxR !== row || boxC !== col)) return false;
+        }
+        return true;
+      }
+
+      // Создание задачи путем удаления цифр
+      createPuzzle(difficulty) {
+        this.generateSolution();
+        this.grid = this.solution.map(row => row.slice()); // Deep copy
+        
+        let attempts = CONFIG.difficulties[difficulty].remove;
         while (attempts > 0) {
           let r = Math.floor(Math.random() * 9);
           let c = Math.floor(Math.random() * 9);
@@ -618,544 +749,436 @@
         }
         return { initial: this.grid, solution: this.solution };
       }
-
-      fillBox(row, col) {
-        let nums = [1,2,3,4,5,6,7,8,9].sort(() => Math.random() - 0.5);
-        let idx = 0;
-        for (let i = 0; i < 3; i++) {
-          for (let j = 0; j < 3; j++) {
-            this.solution[row + i][col + j] = nums[idx++];
-          }
-        }
-      }
-
-      isValid(grid, row, col, num) {
-        for (let x = 0; x < 9; x++) {
-          if (grid[row][x] === num) return false;
-          if (grid[x][col] === num) return false;
-        }
-        let startRow = row - row % 3, startCol = col - col % 3;
-        for (let i = 0; i < 3; i++)
-          for (let j = 0; j < 3; j++)
-            if (grid[i + startRow][j + startCol] === num) return false;
-        return true;
-      }
-
-      solve(grid) {
-        for (let r = 0; r < 9; r++) {
-          for (let c = 0; c < 9; c++) {
-            if (grid[r][c] === 0) {
-              for (let num = 1; num <= 9; num++) {
-                if (this.isValid(grid, r, c, num)) {
-                  grid[r][c] = num;
-                  if (this.solve(grid)) return true;
-                  grid[r][c] = 0;
-                }
-              }
-              return false;
-            }
-          }
-        }
-        return true;
-      }
     }
 
-    // --- 4. UI MANAGER ---
+    /* =========================================
+       CLASS: UI MANAGER
+       ========================================= */
     class UIManager {
-      constructor(events) {
-        this.events = events;
-        this.gridEl = $('#sudoku-grid');
-        this.numpadEl = $('#numpad');
-        this.cells = [];
-        this.initGrid();
-        this.initNumpad();
+      constructor(gameInstance) {
+        this.game = gameInstance;
+        this.elements = {
+          grid: document.getElementById('grid'),
+          numpad: document.getElementById('numpad'),
+          timer: document.getElementById('timer'),
+          difficulty: document.getElementById('difficulty-select'),
+          hintBadge: document.getElementById('hint-badge'),
+          username: document.getElementById('username'),
+          avatar: document.getElementById('user-avatar'),
+          score: document.getElementById('score-display'),
+          soundBtn: document.getElementById('toggle-sound')
+        };
+        
+        this.audio = new Audio(CONFIG.sounds.click);
+        this.soundEnabled = localStorage.getItem('sound') !== 'false';
+        
         this.initTheme();
-        this.bindModals();
+        this.bindEvents();
       }
 
-      initGrid() {
-        this.gridEl.innerHTML = '';
-        this.cells = [];
-        for (let i = 0; i < 81; i++) {
-          let div = document.createElement('div');
-          div.className = 'cell';
-          div.dataset.idx = i;
-          div.addEventListener('mousedown', () => this.events.onCellClick(i));
-          this.gridEl.appendChild(div);
-          this.cells.push(div);
-        }
-      }
-
-      initNumpad() {
-        this.numpadEl.innerHTML = '';
-        for (let i = 1; i <= 9; i++) {
-          let btn = document.createElement('button');
-          btn.className = 'numpad-btn';
-          btn.textContent = i;
-          btn.addEventListener('click', () => this.events.onInput(i));
-          this.numpadEl.appendChild(btn);
-        }
-        // Eraser
-        let erase = document.createElement('button');
-        erase.className = 'numpad-btn text-red-400';
-        erase.innerHTML = `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>`;
-        erase.addEventListener('click', () => this.events.onInput(0));
-        this.numpadEl.appendChild(erase);
-      }
-
-      render(grid, initialGrid, activeIdx, selectedNum, errors = []) {
-        const activeRow = activeIdx !== null ? Math.floor(activeIdx / 9) : -1;
-        const activeCol = activeIdx !== null ? activeIdx % 9 : -1;
-        const activeBlockRow = activeRow !== -1 ? Math.floor(activeRow / 3) : -1;
-        const activeBlockCol = activeCol !== -1 ? Math.floor(activeCol / 3) : -1;
-        
-        // Count numbers to disable completed ones
-        const counts = Array(10).fill(0);
-
-        this.cells.forEach((cell, i) => {
-          const r = Math.floor(i / 9);
-          const c = i % 9;
-          const val = grid[r][c];
-          const isInit = initialGrid[r][c] !== 0;
-
-          if (val !== 0) counts[val]++;
-
-          // Reset classes
-          cell.className = 'cell';
-          cell.textContent = val === 0 ? '' : val;
-
-          // Static classes
-          if (isInit) cell.classList.add('given');
-          else if (val !== 0) cell.classList.add('input');
-
-          // Highlight Logic
-          const isSameNum = val !== 0 && val === selectedNum;
-          const isArea = (r === activeRow || c === activeCol || 
-                         (Math.floor(r/3) === activeBlockRow && Math.floor(c/3) === activeBlockCol));
-          
-          if (i === activeIdx) cell.classList.add('active');
-          else if (isSameNum) cell.classList.add('highlight-similar');
-          else if (isArea && activeIdx !== null) cell.classList.add('highlight-area');
-
-          // Errors
-          if (errors.includes(i)) cell.classList.add('error');
-        });
-
-        // Update Numpad
-        const numBtns = this.numpadEl.querySelectorAll('.numpad-btn');
-        numBtns.forEach((btn, i) => {
-          if (i < 9) { // 1-9
-             const num = i + 1;
-             btn.classList.toggle('selected', num === selectedNum);
-             btn.classList.toggle('disabled', counts[num] >= 9);
-          }
-        });
-      }
-
-      updateTimer(str) { $('#timer').textContent = str; }
-      updateUserInfo(user) {
-        $('#username').textContent = user.username;
-        $('#user-score').textContent = user.score;
-        $('#user-avatar').src = user.avatar;
-      }
-      updateCounts(hints) { $('#hint-count').textContent = `${hints}/${CONFIG.MAX_HINTS}`; }
-      
-      showMessage(msg, type='error') {
-        const el = $('#status-message');
-        el.textContent = msg;
-        el.className = `h-6 text-center text-xs font-semibold transition-opacity opacity-100 ${type === 'error' ? 'text-red-400' : 'text-green-400'}`;
-        setTimeout(() => el.classList.remove('opacity-100'), 2000);
-      }
-
-      // Theme Logic
       initTheme() {
-        const saved = localStorage.getItem('sudoku_theme') || 'default';
-        document.body.setAttribute('data-theme', saved);
-        
-        $('#btn-theme').addEventListener('click', (e) => {
-          e.stopPropagation();
-          $('#theme-panel').classList.toggle('hidden');
+        const savedTheme = localStorage.getItem('theme') || 'cyber';
+        document.body.dataset.theme = savedTheme;
+        document.querySelectorAll('.theme-option').forEach(el => {
+          el.classList.toggle('active', el.dataset.setTheme === savedTheme);
         });
-        
-        $$('#theme-panel div').forEach(div => {
-          div.addEventListener('click', () => {
-            const theme = div.dataset.setTheme;
-            document.body.setAttribute('data-theme', theme);
-            localStorage.setItem('sudoku_theme', theme);
-            $('#theme-panel').classList.add('hidden');
+        this.updateSoundBtn();
+      }
+
+      bindEvents() {
+        // Theme switcher
+        document.querySelectorAll('.theme-option').forEach(opt => {
+          opt.addEventListener('click', () => {
+            const theme = opt.dataset.setTheme;
+            document.body.dataset.theme = theme;
+            localStorage.setItem('theme', theme);
+            document.querySelectorAll('.theme-option').forEach(el => el.classList.remove('active'));
+            opt.classList.add('active');
+            this.playSound();
           });
         });
 
-        document.addEventListener('click', (e) => {
-          if (!e.target.closest('#btn-theme') && !e.target.closest('#theme-panel')) {
-            $('#theme-panel').classList.add('hidden');
-          }
+        // Sound toggle
+        this.elements.soundBtn.addEventListener('click', () => {
+          this.soundEnabled = !this.soundEnabled;
+          localStorage.setItem('sound', this.soundEnabled);
+          this.updateSoundBtn();
+        });
+
+        // Modals
+        document.querySelectorAll('[data-close]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            document.getElementById(btn.dataset.close).classList.remove('open');
+          });
+        });
+
+        document.getElementById('btn-settings').addEventListener('click', () => {
+          document.getElementById('modal-settings').classList.add('open');
+        });
+
+        document.getElementById('btn-rating').addEventListener('click', async () => {
+          document.getElementById('modal-rating').classList.add('open');
+          await this.renderLeaderboard();
+        });
+        
+        // Game Controls
+        document.getElementById('difficulty-select').addEventListener('change', (e) => this.game.startNewGame(e.target.value));
+        document.getElementById('btn-new-game').addEventListener('click', () => this.game.startNewGame());
+        document.getElementById('btn-erase').addEventListener('click', () => this.game.actionErase());
+        document.getElementById('btn-undo').addEventListener('click', () => this.game.actionUndo());
+        document.getElementById('btn-hint').addEventListener('click', () => this.game.actionHint());
+        document.getElementById('btn-victory-close').addEventListener('click', () => {
+           document.getElementById('modal-victory').classList.remove('open');
+           this.game.startNewGame();
         });
       }
 
-      bindModals() {
-        $$('.close-modal').forEach(b => b.addEventListener('click', () => {
-          b.closest('.modal-backdrop').classList.add('hidden');
-        }));
-        // Win modal close
-        $('#btn-win-close').addEventListener('click', () => $('#modal-win').classList.add('hidden'));
+      playSound() {
+        if (this.soundEnabled) {
+          this.audio.currentTime = 0;
+          this.audio.play().catch(() => {});
+        }
       }
       
-      openModal(id) { $(`#${id}`).classList.remove('hidden'); }
+      updateSoundBtn() {
+        this.elements.soundBtn.textContent = this.soundEnabled ? 'ВКЛ' : 'ВЫКЛ';
+      }
+
+      renderGrid(gridState, initialGrid) {
+        this.elements.grid.innerHTML = '';
+        gridState.forEach((row, r) => {
+          row.forEach((val, c) => {
+            const cell = document.createElement('div');
+            cell.className = 'cell';
+            cell.dataset.r = r;
+            cell.dataset.c = c;
+            
+            if (initialGrid[r][c] !== 0) {
+              cell.textContent = initialGrid[r][c];
+              cell.classList.add('given');
+            } else if (val !== 0) {
+              cell.textContent = val;
+              cell.classList.add('user-input');
+            }
+
+            cell.addEventListener('click', () => this.game.selectCell(r, c));
+            this.elements.grid.appendChild(cell);
+          });
+        });
+      }
+
+      updateCell(r, c, val, isError = false) {
+        const cell = this.elements.grid.children[r * 9 + c];
+        cell.textContent = val === 0 ? '' : val;
+        cell.className = 'cell'; // Reset classes
+        if (val !== 0) cell.classList.add('user-input');
+        
+        // Re-apply selection if active
+        if (this.game.selectedCell?.r === r && this.game.selectedCell?.c === c) {
+           cell.classList.add('selected');
+        }
+        
+        if (isError) {
+          cell.classList.add('error');
+          setTimeout(() => cell.classList.remove('error'), 500);
+        }
+      }
+
+      highlightCells(row, col, value) {
+        const cells = Array.from(this.elements.grid.children);
+        cells.forEach(c => c.classList.remove('selected', 'highlighted', 'same-number'));
+        
+        if (row === null) return;
+
+        const idx = row * 9 + col;
+        cells[idx].classList.add('selected');
+
+        // Highlight Row, Col, Box
+        for (let i = 0; i < 81; i++) {
+          const r = Math.floor(i / 9);
+          const c = i % 9;
+          const boxR = Math.floor(r / 3);
+          const boxC = Math.floor(c / 3);
+          const targetBoxR = Math.floor(row / 3);
+          const targetBoxC = Math.floor(col / 3);
+
+          if (r === row || c === col || (boxR === targetBoxR && boxC === targetBoxC)) {
+            if (i !== idx) cells[i].classList.add('highlighted');
+          }
+          
+          // Highlight same numbers
+          if (value !== 0 && cells[i].textContent == value) {
+             cells[i].classList.add('same-number');
+          }
+        }
+      }
+      
+      renderNumpad(counts) {
+        this.elements.numpad.innerHTML = '';
+        for (let i = 1; i <= 9; i++) {
+          const btn = document.createElement('div');
+          btn.className = 'numpad-btn';
+          btn.textContent = i;
+          
+          // Проверка завершенности цифры (если их уже 9 на доске)
+          if (counts[i] >= 9) btn.classList.add('exhausted');
+          
+          btn.addEventListener('click', () => {
+             this.playSound();
+             this.game.inputNumber(i);
+          });
+          this.elements.numpad.appendChild(btn);
+        }
+      }
+
+      updateTimer(seconds) {
+        const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+        const s = (seconds % 60).toString().padStart(2, '0');
+        this.elements.timer.textContent = `${m}:${s}`;
+      }
+      
+      updateHints(count) {
+        this.elements.hintBadge.textContent = count;
+        if(count === 0) this.elements.hintBadge.style.display = 'none';
+      }
+      
+      updateUserInfo(user) {
+        this.elements.username.textContent = user.name;
+        this.elements.avatar.src = user.avatar;
+        this.elements.score.textContent = user.score;
+      }
+      
+      showVictory(stats) {
+        document.getElementById('vic-diff').textContent = stats.difficulty;
+        document.getElementById('vic-time').textContent = stats.time;
+        document.getElementById('vic-score').textContent = `+${stats.points}`;
+        document.getElementById('modal-victory').classList.add('open');
+      }
+      
+      async renderLeaderboard() {
+        const list = document.getElementById('rating-list');
+        list.innerHTML = '<p class="text-center text-[var(--text-muted)]">Загрузка...</p>';
+        
+        const data = await this.game.network.getLeaderboard();
+        list.innerHTML = '';
+        
+        if (data.length === 0) {
+          list.innerHTML = '<p class="text-center p-4">Рейтинг пока пуст</p>';
+          return;
+        }
+
+        data.forEach((u, index) => {
+          const item = document.createElement('div');
+          item.className = 'rank-item';
+          // Highlight current user
+          if (u.id === this.game.network.user.id) item.style.backgroundColor = 'var(--bg-cell-active)';
+          
+          item.innerHTML = `
+            <span class="rank-num">${index + 1}</span>
+            <img src="${u.avatar}" class="w-8 h-8 rounded-full border border-[var(--grid-border)]">
+            <span class="font-bold text-sm truncate w-32">${u.username}</span>
+            <span class="rank-score">${u.score}</span>
+          `;
+          list.appendChild(item);
+        });
+      }
     }
 
-    // --- 5. GAME CONTROLLER (The Brain) ---
-    class GameController {
+    /* =========================================
+       CLASS: MAIN GAME CONTROLLER
+       ========================================= */
+    class SudokuGame {
       constructor() {
-        this.sound = new SoundManager();
-        this.storage = new StorageService();
-        this.core = new SudokuCore();
-        this.ui = new UIManager({
-          onCellClick: (idx) => this.selectCell(idx),
-          onInput: (num) => this.inputNumber(num)
-        });
-
+        this.engine = new SudokuEngine();
+        this.network = new NetworkManager();
+        this.ui = new UIManager(this);
+        
         this.state = {
-          grid: [], // Current state
-          initial: [], // Immutable
-          solution: [], // Answer
-          activeIdx: null,
-          selectedNum: null, // For highlighting
-          difficulty: 'easy',
-          hints: CONFIG.MAX_HINTS,
-          startTime: 0,
-          timerInterval: null,
+          grid: [], // Текущее состояние
+          initial: [], // Изначальные цифры
+          solution: [], // Ответ
           history: [], // Undo stack
-          finished: false
+          difficulty: 'easy',
+          timer: 0,
+          intervalId: null,
+          selectedCell: null,
+          hints: 3,
+          isOver: false
         };
-
-        this.init();
-      }
-
-      async init() {
-        const user = await this.storage.initAuth();
-        this.ui.updateUserInfo(user);
-
-        // Bind Controls
-        $('#btn-new-game').onclick = () => this.newGame();
-        $('#btn-check').onclick = () => this.checkGame();
-        $('#btn-undo').onclick = () => this.undo();
-        $('#btn-hint').onclick = () => this.useHint();
-        $('#difficulty-select').onchange = (e) => {
-          this.state.difficulty = e.target.value;
-          this.newGame();
-        };
-        $('#btn-sound').onclick = () => this.sound.toggle();
-        $('#btn-history').onclick = () => this.showHistory();
-        $('#btn-stats').onclick = () => this.showStats();
-        $('#btn-tutorial').onclick = () => this.showTutorial();
-
-        // Keyboard support
-        document.addEventListener('keydown', (e) => {
-           if(this.state.finished) return;
-           if(e.key >= '1' && e.key <= '9') this.inputNumber(parseInt(e.key));
-           if(e.key === 'Backspace' || e.key === 'Delete') this.inputNumber(0);
-           if(e.key === 'ArrowUp') this.moveSelection(-9);
-           if(e.key === 'ArrowDown') this.moveSelection(9);
-           if(e.key === 'ArrowLeft') this.moveSelection(-1);
-           if(e.key === 'ArrowRight') this.moveSelection(1);
-        });
-
-        // Load saved or new
-        const saved = this.storage.getLocalGame();
-        if (saved && !saved.solved) {
-            // Restore logic... (omitted for brevity, generating new for robust start)
-            this.newGame(); // For cleaner demo, usually restore here
-        } else {
-            this.newGame();
-        }
-
-        // Hide loader
+        
+        document.addEventListener('userDataUpdated', (e) => this.ui.updateUserInfo(e.detail));
+        
+        // Hide loading screen
         setTimeout(() => {
-          $('#loader').style.opacity = '0';
-          setTimeout(() => $('#loader').style.display = 'none', 500);
-        }, 800);
+          document.getElementById('loading-screen').style.opacity = '0';
+          setTimeout(() => document.getElementById('loading-screen').style.display = 'none', 500);
+        }, 1500);
+
+        this.startNewGame('easy');
       }
 
-      newGame() {
-        this.sound.play();
-        this.stopTimer();
+      startNewGame(difficulty = this.state.difficulty) {
+        clearInterval(this.state.intervalId);
         
-        const data = this.core.generate(this.state.difficulty);
-        this.state.initial = data.initial.map(r => [...r]); // Copy
-        this.state.grid = data.initial.map(r => [...r]);
-        this.state.solution = data.solution;
-        
+        this.state.difficulty = difficulty;
+        this.state.hints = 3;
         this.state.history = [];
-        this.state.hints = CONFIG.MAX_HINTS;
-        this.state.finished = false;
-        this.state.activeIdx = null;
-        this.state.selectedNum = null;
-        this.state.startTime = Date.now();
+        this.state.timer = 0;
+        this.state.isOver = false;
+        this.state.selectedCell = null;
         
-        $('#difficulty-display').textContent = $('#difficulty-select').options[$('#difficulty-select').selectedIndex].text;
-        $('#btn-undo').disabled = true;
-        this.ui.updateCounts(this.state.hints);
-        this.render();
-        this.startTimer();
+        const puzzle = this.engine.createPuzzle(difficulty);
+        this.state.initial = puzzle.initial.map(row => row.slice());
+        this.state.grid = puzzle.initial.map(row => row.slice());
+        this.state.solution = puzzle.solution;
+        
+        this.ui.renderGrid(this.state.grid, this.state.initial);
+        this.ui.updateHints(this.state.hints);
+        this.updateNumpadState();
+        
+        // Start Timer
+        this.state.intervalId = setInterval(() => {
+          this.state.timer++;
+          this.ui.updateTimer(this.state.timer);
+        }, 1000);
       }
 
-      selectCell(idx) {
-        if(this.state.finished) return;
-        this.sound.play();
-        this.state.activeIdx = idx;
-        const r = Math.floor(idx/9), c = idx%9;
+      selectCell(r, c) {
+        if (this.state.isOver) return;
+        this.state.selectedCell = { r, c };
         const val = this.state.grid[r][c];
-        if(val !== 0) this.state.selectedNum = val;
-        this.render();
-      }
-      
-      moveSelection(delta) {
-        if (this.state.activeIdx === null) {
-            this.selectCell(0);
-            return;
-        }
-        let newIdx = this.state.activeIdx + delta;
-        if(newIdx >= 0 && newIdx < 81) this.selectCell(newIdx);
+        this.ui.highlightCells(r, c, val);
+        this.ui.playSound();
       }
 
       inputNumber(num) {
-        if(this.state.finished || this.state.activeIdx === null) return;
+        if (this.state.isOver || !this.state.selectedCell) return;
+        const { r, c } = this.state.selectedCell;
         
-        const r = Math.floor(this.state.activeIdx / 9);
-        const c = this.state.activeIdx % 9;
-        
-        // Cannot edit given cells
+        // Нельзя менять изначальные цифры
         if (this.state.initial[r][c] !== 0) return;
         
-        const oldVal = this.state.grid[r][c];
-        if (oldVal === num) return;
+        const prev = this.state.grid[r][c];
+        if (prev === num) return; // No change
 
-        // Save for undo
-        this.state.history.push({ idx: this.state.activeIdx, val: oldVal });
-        if(this.state.history.length > 20) this.state.history.shift();
-        $('#btn-undo').disabled = false;
-
+        // Save history
+        this.state.history.push({ r, c, val: prev });
+        
+        // Set value
         this.state.grid[r][c] = num;
-        if (num !== 0) this.state.selectedNum = num;
         
-        this.sound.play();
-        this.render();
+        // Check correctness immediate visual feedback
+        const isCorrect = this.state.solution[r][c] === num;
         
-        // Auto check for win
-        if (!this.state.grid.flat().includes(0)) {
-            // Check correctness silently
-            let correct = true;
-            for(let i=0; i<9; i++) 
-                for(let j=0; j<9; j++) 
-                    if(this.state.grid[i][j] !== this.state.solution[i][j]) correct = false;
-            
-            if(correct) this.winGame();
-        }
-      }
-
-      undo() {
-        if (!this.state.history.length || this.state.finished) return;
-        const action = this.state.history.pop();
-        const r = Math.floor(action.idx / 9);
-        const c = action.idx % 9;
-        this.state.grid[r][c] = action.val;
-        this.state.activeIdx = action.idx;
-        $('#btn-undo').disabled = this.state.history.length === 0;
-        this.sound.play();
-        this.render();
-      }
-
-      useHint() {
-        if (this.state.finished || this.state.hints <= 0) return;
-        
-        // Find empty or wrong cell
-        let targets = [];
-        for (let r=0; r<9; r++) {
-            for (let c=0; c<9; c++) {
-                if (this.state.grid[r][c] === 0 || this.state.grid[r][c] !== this.state.solution[r][c]) {
-                    targets.push(r*9+c);
-                }
-            }
-        }
-        
-        if (targets.length === 0) return;
-        
-        const idx = targets[Math.floor(Math.random() * targets.length)];
-        const r = Math.floor(idx/9), c = idx%9;
-        
-        this.state.grid[r][c] = this.state.solution[r][c];
-        this.state.initial[r][c] = this.state.solution[r][c]; // Make it permanent/given
-        this.state.hints--;
-        this.ui.updateCounts(this.state.hints);
-        
-        // Visuals
-        const cell = this.ui.cells[idx];
-        cell.classList.add('hinted');
-        setTimeout(() => cell.classList.remove('hinted'), 1000);
-        
-        this.sound.play();
-        this.render();
-      }
-
-      checkGame() {
-        if (this.state.finished) return;
-        let errors = [];
-        let isFull = true;
-        
-        for(let r=0; r<9; r++){
-            for(let c=0; c<9; c++){
-                if(this.state.grid[r][c] === 0) isFull = false;
-                else if(this.state.grid[r][c] !== this.state.solution[r][c]) {
-                    errors.push(r*9+c);
-                }
-            }
-        }
-
-        if (errors.length > 0) {
-            this.ui.render(this.state.grid, this.state.initial, this.state.activeIdx, this.state.selectedNum, errors);
-            this.ui.showMessage("Найдено ошибок: " + errors.length);
-            this.sound.play(); // Consider error sound
-        } else if (!isFull) {
-            this.ui.showMessage("Заполните все клетки", "normal");
+        if (!isCorrect) {
+          this.ui.updateCell(r, c, num, true); // Show error
+          // В строгом режиме можно штрафовать или не давать ставить, 
+          // но в стандартном просто показываем, что поставил (валидация при победе)
         } else {
-            this.winGame();
+          this.ui.updateCell(r, c, num);
+        }
+        
+        this.ui.highlightCells(r, c, num); // Refresh highlights
+        this.updateNumpadState();
+        this.checkWinCondition();
+      }
+
+      actionErase() {
+        if (!this.state.selectedCell) return;
+        this.inputNumber(0);
+      }
+
+      actionUndo() {
+        if (this.state.history.length === 0 || this.state.isOver) return;
+        const last = this.state.history.pop();
+        this.state.grid[last.r][last.c] = last.val;
+        this.ui.updateCell(last.r, last.c, last.val);
+        this.ui.playSound();
+        this.updateNumpadState();
+      }
+
+      actionHint() {
+        if (this.state.isOver || this.state.hints <= 0) return;
+        
+        // Найти пустую клетку
+        let empty = [];
+        for(let r=0; r<9; r++) {
+          for(let c=0; c<9; c++) {
+            if (this.state.grid[r][c] === 0) empty.push({r,c});
+          }
+        }
+        
+        if (empty.length === 0) return;
+        
+        const target = empty[Math.floor(Math.random() * empty.length)];
+        const correctVal = this.state.solution[target.r][target.c];
+        
+        this.state.grid[target.r][target.c] = correctVal;
+        this.state.initial[target.r][target.c] = correctVal; // Lock it as given
+        
+        // UI Update
+        const cell = this.ui.elements.grid.children[target.r*9 + target.c];
+        cell.textContent = correctVal;
+        cell.classList.add('given', 'hint-anim');
+        
+        this.state.hints--;
+        this.ui.updateHints(this.state.hints);
+        this.updateNumpadState();
+        this.checkWinCondition();
+      }
+
+      updateNumpadState() {
+        const counts = Array(10).fill(0);
+        this.state.grid.forEach(row => row.forEach(n => counts[n]++));
+        this.ui.renderNumpad(counts);
+      }
+
+      checkWinCondition() {
+        // Проверяем, заполнена ли сетка
+        let isFull = true;
+        let isCorrect = true;
+        
+        for(let r=0; r<9; r++) {
+          for(let c=0; c<9; c++) {
+            if (this.state.grid[r][c] === 0) {
+              isFull = false;
+              break;
+            }
+            if (this.state.grid[r][c] !== this.state.solution[r][c]) {
+              isCorrect = false;
+            }
+          }
+        }
+
+        if (isFull && isCorrect) {
+          this.gameWon();
         }
       }
 
-      async winGame() {
-        this.state.finished = true;
-        this.stopTimer();
-        const timeSpent = Math.floor((Date.now() - this.state.startTime)/1000);
+      gameWon() {
+        this.state.isOver = true;
+        clearInterval(this.state.intervalId);
         
-        // Calc Score
-        let points = CONFIG.DIFFICULTY[this.state.difficulty].points;
-        points = Math.max(0, points - ((3 - this.state.hints) * 50));
-        points = Math.max(0, points - Math.floor(timeSpent / 10)); // Time penalty
-
-        // Update UI
-        $('#win-time').textContent = formatTime(timeSpent);
-        $('#win-score').textContent = '+' + points;
-        this.ui.openModal('modal-win');
+        const diffConfig = CONFIG.difficulties[this.state.difficulty];
+        // Бонус за скорость: макс 50% от очков, убывает со временем
+        const timeBonus = Math.max(0, Math.floor(200 - this.state.timer / 5)); 
+        const totalPoints = diffConfig.points + timeBonus;
         
-        // Backend
-        await this.storage.updateScore(points);
-        await this.storage.saveRecord(this.state.difficulty, timeSpent);
-        this.ui.updateUserInfo(this.storage.user);
+        this.network.updateScore(totalPoints);
         
-        // Save to local history
-        this.storage.saveLocalGame({
-            date: new Date().toISOString(),
-            difficulty: this.state.difficulty,
-            time: formatTime(timeSpent),
-            solved: true
+        this.ui.showVictory({
+          difficulty: this.ui.elements.difficulty.options[this.ui.elements.difficulty.selectedIndex].text,
+          time: this.ui.elements.timer.textContent,
+          points: totalPoints
         });
-      }
-
-      startTimer() {
-        this.state.timerInterval = setInterval(() => {
-          const s = Math.floor((Date.now() - this.state.startTime)/1000);
-          this.ui.updateTimer(formatTime(s));
-        }, 1000);
-      }
-      stopTimer() { clearInterval(this.state.timerInterval); }
-
-      render() {
-        this.ui.render(this.state.grid, this.state.initial, this.state.activeIdx, this.state.selectedNum);
-      }
-      
-      // Modals Logic
-      showHistory() {
-        const hist = JSON.parse(localStorage.getItem('sudoku_history') || '[]');
-        const container = $('#history-list');
-        container.innerHTML = hist.length ? '' : '<p class="text-center text-gray-500">История пуста</p>';
-        hist.forEach(h => {
-            const el = document.createElement('div');
-            el.className = 'flex justify-between p-3 bg-white/5 rounded-lg border border-white/5';
-            el.innerHTML = `
-                <div>
-                    <div class="font-bold text-sm text-white">${new Date(h.date).toLocaleDateString()}</div>
-                    <div class="text-xs text-gray-400 capitalize">${h.diff}</div>
-                </div>
-                <div class="text-right">
-                    <div class="font-mono text-blue-400">${h.time}</div>
-                    <div class="text-xs ${h.solved ? 'text-green-500' : 'text-red-500'}">${h.solved ? 'Победа' : 'Не закончено'}</div>
-                </div>
-            `;
-            container.appendChild(el);
-        });
-        this.ui.openModal('modal-history');
-      }
-
-      async showStats() {
-        this.ui.openModal('modal-stats');
-        const list = $('#leaderboard-list');
-        list.innerHTML = '<div class="text-center mt-4"><div class="loader-spinner w-8 h-8 mx-auto"></div></div>';
         
-        // Simple tabs logic
-        let type = 'score';
-        const load = async () => {
-             const data = await this.storage.getLeaderboard(type, this.state.difficulty);
-             list.innerHTML = '';
-             if(data.length === 0) list.innerHTML = '<div class="text-center text-gray-500">Нет данных</div>';
-             
-             data.forEach((u, i) => {
-                 const isMe = String(u.id) === String(this.storage.user.id);
-                 const val = type === 'score' ? u.score : formatTime(u.time);
-                 const div = document.createElement('div');
-                 div.className = `flex items-center p-2 rounded-lg gap-3 ${isMe ? 'bg-blue-500/20 border border-blue-500/50' : 'bg-white/5'}`;
-                 div.innerHTML = `
-                    <div class="font-bold w-6 text-center ${i<3 ? 'text-yellow-400' : 'text-gray-500'}">${i+1}</div>
-                    <img src="${u.avatar}" class="w-8 h-8 rounded-full bg-slate-800">
-                    <div class="flex-1 truncate font-medium text-sm text-gray-200">${u.username}</div>
-                    <div class="font-mono font-bold text-blue-300">${val}</div>
-                 `;
-                 list.appendChild(div);
-             });
-        };
-        
-        $('#tab-score').onclick = () => { type='score'; $('#tab-score').classList.add('bg-slate-700','text-white'); $('#tab-speed').classList.remove('bg-slate-700','text-white'); load(); };
-        $('#tab-speed').onclick = () => { type='time'; $('#tab-speed').classList.add('bg-slate-700','text-white'); $('#tab-score').classList.remove('bg-slate-700','text-white'); load(); };
-        
-        load();
-      }
-
-      showTutorial() {
-          const steps = [
-              { title: "Основы", text: "Цель игры - заполнить сетку 9x9 цифрами так, чтобы каждая строка, столбец и блок 3x3 содержали все цифры от 1 до 9." },
-              { title: "Инструменты", text: "Используйте панель снизу для ввода цифр. Кнопка 'Карандаш' (в разработке) позволит делать заметки." },
-              { title: "Подсказки", text: "Застряли? Нажмите на лампочку, чтобы открыть одну клетку. Но это стоит очков!" }
-          ];
-          let cur = 0;
-          const renderStep = () => {
-              $('#tut-title').textContent = steps[cur].title;
-              $('#tut-desc').textContent = steps[cur].text;
-              $('#tut-prev').disabled = cur === 0;
-              $('#tut-next').textContent = cur === steps.length-1 ? 'Понятно' : 'Далее';
-              // Draw mini grid visual (simplified)
-              $('#tut-grid').innerHTML = '';
-              for(let i=0; i<81; i++) {
-                  const d = document.createElement('div');
-                  d.className = 'tut-cell';
-                  if(i%2===0 && cur===0) { d.textContent = (i%9)+1; d.style.color='var(--color-primary)'; }
-                  $('#tut-grid').appendChild(d);
-              }
-          };
-          
-          $('#tut-prev').onclick = () => { if(cur>0) { cur--; renderStep(); } };
-          $('#tut-next').onclick = () => { 
-              if(cur < steps.length-1) { cur++; renderStep(); } 
-              else { $('#modal-tutorial').classList.add('hidden'); }
-          };
-          
-          this.ui.openModal('modal-tutorial');
-          renderStep();
+        // Confetti effect (simple CSS fallback or can add library)
       }
     }
 
-    // --- INIT ---
+    // Init App
     window.addEventListener('DOMContentLoaded', () => {
-      new GameController();
+      window.game = new SudokuGame();
     });
 
   </script>
