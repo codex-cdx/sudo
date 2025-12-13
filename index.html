@@ -3,749 +3,1087 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Sudoku Premium X</title>
+  <title>Sudoku Premium</title>
   
+  <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  
+  <style>
+    /* --- Шрифты и База --- */
+    :root {
+      --font-stack: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+      --safe-area-top: env(safe-area-inset-top);
+      --safe-area-bottom: env(safe-area-inset-bottom);
+    }
+
+    body {
+      font-family: var(--font-stack);
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+      /* Отключаем выделение текста для ощущения приложения */
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      background-color: #000; /* Fallback */
+      transition: background 0.5s ease;
+    }
+
+    /* --- ТЕМЫ (CSS Variables) --- */
+    
+    /* 1. Dark Glass (Default/Premium) */
+    body[data-theme="darkGlass"] {
+      --bg-gradient: radial-gradient(circle at 50% 0%, #2c3e50 0%, #000000 100%);
+      --glass-bg: rgba(30, 30, 30, 0.65);
+      --glass-border: rgba(255, 255, 255, 0.12);
+      --text-main: #ffffff;
+      --text-muted: #8e8e93;
+      --primary-accent: #0A84FF; /* iOS Blue */
+      --primary-hover: #0071e3;
+      --cell-bg: rgba(255, 255, 255, 0.05);
+      --grid-line: rgba(255, 255, 255, 0.15);
+      --highlight-bg: rgba(10, 132, 255, 0.25);
+      --highlight-text: #ffffff;
+      --active-cell-bg: rgba(10, 132, 255, 0.4);
+      --error-text: #ff453a;
+      --given-text: #ffffff;
+      --user-text: #64d2ff;
+      --area-highlight: rgba(255, 255, 255, 0.07);
+      --modal-bg: rgba(30, 30, 30, 0.85);
+    }
+
+    /* 2. Light Glass */
+    body[data-theme="lightGlass"] {
+      --bg-gradient: radial-gradient(circle at 50% 0%, #e0eafc 0%, #cfdef3 100%);
+      --glass-bg: rgba(255, 255, 255, 0.65);
+      --glass-border: rgba(255, 255, 255, 0.5);
+      --text-main: #000000;
+      --text-muted: #666666;
+      --primary-accent: #007AFF;
+      --primary-hover: #005ecb;
+      --cell-bg: rgba(255, 255, 255, 0.4);
+      --grid-line: rgba(0, 0, 0, 0.1);
+      --highlight-bg: rgba(0, 122, 255, 0.2);
+      --highlight-text: #000000;
+      --active-cell-bg: rgba(0, 122, 255, 0.3);
+      --error-text: #ff3b30;
+      --given-text: #000000;
+      --user-text: #007AFF;
+      --area-highlight: rgba(0, 0, 0, 0.05);
+      --modal-bg: rgba(240, 240, 240, 0.85);
+    }
+
+    /* 3. Deep Purple (Midnight) */
+    body[data-theme="midnight"] {
+      --bg-gradient: radial-gradient(circle at top, #2b1055, #7597de);
+      --glass-bg: rgba(20, 10, 40, 0.6);
+      --glass-border: rgba(255, 255, 255, 0.1);
+      --text-main: #e0e0e0;
+      --text-muted: #a0a0a0;
+      --primary-accent: #d946ef; /* Fuchsia */
+      --primary-hover: #c026d3;
+      --cell-bg: rgba(0, 0, 0, 0.2);
+      --grid-line: rgba(255, 255, 255, 0.15);
+      --highlight-bg: rgba(217, 70, 239, 0.25);
+      --highlight-text: #ffffff;
+      --active-cell-bg: rgba(217, 70, 239, 0.4);
+      --error-text: #ff453a;
+      --given-text: #ffffff;
+      --user-text: #f0abfc;
+      --area-highlight: rgba(255, 255, 255, 0.05);
+      --modal-bg: rgba(30, 20, 50, 0.9);
+    }
+
+    body {
+      background: var(--bg-gradient);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* --- GLASSMORPHISM UTILS --- */
+    .glass-panel {
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+    }
+
+    .glass-button {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid var(--glass-border);
+      color: var(--text-main);
+      transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+    
+    .glass-button:active {
+      transform: scale(0.96);
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .accent-button {
+      background: var(--primary-accent);
+      color: white;
+      border: none;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+    
+    .accent-button:active {
+      background: var(--primary-hover);
+    }
+
+    /* --- MAIN LAYOUT --- */
+    #app-container {
+      width: 100%;
+      max-width: 500px; /* Ограничение ширины для десктопов */
+      height: 100vh; /* Занимаем высоту экрана */
+      height: 100dvh; /* Dynamic viewport height для мобилок */
+      display: flex;
+      flex-direction: column;
+      padding: max(10px, var(--safe-area-top)) 16px max(10px, var(--safe-area-bottom)) 16px;
+      box-sizing: border-box;
+      position: relative;
+      overflow-y: auto;
+    }
+
+    /* Header */
+    .header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      padding: 10px 14px;
+      border-radius: 16px;
+    }
+
+    .user-pill {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .avatar-img {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 2px solid var(--primary-accent);
+      object-fit: cover;
+    }
+
+    /* Controls Bar */
+    .controls-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      gap: 8px;
+    }
+
+    .select-styled {
+      appearance: none;
+      background: var(--cell-bg);
+      color: var(--text-main);
+      border: 1px solid var(--glass-border);
+      padding: 8px 12px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 500;
+      outline: none;
+    }
+
+    .icon-btn {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+
+    /* Timer */
+    .timer-badge {
+      font-variant-numeric: tabular-nums;
+      font-weight: 600;
+      font-size: 16px;
+      color: var(--text-main);
+      padding: 6px 12px;
+      background: var(--cell-bg);
+      border-radius: 8px;
+    }
+
+    /* --- GAME GRID (Responsive) --- */
+    .grid-wrapper {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      margin-bottom: 12px;
+      flex-shrink: 0; 
+    }
+
+    .sudoku-grid {
+      display: grid;
+      grid-template-columns: repeat(9, 1fr);
+      gap: 1px;
+      background-color: var(--grid-line);
+      border: 2px solid var(--grid-line);
+      border-radius: 12px;
+      overflow: hidden;
+      width: 100%;
+      /* Магия адаптивности: квадрат, но не больше доступной высоты */
+      aspect-ratio: 1 / 1; 
+      max-height: 60vh;
+      max-width: 60vh;
+    }
+
+    .cell {
+      background-color: var(--cell-bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: clamp(16px, 5vw, 24px);
+      position: relative;
+      cursor: pointer;
+      transition: background-color 0.15s ease;
+      /* Отключаем двойной тап зум */
+      touch-action: manipulation; 
+    }
+
+    /* Grid Lines (Bold Separators) */
+    .cell:nth-child(3n) { border-right: 1px solid var(--grid-line); }
+    .cell:nth-child(9n) { border-right: none; }
+    .cell:nth-child(n+19):nth-child(-n+27),
+    .cell:nth-child(n+46):nth-child(-n+54) { border-bottom: 1px solid var(--grid-line); }
+    
+    /* Дополнительные псевдо-элементы для жирных линий */
+    .sudoku-grid {
+      position: relative;
+    }
+    .grid-overlay {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      pointer-events: none;
+      border-radius: 12px;
+      border: 2px solid var(--primary-accent);
+      opacity: 0.3;
+      display: none; /* Можно включить для стиля */
+    }
+
+    /* Cell States */
+    .cell-content { font-weight: 500; z-index: 2; }
+    .cell.given { color: var(--given-text); font-weight: 700; }
+    .cell.user-input { color: var(--user-text); }
+    .cell.error { color: var(--error-text) !important; animation: shake 0.4s; }
+    .cell.highlight { background-color: var(--highlight-bg); }
+    .cell.area-highlight { background-color: var(--area-highlight); }
+    .cell.active-cell { background-color: var(--active-cell-bg); box-shadow: inset 0 0 0 2px var(--primary-accent); }
+    .cell.hinted { background-color: rgba(255, 215, 0, 0.2); animation: flash 0.5s; }
+
+    /* Separators implemented via CSS Grid Gap + margins logic is complex, 
+       using absolute separators is safer for perfect 3x3 look */
+    .v-sep { position: absolute; width: 2px; background: var(--text-muted); opacity: 0.5; top: 0; bottom: 0; pointer-events: none; }
+    .h-sep { position: absolute; height: 2px; background: var(--text-muted); opacity: 0.5; left: 0; right: 0; pointer-events: none; }
+    
+    /* --- KEYPAD (Adaptive) --- */
+    .keypad-container {
+      display: grid;
+      grid-template-columns: repeat(10, 1fr);
+      gap: 6px;
+      width: 100%;
+      margin-bottom: 12px;
+    }
+
+    /* Для очень узких экранов (iPhone 8 / SE) делаем 2 ряда */
+    @media (max-width: 370px) {
+      .keypad-container {
+        grid-template-columns: repeat(5, 1fr);
+        gap: 8px;
+      }
+    }
+
+    .num-btn {
+      aspect-ratio: 1/1; /* Квадратные кнопки */
+      border-radius: 10px;
+      font-size: 20px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      position: relative;
+    }
+
+    .num-btn.selected {
+      background: var(--primary-accent);
+      color: white;
+      border-color: transparent;
+    }
+    
+    .num-btn.disabled { opacity: 0.3; pointer-events: none; }
+
+    /* --- BOTTOM ACTIONS --- */
+    .actions-bar {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: auto; /* Push to bottom */
+      padding-top: 10px;
+    }
+    
+    .action-btn {
+      flex: 1;
+      height: 48px;
+      border-radius: 14px;
+      font-size: 14px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    /* --- MODALS --- */
+    .modal-overlay {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(5px);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+    .modal-overlay.active { opacity: 1; pointer-events: auto; }
+    
+    .modal-card {
+      background: var(--modal-bg);
+      width: 90%;
+      max-width: 400px;
+      border-radius: 24px;
+      padding: 24px;
+      border: 1px solid var(--glass-border);
+      transform: scale(0.9);
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      max-height: 85vh;
+      overflow-y: auto;
+      color: var(--text-main);
+    }
+    .modal-overlay.active .modal-card { transform: scale(1); }
+    
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .modal-title { font-size: 22px; font-weight: 700; }
+    .close-btn { font-size: 24px; cursor: pointer; color: var(--text-muted); }
+
+    /* --- ANIMATIONS --- */
+    @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+    @keyframes flash { 0% { background: var(--primary-accent); } 100% { background: var(--cell-bg); } }
+    @keyframes popIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+    /* Loading Screen */
+    #loading-screen {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: #000;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      transition: opacity 0.5s;
+    }
+    .loader {
+      width: 48px; height: 48px;
+      border: 5px solid #FFF;
+      border-bottom-color: transparent;
+      border-radius: 50%;
+      animation: rotation 1s linear infinite;
+    }
+    @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    /* Theme Panel */
+    .theme-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .theme-option { 
+      height: 40px; border-radius: 8px; border: 2px solid transparent; cursor: pointer; 
+      display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600;
+    }
+    .theme-option.active-theme { border-color: var(--primary-accent); }
+    
+    /* Separator Lines specifically placed */
+    .sep-v-1 { position: absolute; left: 33.33%; top: 0; bottom: 0; width: 2px; background: var(--primary-accent); opacity: 0.5; pointer-events: none; }
+    .sep-v-2 { position: absolute; left: 66.66%; top: 0; bottom: 0; width: 2px; background: var(--primary-accent); opacity: 0.5; pointer-events: none; }
+    .sep-h-1 { position: absolute; top: 33.33%; left: 0; right: 0; height: 2px; background: var(--primary-accent); opacity: 0.5; pointer-events: none; }
+    .sep-h-2 { position: absolute; top: 66.66%; left: 0; right: 0; height: 2px; background: var(--primary-accent); opacity: 0.5; pointer-events: none; }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body data-theme="darkGlass">
+
+  <div id="loading-screen">
+    <div class="loader"></div>
+    <div style="margin-top: 20px; font-weight: 600; color: white;">Загрузка Sudoku...</div>
+  </div>
+
+  <div id="app-container">
+    
+    <div class="header-bar glass-panel">
+      <div class="user-pill">
+        <img id="user-avatar" src="" class="avatar-img" alt="Avatar">
+        <div>
+          <div id="username" style="font-weight: 700; font-size: 14px;">Guest</div>
+          <div style="font-size: 12px; color: var(--text-muted);">Очки: <span id="user-score" style="color: var(--primary-accent);">0</span></div>
+        </div>
+      </div>
+      <div style="text-align: right; font-size: 10px; color: var(--text-muted);">
+        <div>Easy: <span id="easy-record" style="color:var(--text-main)">--:--</span></div>
+        <div>Med: <span id="medium-record" style="color:var(--text-main)">--:--</span></div>
+        <div>Hard: <span id="hard-record" style="color:var(--text-main)">--:--</span></div>
+      </div>
+    </div>
+
+    <div class="controls-bar">
+      <select id="difficulty" class="select-styled">
+        <option value="easy">Лёгкий</option>
+        <option value="medium">Средний</option>
+        <option value="hard">Сложный</option>
+      </select>
+
+      <div class="timer-badge" id="timer">00:00</div>
+      
+      <div style="display:flex; gap: 8px;">
+        <button id="settings-button" class="icon-btn glass-button"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></button>
+        <button id="rating-button" class="icon-btn glass-button"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path></svg></button>
+      </div>
+    </div>
+
+    <div class="grid-wrapper">
+      <div id="grid" class="sudoku-grid">
+        <div class="sep-v-1"></div><div class="sep-v-2"></div>
+        <div class="sep-h-1"></div><div class="sep-h-2"></div>
+      </div>
+    </div>
+
+    <div id="number-row" class="keypad-container">
+      </div>
+
+    <div class="actions-bar">
+      <button id="undo-button" class="action-btn glass-button" disabled>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 14L4 9l5-5"/><path d="M4 9h10c4.418 0 8 3.582 8 8"/></svg>
+        Отмена
+      </button>
+      <button id="hint-button" class="action-btn glass-button">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z"/><path d="M9 21h6"/></svg>
+        <span id="hint-count-display">3/3</span>
+      </button>
+      <button id="check" class="action-btn accent-button">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+        Готово
+      </button>
+    </div>
+    
+    <div id="message" style="text-align: center; height: 20px; font-size: 14px; margin-top: 5px; color: var(--error-text);"></div>
+
+  </div>
+
+  <div id="settings-modal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title">Настройки</div>
+        <div class="close-btn" data-target="settings-modal">&times;</div>
+      </div>
+      
+      <div style="margin-bottom: 20px;">
+        <p style="margin-bottom: 10px; font-weight: 600;">Тема оформления</p>
+        <div class="theme-grid">
+          <div class="theme-option glass-button" data-theme="darkGlass" style="background: #2c3e50; color:white;">Dark</div>
+          <div class="theme-option glass-button" data-theme="lightGlass" style="background: #e0eafc; color:black;">Light</div>
+          <div class="theme-option glass-button" data-theme="midnight" style="background: #2b1055; color:#d946ef;">Midnight</div>
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-top: 1px solid var(--grid-line);">
+        <span>Звуковые эффекты</span>
+        <button id="sound-toggle" class="glass-button" style="padding: 5px 15px; border-radius: 20px;">ВКЛ</button>
+      </div>
+      
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-top: 1px solid var(--grid-line);">
+        <span>Подсветка цифр</span>
+        <button id="highlightToggle" class="glass-button" style="padding: 5px 15px; border-radius: 20px;">ВКЛ</button>
+      </div>
+
+      <div style="margin-top: 20px; gap: 10px; display: flex; flex-direction: column;">
+         <button id="tutorial-button" class="glass-button" style="width:100%; padding: 10px; border-radius: 12px;">Как играть?</button>
+         <button id="recent-games-button" class="glass-button" style="width:100%; padding: 10px; border-radius: 12px;">История игр</button>
+         <button id="newGame" class="accent-button" style="width:100%; padding: 12px; border-radius: 12px; margin-top: 10px;">Новая игра</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="rating-modal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title">Лидерборд</div>
+        <div class="close-btn" data-target="rating-modal">&times;</div>
+      </div>
+      <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+        <button class="glass-button rating-tab active" data-type="score" style="flex:1; border-radius:8px; padding: 8px;">Очки</button>
+        <button class="glass-button rating-tab" data-type="time" style="flex:1; border-radius:8px; padding: 8px;">Время</button>
+      </div>
+      <div id="difficulty-tabs" class="hidden" style="display: flex; gap: 5px; margin-bottom: 15px;">
+        <button class="glass-button diff-tab active" data-d="easy" style="flex:1; font-size: 12px; padding: 5px; border-radius: 6px;">Easy</button>
+        <button class="glass-button diff-tab" data-d="medium" style="flex:1; font-size: 12px; padding: 5px; border-radius: 6px;">Med</button>
+        <button class="glass-button diff-tab" data-d="hard" style="flex:1; font-size: 12px; padding: 5px; border-radius: 6px;">Hard</button>
+      </div>
+      <div id="rating-list" style="max-height: 300px; overflow-y: auto; font-size: 14px;"></div>
+    </div>
+  </div>
+  
+  <div id="recent-games-modal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header"><div class="modal-title">История</div><div class="close-btn" data-target="recent-games-modal">&times;</div></div>
+      <div id="recent-games-list"></div>
+    </div>
+  </div>
+
+  <div id="tutorial-modal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header"><div class="modal-title" id="tutorial-title"></div><div class="close-btn" data-target="tutorial-modal">&times;</div></div>
+      <div id="tutorial-grid" class="sudoku-grid" style="width: 200px; margin: 0 auto; pointer-events: none;"></div>
+      <p id="tutorial-text" style="text-align: center; margin: 15px 0; min-height: 40px;"></p>
+      <div style="display:flex; justify-content: space-between;">
+        <button id="tutorial-prev" class="glass-button" style="padding: 8px 16px; border-radius: 8px;">Назад</button>
+        <span id="tutorial-step-indicator" style="font-size: 12px; opacity: 0.7; align-self: center;"></span>
+        <button id="tutorial-next" class="accent-button" style="padding: 8px 16px; border-radius: 8px;">Далее</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="win-modal" class="modal-overlay">
+    <div class="modal-card" style="text-align: center;">
+      <h2 style="color: var(--primary-accent); font-size: 28px; margin: 0 0 10px 0;">Победа!</h2>
+      <p id="win-modal-message" style="margin-bottom: 20px;"></p>
+      <button id="win-modal-close-btn" class="accent-button" style="width: 100%; padding: 12px; border-radius: 12px;">Отлично!</button>
+    </div>
+  </div>
+
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
 
-  <style>
-    /* --- RESET & CORE --- */
-    :root {
-      --font-stack: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
-      --safe-top: env(safe-area-inset-top, 20px);
-      --safe-bottom: env(safe-area-inset-bottom, 20px);
-      
-      /* Default: Dark Glass */
-      --bg-grad: radial-gradient(circle at 50% 0%, #1a2a3a 0%, #000000 100%);
-      --glass-bg: rgba(25, 25, 25, 0.7);
-      --glass-border: rgba(255, 255, 255, 0.08);
-      --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
-      
-      --txt-main: #ffffff;
-      --txt-sec: #8e8e93;
-      --accent: #0A84FF;
-      --accent-glow: rgba(10, 132, 255, 0.5);
-      
-      --grid-border: rgba(255, 255, 255, 0.15);
-      --cell-bg: rgba(255, 255, 255, 0.03);
-      --cell-active: rgba(10, 132, 255, 0.25);
-      
-      --given-col: #ffffff;
-      --user-col: #64d2ff;
-      --err-col: #ff453a;
-    }
-
-    body[data-theme="light"] {
-      --bg-grad: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-      --glass-bg: rgba(255, 255, 255, 0.65);
-      --glass-border: rgba(255, 255, 255, 0.6);
-      --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
-      --txt-main: #1d1d1f;
-      --txt-sec: #6e6e73;
-      --accent: #007AFF;
-      --accent-glow: rgba(0, 122, 255, 0.3);
-      --grid-border: rgba(0, 0, 0, 0.1);
-      --cell-bg: rgba(255, 255, 255, 0.4);
-      --cell-active: rgba(0, 122, 255, 0.2);
-      --given-col: #000000;
-      --user-col: #007AFF;
-    }
-
-    body[data-theme="neon"] {
-      --bg-grad: linear-gradient(180deg, #0f0c29, #302b63, #24243e);
-      --glass-bg: rgba(20, 10, 30, 0.6);
-      --glass-border: rgba(255, 255, 255, 0.1);
-      --accent: #d946ef;
-      --accent-glow: rgba(217, 70, 239, 0.6);
-      --user-col: #f0abfc;
-      --cell-active: rgba(217, 70, 239, 0.2);
-    }
-
-    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-    body {
-      margin: 0; padding: 0;
-      font-family: var(--font-stack);
-      background: var(--bg-grad);
-      color: var(--txt-main);
-      height: 100vh; height: 100dvh;
-      overflow: hidden;
-      display: flex; flex-direction: column;
-      user-select: none; -webkit-user-select: none;
-      transition: background 0.5s ease;
-    }
-
-    /* --- UTILS --- */
-    .glass {
-      background: var(--glass-bg);
-      backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-      border: 1px solid var(--glass-border);
-      box-shadow: var(--glass-shadow);
-    }
-    .btn {
-      border: none; outline: none; cursor: pointer;
-      font-family: inherit; font-weight: 600;
-      transition: transform 0.1s, background 0.2s;
-      display: flex; align-items: center; justify-content: center;
-    }
-    .btn:active { transform: scale(0.96); }
-    .hidden { display: none !important; }
-
-    /* --- LAYOUT --- */
-    #app {
-      flex: 1;
-      display: flex; flex-direction: column;
-      padding: max(10px, var(--safe-top)) 16px max(10px, var(--safe-bottom)) 16px;
-      max-width: 500px; margin: 0 auto; width: 100%;
-      position: relative;
-    }
-
-    /* HEADER */
-    .header {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 12px; border-radius: 20px;
-      margin-bottom: 12px;
-    }
-    .user-info { display: flex; align-items: center; gap: 10px; }
-    .avatar { width: 38px; height: 38px; border-radius: 50%; border: 2px solid var(--accent); object-fit: cover; }
-    .stats-mini { font-size: 11px; text-align: right; color: var(--txt-sec); line-height: 1.4; }
-    .stats-mini span { color: var(--txt-main); font-weight: 600; font-variant-numeric: tabular-nums; }
-
-    /* CONTROLS */
-    .controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-    .diff-select {
-      background: var(--cell-bg); color: var(--txt-main);
-      border: 1px solid var(--glass-border);
-      padding: 6px 12px; border-radius: 12px;
-      font-size: 14px; outline: none; appearance: none;
-    }
-    .timer {
-      font-variant-numeric: tabular-nums; font-weight: 700; font-size: 18px;
-      letter-spacing: 0.5px; text-shadow: 0 0 10px var(--glass-shadow);
-    }
-    .tools { display: flex; gap: 8px; }
-    .tool-btn { width: 36px; height: 36px; border-radius: 10px; color: var(--txt-main); }
-
-    /* GRID WRAPPER (Auto Scale) */
-    .board-container {
-      flex: 1; display: flex; align-items: center; justify-content: center;
-      position: relative; min-height: 0; margin-bottom: 10px;
-    }
-    
-    .sudoku-grid {
-      display: grid;
-      grid-template-columns: repeat(9, 1fr);
-      /* Use aspect ratio to keep it square, but cap at height */
-      aspect-ratio: 1/1;
-      height: 100%; max-height: 100%;
-      width: auto; max-width: 100%;
-      
-      background: var(--grid-border);
-      gap: 1px; /* The borders */
-      border: 2px solid var(--grid-border);
-      border-radius: 12px; overflow: hidden;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-    }
-
-    /* CELLS */
-    .cell {
-      background: var(--cell-bg);
-      position: relative;
-      display: flex; align-items: center; justify-content: center;
-      font-size: clamp(14px, 5.5vw, 24px);
-      cursor: pointer;
-    }
-    /* Thicker lines via pseudo logic requires precise nth-child or extra markup. 
-       Using border trick on specific cells for 3x3 blocks */
-    .cell:nth-child(3n) { border-right: 1px solid var(--grid-line); } /* Helper class handled in JS or simplified here */
-    
-    /* Optimized Grid Borders for 3x3 Look */
-    .cell { margin: 0; transition: background 0.1s; }
-    .cell.given { font-weight: 800; color: var(--given-col); }
-    .cell.user { font-weight: 500; color: var(--user-col); }
-    .cell.error { color: var(--err-col) !important; animation: shake 0.4s; }
-    .cell.active { background: var(--cell-active); box-shadow: inset 0 0 0 2px var(--accent); z-index: 2; }
-    .cell.highlight { background: rgba(255,255,255,0.06); }
-    .cell.same-num { background: var(--accent-glow); color: #fff; text-shadow: 0 0 4px rgba(0,0,0,0.5); }
-    
-    /* 3x3 Separators overlay */
-    .grid-overlay {
-      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-      pointer-events: none; border-radius: 12px; z-index: 5;
-    }
-    .grid-line-v { position: absolute; top:0; bottom:0; width: 2px; background: var(--txt-sec); opacity: 0.3; }
-    .grid-line-h { position: absolute; left:0; right:0; height: 2px; background: var(--txt-sec); opacity: 0.3; }
-
-    /* KEYPAD */
-    .keypad {
-      display: grid; grid-template-columns: repeat(10, 1fr); gap: 6px;
-      margin-bottom: 12px;
-    }
-    .num-key {
-      aspect-ratio: 0.85; /* Slightly taller on mobile? No, square is better */
-      aspect-ratio: 1;
-      border-radius: 10px;
-      font-size: 20px; color: var(--txt-main);
-      background: rgba(255,255,255,0.05);
-      border: 1px solid var(--glass-border);
-    }
-    .num-key:active { background: rgba(255,255,255,0.2); }
-    .num-key.mode-active { background: var(--accent); border-color: transparent; box-shadow: 0 0 10px var(--accent-glow); }
-    .num-key.completed { opacity: 0.2; pointer-events: none; }
-
-    /* ACTIONS */
-    .bottom-actions { display: flex; gap: 12px; height: 50px; }
-    .action-big {
-      flex: 1; border-radius: 14px;
-      font-size: 15px; letter-spacing: 0.5px;
-      color: var(--txt-main);
-    }
-    .btn-primary { background: var(--accent); color: white; box-shadow: 0 4px 15px var(--accent-glow); }
-
-    /* --- IPHONE 8 / SE OPTIMIZATIONS --- */
-    /* Когда высота экрана маленькая, сжимаем все что не игровое поле */
-    @media (max-height: 700px) {
-      .header { padding: 8px; margin-bottom: 6px; }
-      .avatar { width: 32px; height: 32px; }
-      .controls { margin-bottom: 6px; }
-      .timer { font-size: 16px; }
-      .keypad { gap: 4px; margin-bottom: 8px; }
-      .num-key { font-size: 18px; border-radius: 8px; }
-      .bottom-actions { height: 42px; }
-      #app { padding-top: 5px; padding-bottom: 10px; }
-    }
-    
-    /* Super small fix for Keypad width */
-    @media (max-width: 360px) {
-      .keypad { grid-template-columns: repeat(5, 1fr); }
-      .num-key { aspect-ratio: 1.5; } 
-    }
-
-    /* --- MODALS --- */
-    .modal-wrap {
-      position: fixed; inset: 0; z-index: 100;
-      background: rgba(0,0,0,0.6); backdrop-filter: blur(8px);
-      display: flex; align-items: center; justify-content: center;
-      opacity: 0; pointer-events: none; transition: opacity 0.3s;
-    }
-    .modal-wrap.active { opacity: 1; pointer-events: auto; }
-    .modal {
-      width: 90%; max-width: 380px; max-height: 85vh;
-      background: #1c1c1e; /* Solid dark for contrast or heavy glass */
-      background: var(--bg-grad);
-      border: 1px solid var(--glass-border);
-      border-radius: 24px; padding: 24px;
-      display: flex; flex-direction: column;
-      transform: scale(0.9); transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
-    }
-    .modal-wrap.active .modal { transform: scale(1); }
-    .modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-    .modal-title { font-size: 22px; font-weight: 700; }
-    .close-icon { padding: 5px; cursor: pointer; opacity: 0.7; }
-
-    /* RATING LIST FIX */
-    .leaderboard-list {
-      flex: 1; overflow-y: auto;
-      margin: 10px -10px; padding: 0 10px;
-    }
-    .lb-row {
-      display: grid;
-      grid-template-columns: 30px 40px 1fr 60px; /* Rank | Avatar | Name | Score */
-      align-items: center; gap: 10px;
-      padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.1);
-      font-size: 14px;
-    }
-    .lb-rank { font-weight: 700; color: var(--accent); text-align: center; }
-    .lb-avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; background: #333; }
-    .lb-name { 
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
-      font-weight: 500; min-width: 0; /* Critical for flex/grid truncation */
-    }
-    .lb-score { text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; }
-    
-    /* ANIMATIONS */
-    @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-4px)} 75%{transform:translateX(4px)} }
-    @keyframes pop { 0%{transform:scale(0.8);opacity:0} 100%{transform:scale(1);opacity:1} }
-    .pop-in { animation: pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-    
-    /* SKELETON LOADER */
-    .skeleton { background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 4px; }
-    @keyframes shimmer { 0%{background-position: 200% 0} 100%{background-position: -200% 0} }
-
-  </style>
-</head>
-<body data-theme="dark">
-
-  <div id="app">
-    
-    <div class="header glass">
-      <div class="user-info">
-        <img id="u-avatar" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" class="avatar" alt="">
-        <div>
-          <div id="u-name" style="font-weight: 700; font-size: 14px; max-width: 120px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Guest</div>
-          <div style="font-size: 12px; color: var(--accent);">Score: <span id="u-score">0</span></div>
-        </div>
-      </div>
-      <div class="stats-mini">
-        <div>Best Easy: <span id="rec-easy">--:--</span></div>
-        <div>Best Hard: <span id="rec-hard">--:--</span></div>
-      </div>
-    </div>
-
-    <div class="controls">
-      <select id="difficulty" class="diff-select">
-        <option value="easy">Easy</option>
-        <option value="medium">Medium</option>
-        <option value="hard">Hard</option>
-      </select>
-      <div id="timer" class="timer">00:00</div>
-      <div class="tools">
-        <button class="btn glass tool-btn" onclick="openModal('settings')">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-        </button>
-        <button class="btn glass tool-btn" onclick="openRating()">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
-        </button>
-      </div>
-    </div>
-
-    <div class="board-container">
-      <div id="grid" class="sudoku-grid"></div>
-      <div class="grid-overlay">
-        <div class="grid-line-v" style="left: 33.33%"></div>
-        <div class="grid-line-v" style="left: 66.66%"></div>
-        <div class="grid-line-h" style="top: 33.33%"></div>
-        <div class="grid-line-h" style="top: 66.66%"></div>
-      </div>
-    </div>
-
-    <div class="keypad" id="keypad">
-      </div>
-
-    <div class="bottom-actions">
-      <button class="btn glass action-big" id="btn-undo" onclick="undo()">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:6px"><path d="M9 14L4 9l5-5"/><path d="M4 9h10c4.418 0 8 3.582 8 8"/></svg> Undo
-      </button>
-      <button class="btn glass action-big" id="btn-hint" onclick="takeHint()">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:6px"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
-        <span id="hint-lbl">3/3</span>
-      </button>
-      <button class="btn action-big btn-primary" onclick="newGame()">New Game</button>
-    </div>
-
-  </div>
-
-  <div id="modal-settings" class="modal-wrap" onclick="closeModal(event, 'settings')">
-    <div class="modal">
-      <div class="modal-head">
-        <div class="modal-title">Settings</div>
-        <div class="close-icon" onclick="closeModal(null, 'settings')">&times;</div>
-      </div>
-      <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:20px;">
-        <button class="btn glass" onclick="setTheme('dark')" style="height:40px; background:#1a2a3a">Dark</button>
-        <button class="btn glass" onclick="setTheme('light')" style="height:40px; background:#f0f0f0; color:#000">Light</button>
-        <button class="btn glass" onclick="setTheme('neon')" style="height:40px; background:#24243e; color:#d946ef">Neon</button>
-      </div>
-      <div style="display:flex; justify-content:space-between; padding:10px 0; border-top:1px solid rgba(255,255,255,0.1)">
-        <span>Sounds & Haptics</span>
-        <span id="sound-state" style="color:var(--accent); font-weight:700">ON</span>
-      </div>
-    </div>
-  </div>
-
-  <div id="modal-rating" class="modal-wrap" onclick="closeModal(event, 'rating')">
-    <div class="modal" style="height: 60vh;">
-      <div class="modal-head">
-        <div class="modal-title">Leaderboard</div>
-        <div class="close-icon" onclick="closeModal(null, 'rating')">&times;</div>
-      </div>
-      
-      <div style="display:flex; gap:10px; margin-bottom:10px;">
-        <button class="btn glass" style="flex:1; padding:8px; border-radius:8px;" onclick="switchRankType('score')">Top Score</button>
-        <button class="btn glass" style="flex:1; padding:8px; border-radius:8px;" onclick="switchRankType('speed')">Speedrun</button>
-      </div>
-
-      <div class="leaderboard-list" id="lb-content">
-        </div>
-    </div>
-  </div>
-
-  <div id="modal-win" class="modal-wrap">
-    <div class="modal" style="text-align:center; align-items:center;">
-      <h2 style="font-size:32px; color:var(--accent); margin:0 0 10px;">Excellent!</h2>
-      <div id="win-details" style="margin-bottom:20px; font-size:16px; line-height:1.6; color:var(--txt-sec);"></div>
-      <button class="btn btn-primary action-big" style="width:100%" onclick="closeModal(null, 'win'); newGame();">Play Again</button>
-    </div>
-  </div>
-
   <script>
-    // --- CONFIG & STATE ---
+    /* --- LOGIC START --- */
     const firebaseConfig = { apiKey: "AIzaSyBkYQ7tRMrZ-mghBnkJ_EvuzHpjs_p8hOY", authDomain: "sudo-9fbfc.firebaseapp.com", projectId: "sudo-9fbfc", storageBucket: "sudo-9fbfc.appspot.com", messagingSenderId: "927814106972", appId: "1:927814106972:web:71e0773453f9d16f598b99" };
-    try { firebase.initializeApp(firebaseConfig); } catch(e){}
-    const db = firebase.firestore();
     
-    // Telegram Integration
-    const tg = window.Telegram?.WebApp;
-    if(tg) { 
-      tg.ready(); 
-      tg.expand(); 
-      document.body.style.backgroundColor = tg.themeParams.bg_color; // Fallback
+    // Инициализация
+    try { firebase.initializeApp(firebaseConfig); } catch(e){ console.error(e); }
+    const db = firebase.firestore();
+    const auth = firebase.auth();
+    const usersCollection = db.collection('users');
+    const recordsCollection = db.collection('timeRecords');
+
+    // State Variables
+    let grid = [], solution = [], givenCells = new Set(), timerInterval, startTime=0;
+    let activeCell = null, activeTool = null, highlightEnabled = true, undoStack = [];
+    let hintCount = 0, isGameFinished = false, isSoundEnabled = true;
+    let currentUser = { id: null, username: 'Guest', avatar: 'https://t.me/i/userpic/320/default.jpg', score: 0, bestTimes: { easy: null, medium: null, hard: null } };
+    let currentRatingType = 'score', currentRatingDifficulty = 'easy';
+
+    // Elements
+    const el = (id) => document.getElementById(id);
+    const elements = {
+      grid: el('grid'), numberRow: el('number-row'), difficulty: el('difficulty'),
+      newGameBtn: el('newGame'), checkBtn: el('check'), undoBtn: el('undo-button'),
+      hintBtn: el('hint-button'), timer: el('timer'), message: el('message'),
+      userAvatar: el('user-avatar'), username: el('username'), userScore: el('user-score'),
+      loadingScreen: el('loading-screen'), winModal: el('win-modal'),
+      settingsModal: el('settings-modal'), ratingModal: el('rating-modal'),
+      recentModal: el('recent-games-modal'), tutorialModal: el('tutorial-modal')
+    };
+
+    // Sound
+    const clickSound = new Audio('https://github.com/codex-cdx/sudo/raw/refs/heads/main/%D0%9F%D0%BB%D0%B0%D0%BC%D0%B1.mp3');
+    function playSound() { if(isSoundEnabled) { clickSound.currentTime = 0; clickSound.play().catch(()=>{}); } }
+
+    // Helpers
+    function formatTime(s) { if(s==null) return '--:--'; return `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`; }
+    function toggleModal(modalId, show) { 
+      const m = el(modalId); 
+      if(show) { m.classList.remove('hidden'); requestAnimationFrame(()=>m.classList.add('active')); }
+      else { m.classList.remove('active'); setTimeout(()=>m.classList.add('hidden'), 300); }
     }
-    const haptic = (style) => {
-      if(tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred(style || 'light');
-    };
 
-    let state = {
-      grid: [], solution: [], given: new Set(),
-      selected: null, // {r, c}
-      history: [],
-      hints: 3,
-      timer: 0, timerId: null,
-      mode: null, // 'pencil' logic handled directly by overwrite
-      isPaused: false,
-      user: { id: 'guest', name: 'Guest', avatar: 'https://i.imgur.com/7wQjV5Y.png', score: 0, records: {} }
-    };
-
-    // --- DOM CACHE ---
-    const $ = (id) => document.getElementById(id);
-    const els = {
-      grid: $('grid'), keypad: $('keypad'), timer: $('timer'),
-      diff: $('difficulty'), hintBtn: $('btn-hint'),
-      uName: $('u-name'), uAvatar: $('u-avatar'), uScore: $('u-score')
-    };
-
-    // --- CORE GAME ENGINE ---
-    function init() {
-      // 1. Setup Grid
-      els.grid.innerHTML = '';
+    // --- GRID LOGIC ---
+    function createGrid() {
+      elements.grid.innerHTML = '<div class="sep-v-1"></div><div class="sep-v-2"></div><div class="sep-h-1"></div><div class="sep-h-2"></div>';
+      grid = Array(9).fill().map(()=>Array(9).fill(0));
+      givenCells.clear();
       for(let i=0; i<81; i++) {
         const d = document.createElement('div');
         d.className = 'cell';
-        d.onclick = (e) => { e.stopPropagation(); selectCell(Math.floor(i/9), i%9); };
-        els.grid.appendChild(d);
+        d.dataset.idx = i;
+        const span = document.createElement('span');
+        span.className = 'cell-content';
+        d.appendChild(span);
+        d.addEventListener('click', (e) => { e.stopPropagation(); handleCellClick(Math.floor(i/9), i%9); });
+        elements.grid.appendChild(d);
       }
-      // 2. Setup Keypad
-      els.keypad.innerHTML = '';
-      for(let i=1; i<=9; i++) {
-        const b = document.createElement('button');
-        b.className = 'btn num-key';
-        b.textContent = i;
-        b.onclick = () => fillNumber(i);
-        els.keypad.appendChild(b);
-      }
-      const erase = document.createElement('button');
-      erase.className = 'btn num-key';
-      erase.innerHTML = '⌫'; // Backspace icon
-      erase.onclick = () => fillNumber(0);
-      els.keypad.appendChild(erase);
-
-      // 3. Auth & Start
-      authUser().then(() => {
-        newGame();
-      });
-      
-      // 4. Restore Theme
-      document.body.dataset.theme = localStorage.getItem('theme') || 'dark';
     }
 
-    function newGame() {
-      haptic('medium');
-      clearInterval(state.timerId);
-      state.timer = 0;
-      state.hints = 3;
-      state.history = [];
-      state.selected = null;
-      els.hintBtn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:6px"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg> 3/3`;
-      els.hintBtn.disabled = false;
-      
-      // Generate Logic (Simplified for brevity but functional)
-      const diff = els.diff.value;
-      const [grid, sol] = generateSudoku(diff);
-      state.grid = grid;
-      state.solution = sol;
-      
-      state.given = new Set();
-      const cells = document.querySelectorAll('.cell');
-      cells.forEach((c, i) => {
-        const r = Math.floor(i/9), col = i%9;
-        const val = grid[r][col];
-        c.className = 'cell pop-in';
-        c.textContent = val || '';
-        if(val) {
-          c.classList.add('given');
-          state.given.add(`${r},${col}`);
-        }
-      });
-      
-      state.timerId = setInterval(() => {
-        state.timer++;
-        const m = String(Math.floor(state.timer/60)).padStart(2,'0');
-        const s = String(state.timer%60).padStart(2,'0');
-        els.timer.innerText = `${m}:${s}`;
-      }, 1000);
-      
-      updateKeypadStatus();
+    function createKeypad() {
+      elements.numberRow.innerHTML = '';
+      for(let i=1; i<=9; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'num-btn glass-button';
+        btn.textContent = i;
+        btn.dataset.val = i;
+        btn.onclick = () => { playSound(); selectTool(i); };
+        elements.numberRow.appendChild(btn);
+      }
+      const eraseBtn = document.createElement('button');
+      eraseBtn.className = 'num-btn glass-button';
+      eraseBtn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 4H8l-7 8 7 8h13v-16z"/><line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/></svg>';
+      eraseBtn.dataset.val = 'erase';
+      eraseBtn.onclick = () => { playSound(); selectTool('erase'); };
+      elements.numberRow.appendChild(eraseBtn);
+    }
+
+    // --- GAMEPLAY ---
+    function handleCellClick(r, c) {
+      playSound();
+      if(isGameFinished) return;
+      if(activeTool) {
+        // Mode: Action (Placement)
+        const cellVal = grid[r][c];
+        if(givenCells.has(`${r},${c}`)) return; // Immutable
+        if(activeTool === 'erase') performAction(0, r, c);
+        else performAction(activeTool, r, c);
+      } else {
+        // Mode: Selection
+        selectCell(r, c);
+      }
     }
 
     function selectCell(r, c) {
-      state.selected = {r, c};
-      haptic('light');
-      
-      // Highlight Logic
-      const idx = r*9+c;
+      if(isGameFinished) return;
+      clearHighlights();
+      activeCell = [r, c];
       const cells = document.querySelectorAll('.cell');
-      const val = state.grid[r][c];
       
-      cells.forEach(ce => ce.className = ce.className.replace(/ active| highlight| same-num/g, ''));
-      
-      // Highlight row/col/box area
-      cells.forEach((ce, i) => {
-        const cr = Math.floor(i/9), cc = i%9;
-        if(cr===r || cc===c || (Math.floor(cr/3)===Math.floor(r/3) && Math.floor(cc/3)===Math.floor(c/3))) {
-          ce.classList.add('highlight');
-        }
-        if(val && state.grid[cr][cc] === val) ce.classList.add('same-num');
+      // Highlight Area (Row, Col, Box)
+      cells.forEach((cell, idx) => {
+        const cr = Math.floor(idx/9), cc = idx%9;
+        const sameRow = cr === r;
+        const sameCol = cc === c;
+        const sameBox = Math.floor(cr/3) === Math.floor(r/3) && Math.floor(cc/3) === Math.floor(c/3);
+        if(sameRow || sameCol || sameBox) cell.classList.add('area-highlight');
       });
-      
-      cells[idx].classList.add('active');
+
+      // Active Cell
+      const target = cells[r*9+c];
+      target.classList.add('active-cell');
+
+      // Highlight Similar
+      const val = grid[r][c];
+      if(val !== 0 && highlightEnabled) highlightSimilar(val);
     }
 
-    function fillNumber(num) {
-      if(!state.selected) return;
-      const {r, c} = state.selected;
-      if(state.given.has(`${r},${c}`)) { haptic('error'); return; }
+    function selectTool(val) {
+      if(isGameFinished) return;
+      if(activeTool === val) activeTool = null; // Toggle off
+      else activeTool = val;
       
-      const old = state.grid[r][c];
-      if(old === num) return;
+      // UI Update
+      document.querySelectorAll('.num-btn').forEach(b => {
+        b.classList.toggle('selected', b.dataset.val == activeTool);
+      });
+
+      activeCell = null;
+      clearHighlights();
+      if(activeTool && activeTool !== 'erase' && highlightEnabled) highlightSimilar(activeTool);
+    }
+
+    function highlightSimilar(val) {
+      document.querySelectorAll('.cell').forEach((c, idx) => {
+        const r = Math.floor(idx/9), col = idx%9;
+        if(grid[r][col] === val) c.classList.add('highlight');
+      });
+    }
+
+    function clearHighlights() {
+      document.querySelectorAll('.cell').forEach(c => c.classList.remove('active-cell', 'area-highlight', 'highlight'));
+    }
+
+    function performAction(val, r, c) {
+      const prev = grid[r][c];
+      if(prev === val) return;
       
-      haptic('light');
-      state.history.push({r, c, old});
-      state.grid[r][c] = num;
+      undoStack.push({r, c, prev, val});
+      grid[r][c] = val;
       
       const cell = document.querySelectorAll('.cell')[r*9+c];
-      cell.textContent = num || '';
-      cell.classList.remove('error', 'user');
-      if(num) cell.classList.add('user');
+      cell.querySelector('.cell-content').textContent = val === 0 ? '' : val;
+      cell.classList.remove('error', 'hinted');
+      cell.classList.toggle('user-input', val !== 0);
       
-      // Check immediate error (Standard gameplay style)
-      if(num && num !== state.solution[r][c]) {
-        cell.classList.add('error');
-        haptic('error');
-      } else {
-         // Update same-number highlighting
-         selectCell(r, c);
-         checkWin();
-      }
-      updateKeypadStatus();
+      updateUI();
+      if(highlightEnabled) { clearHighlights(); if(val!==0) highlightSimilar(val); }
+    }
+
+    function updateUI() {
+      // Undo Button
+      elements.undoBtn.disabled = undoStack.length === 0;
+      // Hint Button
+      el('hint-count-display').textContent = `${3-hintCount}/3`;
+      el('hint-button').disabled = hintCount >= 3;
+      // Number Pad Limit
+      const counts = Array(10).fill(0);
+      grid.flat().forEach(v => counts[v]++);
+      document.querySelectorAll('.num-btn').forEach(btn => {
+         const val = parseInt(btn.dataset.val);
+         if(val && counts[val] >= 9) {
+             btn.classList.add('disabled');
+             if(activeTool === val) selectTool(null);
+         } else {
+             btn.classList.remove('disabled');
+         }
+      });
     }
 
     function undo() {
-      if(!state.history.length) return;
-      haptic('medium');
-      const last = state.history.pop();
-      state.grid[last.r][last.c] = last.old;
+      playSound();
+      if(!undoStack.length) return;
+      const last = undoStack.pop();
+      grid[last.r][last.c] = last.prev;
       const cell = document.querySelectorAll('.cell')[last.r*9+last.c];
-      cell.textContent = last.old || '';
-      cell.classList.remove('error', 'user');
-      if(last.old) cell.classList.add('user');
+      cell.querySelector('.cell-content').textContent = last.prev || '';
+      cell.classList.remove('error');
+      cell.classList.toggle('user-input', last.prev !== 0);
+      updateUI();
       selectCell(last.r, last.c);
     }
 
-    function takeHint() {
-      if(state.hints <= 0) return;
-      // Find empty cell
-      let empty = [];
-      for(let r=0;r<9;r++) for(let c=0;c<9;c++) if(state.grid[r][c]===0) empty.push({r,c});
+    // --- SUDOKU GENERATOR ---
+    function generatePuzzle(diff) {
+      function shuffle(a) { for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]} }
+      function solve(b) {
+        for(let i=0;i<81;i++){
+          if(b[Math.floor(i/9)][i%9]===0){
+             for(let n=1;n<=9;n++){
+               if(isValid(b,Math.floor(i/9),i%9,n)){
+                 b[Math.floor(i/9)][i%9]=n;
+                 if(solve(b))return true;
+                 b[Math.floor(i/9)][i%9]=0;
+               }
+             }
+             return false;
+          }
+        }
+        return true;
+      }
+      function isValid(b,r,c,n){
+        for(let i=0;i<9;i++) if(b[r][i]===n||b[i][c]===n||b[3*Math.floor(r/3)+Math.floor(i/3)][3*Math.floor(c/3)+i%3]===n)return false;
+        return true;
+      }
       
-      if(!empty.length) return; // Full but maybe errors?
+      // 1. Full Solution
+      const base = Array(9).fill().map(()=>Array(9).fill(0));
+      // Randomize first row for variety
+      const firstRow = [1,2,3,4,5,6,7,8,9]; shuffle(firstRow);
+      base[0] = firstRow;
+      solve(base);
+      solution = base.map(r=>[...r]);
+
+      // 2. Remove cells
+      grid = base.map(r=>[...r]);
+      const attempts = {easy:40, medium:50, hard:60}[diff] || 40;
+      let removed = 0;
+      while(removed < attempts) {
+        let r=Math.floor(Math.random()*9), c=Math.floor(Math.random()*9);
+        if(grid[r][c]!==0) { grid[r][c]=0; removed++; }
+      }
       
-      state.hints--;
-      els.hintBtn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:6px"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg> ${state.hints}/3`;
-      if(state.hints===0) els.hintBtn.disabled = true;
-      
-      const t = empty[Math.floor(Math.random()*empty.length)];
-      // Push to history so undo works on hints too
-      state.history.push({r:t.r, c:t.c, old:0}); 
-      state.grid[t.r][t.c] = state.solution[t.r][t.c];
-      
-      const cell = document.querySelectorAll('.cell')[t.r*9+t.c];
-      cell.textContent = state.grid[t.r][t.c];
-      cell.classList.add('given'); // Treat hint as given
-      state.given.add(`${t.r},${t.c}`);
-      
-      selectCell(t.r, t.c);
-      haptic('success');
+      // Render
+      const cells = document.querySelectorAll('.cell');
+      givenCells.clear();
+      for(let i=0; i<81; i++) {
+        const val = grid[Math.floor(i/9)][i%9];
+        const cell = cells[i];
+        cell.className = 'cell';
+        cell.querySelector('.cell-content').textContent = val || '';
+        if(val!==0) {
+          givenCells.add(`${Math.floor(i/9)},${i%9}`);
+          cell.classList.add('given');
+        }
+      }
+      updateUI();
     }
 
-    function checkWin() {
-      // Simple check: is grid full and error free?
+    // --- GAME CONTROL ---
+    function startGame() {
+      isGameFinished = false;
+      undoStack = [];
+      hintCount = 0;
+      clearInterval(timerInterval);
+      startTime = Date.now();
+      timerInterval = setInterval(() => {
+        elements.timer.textContent = formatTime(Math.floor((Date.now()-startTime)/1000));
+      }, 1000);
+      
+      elements.checkBtn.disabled = false;
+      elements.checkBtn.textContent = 'Готово';
+      elements.message.textContent = '';
+      
+      createGrid();
+      createKeypad();
+      generatePuzzle(elements.difficulty.value);
+      toggleModal('settings-modal', false);
+    }
+
+    function checkGame() {
+      playSound();
+      if(isGameFinished) return;
+      
+      let error = false;
       let full = true;
+      
+      const cells = document.querySelectorAll('.cell');
+      cells.forEach((c, idx) => {
+        const r = Math.floor(idx/9), col = idx%9;
+        const val = grid[r][col];
+        if(val === 0) full = false;
+        else if(val !== solution[r][col]) {
+           c.classList.add('error');
+           error = true;
+        }
+      });
+
+      if(error) elements.message.textContent = "Найдена ошибка!";
+      else if(!full) elements.message.textContent = "Поле не заполнено.";
+      else {
+        // Win!
+        isGameFinished = true;
+        clearInterval(timerInterval);
+        const time = Math.floor((Date.now()-startTime)/1000);
+        const pts = calculatePoints(time, hintCount);
+        saveWin(time, pts);
+      }
+    }
+
+    function getHint() {
+      playSound();
+      if(hintCount >= 3 || isGameFinished) return;
+      
+      // Find empty or wrong
+      const candidates = [];
       for(let r=0;r<9;r++) for(let c=0;c<9;c++) {
-        if(state.grid[r][c] === 0 || state.grid[r][c] !== state.solution[r][c]) {
-          full = false; break;
-        }
+        if(!givenCells.has(`${r},${c}`) && grid[r][c] !== solution[r][c]) candidates.push([r,c]);
       }
+      if(!candidates.length) return;
       
-      if(full) {
-        clearInterval(state.timerId);
-        haptic('success');
-        
-        // Calculate Score
-        const base = {easy: 500, medium: 1000, hard: 2000}[els.diff.value];
-        const penalty = state.timer * 2; // -2 pts per second
-        const finalScore = Math.max(100, base - penalty + (state.hints * 100));
-        
-        state.user.score += finalScore;
-        saveProgress(finalScore);
-        
-        $('win-details').innerHTML = `Difficulty: <b>${els.diff.value.toUpperCase()}</b><br>Time: ${els.timer.innerText}<br>Score: +${finalScore}`;
-        $('modal-win').classList.add('active');
-        $('modal-win').style.pointerEvents = 'auto';
-        $('modal-win').style.opacity = 1;
-      }
+      hintCount++;
+      const [r,c] = candidates[Math.floor(Math.random()*candidates.length)];
+      performAction(solution[r][c], r, c);
+      const cell = document.querySelectorAll('.cell')[r*9+c];
+      cell.classList.add('hinted');
+      updateUI();
     }
 
-    function updateKeypadStatus() {
-       const counts = Array(10).fill(0);
-       state.grid.forEach(row => row.forEach(n => counts[n]++));
-       document.querySelectorAll('.num-key').forEach((btn, i) => {
-         const num = i+1; // i=0 is '1'
-         if(num < 10 && counts[num] >= 9) btn.classList.add('completed');
-         else btn.classList.remove('completed');
-       });
+    function calculatePoints(time, hints) {
+      const base = {easy:100, medium:250, hard:500}[elements.difficulty.value];
+      return Math.max(10, base - (time/2) - (hints*50));
     }
 
-    // --- DATA ---
-    async function authUser() {
-      // Guest or TG User
-      if(tg && tg.initDataUnsafe?.user) {
-         const u = tg.initDataUnsafe.user;
-         state.user.id = String(u.id);
-         state.user.name = u.username || u.first_name;
-         if(u.photo_url) state.user.avatar = u.photo_url;
-      }
-      
-      els.uName.innerText = state.user.name;
-      els.uAvatar.src = state.user.avatar;
-      
+    // --- DATABASE & USER ---
+    async function initUser() {
       try {
-        const doc = await db.collection('users').doc(state.user.id).get();
+        await auth.signInAnonymously();
+        let uid = auth.currentUser.uid;
+        let userData = { username: 'Guest', avatar: currentUser.avatar };
+        
+        // Telegram Data override
+        if(window.Telegram?.WebApp?.initDataUnsafe?.user) {
+          const tgUser = window.Telegram.WebApp.initDataUnsafe.user;
+          uid = String(tgUser.id); // Stable ID
+          userData.username = tgUser.username || tgUser.first_name;
+          if(tgUser.photo_url) userData.avatar = tgUser.photo_url;
+        }
+        
+        currentUser.id = uid;
+        currentUser.username = userData.username;
+        currentUser.avatar = userData.avatar;
+        
+        // UI Update
+        elements.username.textContent = currentUser.username;
+        elements.userAvatar.src = currentUser.avatar;
+
+        // Fetch Data
+        const doc = await usersCollection.doc(uid).get();
         if(doc.exists) {
-          const d = doc.data();
-          state.user.score = d.score || 0;
-          state.user.records = d.records || {};
-          updateStatsUI();
+          const data = doc.data();
+          currentUser.score = data.score || 0;
+          currentUser.bestTimes = data.bestTimes || {easy:null, medium:null, hard:null};
+        } else {
+          await usersCollection.doc(uid).set({ ...userData, score:0, bestTimes: {} });
         }
-      } catch(e) { console.log('Offline mode'); }
+        
+        elements.userScore.textContent = Math.floor(currentUser.score);
+        updateRecordDisplay();
+      } catch(e) { console.error("Auth error", e); }
+      
+      // Finish loading
+      setTimeout(() => {
+        elements.loadingScreen.style.opacity = '0';
+        setTimeout(()=> elements.loadingScreen.style.display='none', 500);
+      }, 1000);
     }
 
-    async function saveProgress(roundScore) {
-      els.uScore.innerText = state.user.score;
-      const d = els.diff.value;
-      if(!state.user.records[d] || state.timer < state.user.records[d]) {
-        state.user.records[d] = state.timer;
-      }
-      updateStatsUI();
+    async function saveWin(time, pts) {
+      currentUser.score += pts;
+      elements.userScore.textContent = Math.floor(currentUser.score);
+      const diff = elements.difficulty.value;
       
-      try {
-        await db.collection('users').doc(state.user.id).set({
-          name: state.user.name,
-          avatar: state.user.avatar,
-          score: state.user.score,
-          records: state.user.records
-        }, { merge: true });
+      let newRecord = false;
+      if(!currentUser.bestTimes[diff] || time < currentUser.bestTimes[diff]) {
+        currentUser.bestTimes[diff] = time;
+        newRecord = true;
+      }
+      
+      updateRecordDisplay();
+      
+      // Save to DB
+      if(currentUser.id) {
+        usersCollection.doc(currentUser.id).set({
+          score: currentUser.score,
+          bestTimes: currentUser.bestTimes,
+          username: currentUser.username,
+          avatar: currentUser.avatar
+        }, {merge:true});
         
-        await db.collection('history').add({
-          uid: state.user.id,
-          name: state.user.name,
-          avatar: state.user.avatar,
-          score: roundScore,
-          time: state.timer,
-          diff: d,
-          date: new Date()
+        recordsCollection.add({
+          userId: currentUser.id,
+          username: currentUser.username,
+          avatar: currentUser.avatar,
+          difficulty: diff,
+          time: time,
+          date: new Date().toISOString()
         });
-      } catch(e){}
+      }
+      
+      el('win-modal-message').innerHTML = `Сложность: <b>${diff}</b><br>Время: ${formatTime(time)}<br>Очки: +${Math.floor(pts)}${newRecord ? '<br><br>🏆 <b>Новый рекорд!</b>' : ''}`;
+      toggleModal('win-modal', true);
+    }
+
+    function updateRecordDisplay() {
+      el('easy-record').textContent = formatTime(currentUser.bestTimes.easy);
+      el('medium-record').textContent = formatTime(currentUser.bestTimes.medium);
+      el('hard-record').textContent = formatTime(currentUser.bestTimes.hard);
     }
     
-    function updateStatsUI() {
-      els.uScore.innerText = state.user.score;
-      const fmt = (t) => t ? `${Math.floor(t/60)}:${String(t%60).padStart(2,'0')}` : '--:--';
-      $('rec-easy').innerText = fmt(state.user.records.easy);
-      $('rec-hard').innerText = fmt(state.user.records.hard);
-    }
-
-    // --- LEADERBOARD & MODALS ---
-    window.openModal = (name) => {
-      const m = $(`modal-${name}`);
-      m.classList.add('active');
-      haptic('light');
-    };
-    window.closeModal = (e, name) => {
-      if(e && e.target !== e.currentTarget) return;
-      $(`modal-${name}`).classList.remove('active');
-    };
-    window.setTheme = (t) => {
-      document.body.dataset.theme = t;
-      localStorage.setItem('theme', t);
-      haptic('light');
-    };
-
-    window.openRating = async () => {
-      openModal('rating');
-      const list = $('lb-content');
-      // Skeleton loader
-      list.innerHTML = Array(5).fill('<div class="lb-row"><div class="skeleton" style="height:20px; width:20px"></div><div class="skeleton" style="height:30px; width:30px; border-radius:50%"></div><div class="skeleton" style="height:20px; flex:1"></div></div>').join('');
+    // --- LEADERBOARDS ---
+    async function loadLeaderboard() {
+      const list = el('rating-list');
+      list.innerHTML = '<div style="text-align:center; padding:20px;">Загрузка...</div>';
+      
+      let query;
+      if(currentRatingType === 'score') {
+        query = usersCollection.orderBy('score', 'desc').limit(20);
+      } else {
+        query = recordsCollection.where('difficulty', '==', currentRatingDifficulty).orderBy('time', 'asc').limit(20);
+      }
       
       try {
-        const snap = await db.collection('users').orderBy('score', 'desc').limit(20).get();
+        const snap = await query.get();
         list.innerHTML = '';
         snap.forEach((doc, idx) => {
-           const d = doc.data();
-           list.innerHTML += `
-             <div class="lb-row">
-               <div class="lb-rank">${idx+1}</div>
-               <img src="${d.avatar}" class="lb-avatar">
-               <div class="lb-name">${d.name}</div>
-               <div class="lb-score">${d.score}</div>
-             </div>
-           `;
+          const d = doc.data();
+          const row = document.createElement('div');
+          row.style.cssText = "display:flex; align-items:center; gap:10px; padding:8px; border-bottom:1px solid var(--grid-line);";
+          row.innerHTML = `
+            <div style="font-weight:bold; width:20px;">${idx+1}</div>
+            <img src="${d.avatar}" style="width:30px; height:30px; border-radius:50%;">
+            <div style="flex:1; overflow:hidden; text-overflow:ellipsis;">${d.username}</div>
+            <div style="font-weight:bold;">${currentRatingType === 'score' ? Math.floor(d.score) : formatTime(d.time)}</div>
+          `;
+          list.appendChild(row);
         });
-      } catch(e) { list.innerHTML = '<div style="text-align:center; padding:20px; color:var(--txt-sec)">Failed to load</div>'; }
-    };
-
-    // --- SUDOKU GEN (Minified) ---
-    function generateSudoku(diff) {
-      // 1. Base
-      const b = Array(9).fill().map(()=>Array(9).fill(0));
-      const fill = (r,c) => {
-        if(c===9) { c=0; r++; if(r===9) return true; }
-        if(b[r][c]!==0) return fill(r,c+1);
-        const nums = [1,2,3,4,5,6,7,8,9].sort(()=>Math.random()-0.5);
-        for(let n of nums) {
-          if(chk(b,r,c,n)) { b[r][c]=n; if(fill(r,c+1)) return true; b[r][c]=0; }
-        }
-        return false;
-      };
-      const chk = (g,r,c,n) => {
-        for(let i=0;i<9;i++) if(g[r][i]===n||g[i][c]===n||g[3*Math.floor(r/3)+Math.floor(i/3)][3*Math.floor(c/3)+i%3]===n) return false;
-        return true;
-      };
-      fill(0,0);
-      const sol = b.map(r=>[...r]);
-      
-      // 2. Remove
-      const attempts = {easy:30, medium:45, hard:58}[diff];
-      let k = attempts;
-      while(k>0) {
-        let r=Math.floor(Math.random()*9), c=Math.floor(Math.random()*9);
-        if(b[r][c]!==0) { b[r][c]=0; k--; }
-      }
-      return [b, sol];
+        if(snap.empty) list.innerHTML = '<div style="text-align:center; padding:20px;">Пока пусто</div>';
+      } catch(e) { list.textContent = "Ошибка загрузки"; console.error(e); }
     }
 
-    init();
+    // --- EVENTS & INIT ---
+    document.addEventListener('DOMContentLoaded', () => {
+      // Buttons
+      elements.newGameBtn.onclick = startGame;
+      elements.checkBtn.onclick = checkGame;
+      elements.hintBtn.onclick = getHint;
+      elements.undoBtn.onclick = undo;
+      el('settings-button').onclick = () => toggleModal('settings-modal', true);
+      el('rating-button').onclick = () => { toggleModal('rating-modal', true); loadLeaderboard(); };
+      el('recent-games-button').onclick = () => { toggleModal('recent-games-modal', true); /* Add Logic if needed */ };
+      el('tutorial-button').onclick = () => { toggleModal('tutorial-modal', true); /* Add Logic */ };
+      el('win-modal-close-btn').onclick = () => toggleModal('win-modal', false);
+      
+      // Close Modals
+      document.querySelectorAll('.close-btn').forEach(b => {
+        b.onclick = () => toggleModal(b.dataset.target, false);
+      });
+      document.querySelectorAll('.modal-overlay').forEach(o => {
+        o.onclick = (e) => { if(e.target === o) toggleModal(o.id, false); };
+      });
+
+      // Settings
+      el('sound-toggle').onclick = (e) => { 
+        isSoundEnabled = !isSoundEnabled; 
+        e.target.textContent = isSoundEnabled ? "ВКЛ" : "ВЫКЛ"; 
+      };
+      el('highlightToggle').onclick = (e) => { 
+        highlightEnabled = !highlightEnabled; 
+        e.target.textContent = highlightEnabled ? "ВКЛ" : "ВЫКЛ"; 
+        if(!highlightEnabled) clearHighlights();
+      };
+      
+      // Theme Switcher
+      document.querySelectorAll('.theme-option').forEach(opt => {
+        opt.onclick = () => {
+          document.body.dataset.theme = opt.dataset.theme;
+          localStorage.setItem('sudo-theme', opt.dataset.theme);
+        };
+      });
+      
+      // Rating Tabs
+      document.querySelectorAll('.rating-tab').forEach(t => {
+         t.onclick = () => {
+           currentRatingType = t.dataset.type;
+           document.querySelectorAll('.rating-tab').forEach(x => x.classList.remove('active'));
+           t.classList.add('active');
+           el('difficulty-tabs').classList.toggle('hidden', currentRatingType !== 'time');
+           loadLeaderboard();
+         }
+      });
+      document.querySelectorAll('.diff-tab').forEach(t => {
+         t.onclick = () => {
+           currentRatingDifficulty = t.dataset.d;
+           document.querySelectorAll('.diff-tab').forEach(x => x.classList.remove('active'));
+           t.classList.add('active');
+           loadLeaderboard();
+         }
+      });
+
+      // Restore Theme
+      const savedTheme = localStorage.getItem('sudo-theme');
+      if(savedTheme) document.body.dataset.theme = savedTheme;
+
+      // Start
+      initUser();
+      startGame();
+    });
   </script>
 </body>
 </html>
