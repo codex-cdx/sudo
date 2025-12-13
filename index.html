@@ -3,1033 +3,1030 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#000000">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>Sudoku Glass</title>
   
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+
   <style>
-    /* --- Шрифты и База --- */
+    /* --- 1. CORE & RESET --- */
     :root {
-      --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      /* Base Fonts - iOS System */
+      --font-main: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       
-      /* Default Theme (iOS Dark Glass) */
-      --app-bg: #000000;
-      --glass-panel: rgba(30, 30, 30, 0.65);
-      --glass-border: rgba(255, 255, 255, 0.12);
-      --glass-blur: 25px;
-      
+      /* Glassmorphism Variables - Default (Dark/Midnight) */
+      --bg-gradient: radial-gradient(circle at top left, #2b32b2, #1488cc), radial-gradient(circle at bottom right, #000000, #1c1c1c);
+      --glass-bg: rgba(25, 25, 25, 0.65);
+      --glass-border: rgba(255, 255, 255, 0.08);
+      --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+      --blur-strength: 20px;
+
+      /* Game Colors */
       --accent-color: #0A84FF; /* iOS Blue */
-      --accent-hover: #007AFF;
+      --accent-hover: #0077ED;
       --text-main: #FFFFFF;
       --text-secondary: rgba(255, 255, 255, 0.6);
-      
-      --cell-bg: rgba(255, 255, 255, 0.05);
-      --cell-active: rgba(10, 132, 255, 0.2);
-      --cell-highlight: rgba(10, 132, 255, 0.1);
-      --grid-gap-color: rgba(255, 255, 255, 0.1);
-      
-      --btn-bg: rgba(255, 255, 255, 0.1);
-      --btn-text: #FFFFFF;
-      
+      --cell-bg: rgba(255, 255, 255, 0.03);
+      --cell-active: rgba(10, 132, 255, 0.15);
+      --grid-line: rgba(255, 255, 255, 0.1);
       --error-color: #FF453A; /* iOS Red */
-      --success-color: #32D74B; /* iOS Green */
-      --warn-color: #FFD60A;
+      --success-color: #30D158; /* iOS Green */
+      --highlight-num: rgba(255, 215, 0, 0.2);
+      --hint-bg: #FFD60A; /* iOS Yellow */
       
-      --given-num: #FFFFFF;
-      --user-num: #0A84FF;
-      
-      --radius-lg: 24px;
-      --radius-md: 16px;
-      --radius-sm: 10px;
+      /* Grid Config */
+      --gap-size: 1px;
     }
 
-    /* Темы */
-    body[data-theme="light"] {
-      --app-bg: #F2F2F7;
-      --glass-panel: rgba(255, 255, 255, 0.75);
-      --glass-border: rgba(0, 0, 0, 0.05);
-      --text-main: #000000;
-      --text-secondary: rgba(60, 60, 67, 0.6);
-      --cell-bg: rgba(0, 0, 0, 0.03);
-      --cell-active: rgba(0, 122, 255, 0.15);
-      --given-num: #000000;
-      --grid-gap-color: rgba(0, 0, 0, 0.1);
-      --btn-bg: rgba(0, 0, 0, 0.05);
-      --btn-text: #000000;
+    /* Themes Configuration */
+    body[data-theme="ocean"] {
+      --bg-gradient: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      --accent-color: #4facfe;
     }
-
     body[data-theme="purple"] {
-      --accent-color: #BF5AF2;
-      --accent-hover: #AF52DE;
-      --user-num: #BF5AF2;
-      --cell-active: rgba(191, 90, 242, 0.2);
+      --bg-gradient: linear-gradient(135deg, #240b36, #c31432);
+      --accent-color: #d4145a;
+    }
+    body[data-theme="amoled"] {
+      --bg-gradient: #000000;
+      --glass-bg: rgba(20, 20, 20, 0.9);
+      --accent-color: #ffffff;
+      --cell-bg: #111;
     }
 
-    body[data-theme="gold"] {
-      --accent-color: #FFD60A;
-      --accent-hover: #FFC800;
-      --user-num: #FFD60A;
-      --cell-active: rgba(255, 214, 10, 0.2);
-      --btn-text: #ffffff;
+    * {
+      -webkit-tap-highlight-color: transparent;
+      box-sizing: border-box;
+      touch-action: manipulation; /* Disable double-tap zoom */
     }
 
-    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
-    
     body {
       font-family: var(--font-main);
-      background-color: var(--app-bg);
+      background: #111; /* Fallback */
+      background-image: var(--bg-gradient);
+      background-attachment: fixed;
+      background-size: cover;
       color: var(--text-main);
       margin: 0;
-      height: 100dvh; /* Dynamic viewport height */
-      overflow: hidden;
+      min-height: 100vh;
+      overflow-x: hidden;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
-      position: relative;
+      padding-bottom: env(safe-area-inset-bottom);
     }
 
-    /* --- Анимированный фон (Blobs) --- */
-    .bg-blob {
-      position: absolute;
-      border-radius: 50%;
-      filter: blur(80px);
-      z-index: -1;
-      opacity: 0.6;
-      animation: float 10s infinite ease-in-out;
-    }
-    .blob-1 { top: -10%; left: -10%; width: 50vw; height: 50vw; background: var(--accent-color); animation-delay: 0s; }
-    .blob-2 { bottom: -10%; right: -10%; width: 60vw; height: 60vw; background: #5E5CE6; animation-delay: -5s; }
-    .blob-3 { top: 40%; left: 40%; width: 40vw; height: 40vw; background: #30D158; opacity: 0.3; animation-delay: -2s; }
-
-    @keyframes float {
-      0%, 100% { transform: translate(0, 0) scale(1); }
-      33% { transform: translate(30px, -50px) scale(1.1); }
-      66% { transform: translate(-20px, 20px) scale(0.9); }
-    }
-
-    /* --- Glass Components --- */
-    .glass {
-      background: var(--glass-panel);
-      backdrop-filter: blur(var(--glass-blur));
-      -webkit-backdrop-filter: blur(var(--glass-blur));
+    /* --- 2. GLASS COMPONENTS --- */
+    .glass-panel {
+      background: var(--glass-bg);
+      backdrop-filter: blur(var(--blur-strength));
+      -webkit-backdrop-filter: blur(var(--blur-strength));
       border: 1px solid var(--glass-border);
-      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
+      border-radius: 20px;
+      box-shadow: var(--glass-shadow);
     }
 
     .glass-btn {
-      background: var(--btn-bg);
-      color: var(--btn-text);
-      border: 1px solid var(--glass-border);
-      transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(4px);
+      color: var(--text-main);
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      border-radius: 12px;
     }
-    .glass-btn:active { transform: scale(0.95); opacity: 0.8; }
-    .glass-btn:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
     
-    .btn-primary {
+    .glass-btn:active {
+      transform: scale(0.96);
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .glass-btn.primary {
       background: var(--accent-color);
       color: #fff;
       border: none;
-      box-shadow: 0 4px 15px color-mix(in srgb, var(--accent-color) 40%, transparent);
+      font-weight: 600;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
     }
-    .btn-primary:active { background: var(--accent-hover); }
 
-    /* --- Loading Screen --- */
-    #loading-screen {
-      position: fixed; inset: 0;
-      background: var(--app-bg);
-      z-index: 9999;
-      display: flex; flex-direction: column;
-      justify-content: center; align-items: center;
-      transition: opacity 0.5s ease-out;
+    .glass-btn.primary:active {
+      background: var(--accent-hover);
     }
+
+    .glass-btn:disabled {
+      opacity: 0.3;
+      transform: none;
+      filter: grayscale(1);
+    }
+
+    /* --- 3. LOADING SCREEN --- */
+    #loading-screen {
+      position: fixed;
+      inset: 0;
+      background: #000;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      transition: opacity 0.6s ease-out;
+    }
+
     .loader {
-      width: 48px; height: 48px;
-      border: 5px solid var(--text-secondary);
+      width: 48px;
+      height: 48px;
+      border: 5px solid #FFF;
       border-bottom-color: var(--accent-color);
       border-radius: 50%;
       animation: rotation 1s linear infinite;
     }
     @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-    /* --- Layout & Grid --- */
-    #game-container {
-      width: 100%; max-width: 500px;
-      height: 100%; max-height: 100dvh;
-      display: flex; flex-direction: column;
-      padding: 1rem;
-      position: relative; z-index: 10;
-    }
-
-    .header-bar {
-      display: flex; justify-content: space-between; align-items: center;
-      margin-bottom: 0.5rem;
-      padding: 0.75rem;
-      border-radius: var(--radius-lg);
-    }
-
-    .grid-wrapper {
+    /* --- 4. LAYOUT & GAME BOARD --- */
+    #game-wrapper {
+      width: 100%;
+      max-width: 500px; /* Limits width on tablets/desktop */
+      padding: 10px 16px;
       flex-grow: 1;
-      display: flex; justify-content: center; align-items: center;
-      padding: 10px 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center; /* Centers vertically */
     }
 
-    .sudoku-grid {
+    /* HEADER */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      padding: 0 4px;
+    }
+
+    .user-pill {
+      display: flex;
+      align-items: center;
+      background: rgba(0,0,0,0.3);
+      padding: 4px 12px 4px 4px;
+      border-radius: 30px;
+      gap: 8px;
+    }
+
+    .user-pill img {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 2px solid var(--accent-color);
+    }
+
+    .score-badge {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--accent-color);
+    }
+
+    .timer-pill {
+      font-variant-numeric: tabular-nums;
+      font-weight: 600;
+      font-size: 1.1rem;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    }
+
+    /* GRID CONTAINER */
+    .sudoku-container {
+      position: relative;
+      width: 100%;
+      /* Aspect Ratio Hack to keep it square */
+      padding-bottom: 100%; 
+      border-radius: 16px;
+      overflow: hidden;
+      background: var(--grid-line);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      margin-bottom: 20px;
+    }
+
+    .grid-inner {
+      position: absolute;
+      top: 2px; bottom: 2px; left: 2px; right: 2px;
       display: grid;
       grid-template-columns: repeat(9, 1fr);
+      grid-template-rows: repeat(9, 1fr);
       gap: 1px;
-      background-color: var(--grid-gap-color);
-      border-radius: var(--radius-md);
-      overflow: hidden;
-      width: 100%;
-      aspect-ratio: 1/1;
-      border: 2px solid var(--glass-border);
-      position: relative;
     }
 
-    /* Толстые линии сетки через псевдоэлементы или спец классы */
-    .sudoku-grid {
-      padding: 2px;
-    }
     .cell {
       background: var(--cell-bg);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: clamp(16px, 6vw, 24px);
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.15s ease;
+      color: var(--text-main);
       position: relative;
-      display: flex; align-items: center; justify-content: center;
-      font-size: clamp(1rem, 5vw, 1.8rem);
-      transition: background 0.15s;
     }
-    
-    /* Границы блоков 3x3 */
-    .cell:nth-child(3n) { border-right: 1px solid rgba(255,255,255,0.05); } 
+
+    /* Thick borders logic via nth-child */
+    .cell:nth-child(3n) { border-right: 1px solid rgba(255,255,255,0.2); }
     .cell:nth-child(9n) { border-right: none; }
-    .cell:nth-child(n+19):nth-child(-n+27),
-    .cell:nth-child(n+46):nth-child(-n+54) {
-      border-bottom: 1px solid rgba(255,255,255,0.05); /* Тонкая линия внутри */
-    }
-
-    /* Визуальные разделители блоков (наложенная сетка) */
-    .grid-overlay {
-      position: absolute; inset: 0; pointer-events: none;
-      display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr);
-      border-radius: var(--radius-md);
-      z-index: 5;
-    }
-    .block-border {
-      border: 2px solid var(--glass-border);
-      box-shadow: inset 0 0 0 0.5px rgba(0,0,0,0.1);
-    }
-
-    .cell-content { font-weight: 500; }
-    .cell.given .cell-content { color: var(--given-num); font-weight: 700; }
-    .cell.user-input .cell-content { color: var(--user-num); }
-    .cell.error .cell-content { color: var(--error-color) !important; animation: shake 0.3s; }
+    /* Horizontal lines are harder with simple grid gap, using pseudo-elements on the grid wrapper or specific row classes is better. 
+       Here we use a background trick or specialized borders. Let's stick to a clean look: */
     
-    .cell.active-cell { background: var(--cell-active); box-shadow: inset 0 0 0 2px var(--accent-color); z-index: 2; border-radius: 4px;}
-    .cell.highlight { background: var(--cell-highlight); }
-    .cell.area-highlight { background: rgba(255,255,255,0.03); }
-    .cell.hinted { background: var(--success-color) !important; color: #000 !important; transition: all 0.5s; }
-
-    /* --- Controls Area --- */
-    .controls-area {
-      display: flex; flex-direction: column; gap: 0.75rem;
-      margin-bottom: env(safe-area-inset-bottom, 20px);
+    /* Better Board Separators */
+    .grid-inner::after, .grid-inner::before {
+      content: '';
+      position: absolute;
+      background: rgba(255,255,255,0.4);
+      pointer-events: none;
+      z-index: 10;
     }
+    /* Vertical Lines */
+    .v-line-1 { position: absolute; left: 33.33%; top: 0; bottom: 0; width: 2px; background: rgba(255,255,255,0.3); pointer-events: none; }
+    .v-line-2 { position: absolute; left: 66.66%; top: 0; bottom: 0; width: 2px; background: rgba(255,255,255,0.3); pointer-events: none; }
+    .h-line-1 { position: absolute; top: 33.33%; left: 0; right: 0; height: 2px; background: rgba(255,255,255,0.3); pointer-events: none; }
+    .h-line-2 { position: absolute; top: 66.66%; left: 0; right: 0; height: 2px; background: rgba(255,255,255,0.3); pointer-events: none; }
 
-    .tools-bar {
-      display: flex; justify-content: space-between; gap: 0.5rem;
-    }
-    .tool-btn {
-      flex: 1; height: 44px; border-radius: var(--radius-sm); font-size: 0.9rem;
+    /* Cell States */
+    .cell.selected { background: var(--cell-active); }
+    .cell.highlight { background: rgba(255, 255, 255, 0.08); }
+    .cell.same-num { background: var(--cell-active); color: #fff; font-weight: 700; }
+    .cell.error { color: var(--error-color); background: rgba(255, 69, 58, 0.15); }
+    .cell.given { font-weight: 700; color: var(--text-main); }
+    .cell.user-input { color: var(--accent-color); font-weight: 500; }
+    .cell.hinted { background: var(--hint-bg) !important; color: #000 !important; }
+
+    /* --- 5. CONTROLS --- */
+    .controls-bar {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      gap: 8px;
     }
 
     .numpad {
-      display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.5rem;
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+      margin-bottom: 12px;
     }
+    
     .num-btn {
-      aspect-ratio: 1.2/1; border-radius: var(--radius-sm); font-size: 1.5rem; font-weight: 400;
+      aspect-ratio: 1; /* Perfectly square/round */
+      border-radius: 50%;
+      font-size: 1.5rem;
+      font-weight: 400;
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
-    .num-btn.selected { background: var(--accent-color); color: white; border-color: transparent; }
 
-    /* --- Modals --- */
+    .num-btn.erase {
+      color: var(--error-color);
+    }
+    
+    .action-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 0;
+      font-size: 0.7rem;
+      gap: 4px;
+      border-radius: 12px;
+    }
+    
+    .action-btn svg { width: 24px; height: 24px; }
+
+    /* --- 6. MODALS (iOS Style) --- */
     .modal-overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px);
-      z-index: 50; opacity: 0; visibility: hidden; transition: all 0.3s;
-      display: flex; align-items: center; justify-content: center;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(5px);
+      z-index: 100;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
     }
-    .modal-overlay.open { opacity: 1; visibility: visible; }
-    
-    .modal-content {
-      width: 90%; max-width: 400px; max-height: 85vh;
-      padding: 1.5rem; border-radius: var(--radius-lg);
-      transform: scale(0.9); transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-      overflow-y: auto;
-    }
-    .modal-overlay.open .modal-content { transform: scale(1); }
+    .modal-overlay.active { opacity: 1; pointer-events: auto; }
 
-    /* --- Animations --- */
-    @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
-    @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-    
-    /* Utilities */
-    .text-accent { color: var(--accent-color); }
-    .text-sm { font-size: 0.875rem; }
-    .font-bold { font-weight: 700; }
-    .hidden { display: none !important; }
-    
-    /* Custom Scrollbar */
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
+    .ios-modal {
+      background: rgba(30, 30, 30, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      width: 85%;
+      max-width: 340px;
+      border-radius: 20px;
+      overflow: hidden;
+      transform: scale(0.9);
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .modal-overlay.active .ios-modal { transform: scale(1); }
 
-    /* Leaderboard Styles */
-    .rank-item {
-      display: flex; align-items: center; gap: 10px;
-      padding: 10px; border-bottom: 1px solid var(--glass-border);
+    .modal-header {
+      padding: 20px;
+      text-align: center;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
     }
-    .rank-item:last-child { border-bottom: none; }
-    .rank-badge {
-      width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;
-      border-radius: 50%; font-size: 0.8rem; font-weight: bold;
+    .modal-title { font-size: 1.2rem; font-weight: 700; margin-bottom: 5px; }
+    .modal-body { padding: 0; max-height: 60vh; overflow-y: auto; }
+    
+    .modal-action-bar {
+      display: flex;
+      border-top: 1px solid rgba(255,255,255,0.1);
     }
-    .rank-1 { background: #FFD700; color: #000; }
-    .rank-2 { background: #C0C0C0; color: #000; }
-    .rank-3 { background: #CD7F32; color: #000; }
+    .modal-close {
+      flex: 1;
+      padding: 16px;
+      background: transparent;
+      border: none;
+      color: var(--accent-color);
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    /* List Items in Modals */
+    .list-item {
+      display: flex;
+      align-items: center;
+      padding: 12px 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      gap: 12px;
+    }
+    .list-item:last-child { border-bottom: none; }
+
+    /* Theme Selector Grid */
+    .theme-grid {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      padding: 20px;
+    }
+    .theme-circle {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.2);
+      cursor: pointer;
+      position: relative;
+    }
+    .theme-circle.active::after {
+      content: '✓';
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: bold;
+    }
+
   </style>
 </head>
 <body>
 
-  <div class="bg-blob blob-1"></div>
-  <div class="bg-blob blob-2"></div>
-  <div class="bg-blob blob-3"></div>
-
   <div id="loading-screen">
     <div class="loader"></div>
-    <div style="margin-top: 20px; font-weight: 500; font-size: 1.2rem; color: var(--text-main);">Sudoku</div>
+    <p style="margin-top: 20px; font-weight: 500; color: #aaa;">Загрузка Sudoku...</p>
   </div>
 
-  <div id="game-container">
+  <div id="game-wrapper">
     
-    <div class="glass header-bar">
-      <div class="flex items-center gap-3">
-        <div class="relative">
-          <img id="user-avatar" src="https://t.me/i/userpic/320/default.jpg" class="w-10 h-10 rounded-full border border-white/20 object-cover" alt="Ava">
-          <div class="absolute -bottom-1 -right-1 bg-gray-800 text-[10px] px-1.5 py-0.5 rounded-full border border-white/10" id="difficulty-badge">Easy</div>
-        </div>
-        <div class="flex flex-col">
-          <span id="username" class="text-sm font-bold truncate max-w-[100px]">Guest</span>
-          <span class="text-xs text-secondary flex items-center gap-1">
-            <svg class="w-3 h-3 text-accent" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
-            <span id="user-score">0</span>
-          </span>
+    <header>
+      <div class="user-pill" id="profile-btn">
+        <img id="user-avatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ccc'%3E%3Cpath d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/%3E%3C/svg%3E" alt="Avatar">
+        <div>
+          <div id="username" style="font-size: 0.8rem; line-height: 1;">Гость</div>
+          <div class="score-badge" id="user-score">0 pts</div>
         </div>
       </div>
+      
+      <div id="timer" class="timer-pill">00:00</div>
+      
+      <button id="menu-btn" class="glass-btn" style="width: 40px; height: 40px; display:flex; align-items:center; justify-content:center;">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+        </svg>
+      </button>
+    </header>
 
-      <div class="flex items-center gap-2">
-         <div id="timer" class="glass px-3 py-1.5 rounded-full text-sm font-mono tracking-wider">00:00</div>
-         <button id="menu-btn" class="glass-btn w-10 h-10 rounded-full" title="Меню">
-           <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
-         </button>
-      </div>
+    <div style="background: rgba(0,0,0,0.3); border-radius: 10px; padding: 3px; display: flex; margin-bottom: 15px;">
+      <button class="diff-btn flex-1 py-1.5 text-xs rounded-lg transition-all text-center" data-val="easy" style="background:var(--accent-color); color:#fff">Лёгкий</button>
+      <button class="diff-btn flex-1 py-1.5 text-xs rounded-lg transition-all text-center opacity-70" data-val="medium">Средний</button>
+      <button class="diff-btn flex-1 py-1.5 text-xs rounded-lg transition-all text-center opacity-70" data-val="hard">Сложный</button>
     </div>
 
-    <div class="grid-wrapper">
-      <div class="relative w-full max-w-[400px]">
-        <div id="grid" class="sudoku-grid glass"></div>
-        <div class="grid-overlay">
-          <div class="block-border"></div><div class="block-border"></div><div class="block-border"></div>
-          <div class="block-border"></div><div class="block-border"></div><div class="block-border"></div>
-          <div class="block-border"></div><div class="block-border"></div><div class="block-border"></div>
-        </div>
-      </div>
-    </div>
-
-    <div class="controls-area">
-      <div class="tools-bar">
-         <button id="undo-button" class="glass-btn tool-btn" disabled>
-           <svg class="w-5 h-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
-           Undo
-         </button>
-         <button id="erase-button" class="glass-btn tool-btn" data-tool="erase">
-           <svg class="w-5 h-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-           Erase
-         </button>
-         <button id="hint-button" class="glass-btn tool-btn">
-           <svg class="w-5 h-5 mr-1 text-accent" fill="currentColor" viewBox="0 0 20 20"><path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1h4v1a2 2 0 11-4 0zM12 14c.015-.34.208-.646.477-.859a4 4 0 10-4.954 0c.27.213.462.519.476.859h4.002z"/></svg>
-           <span id="hint-count-display">3</span>
-         </button>
-         <button id="check-btn" class="glass-btn tool-btn btn-primary">
-            Check
-         </button>
-      </div>
-
-      <div class="numpad" id="number-row">
+    <div class="sudoku-container">
+      <div class="v-line-1"></div>
+      <div class="v-line-2"></div>
+      <div class="h-line-1"></div>
+      <div class="h-line-2"></div>
+      <div id="grid" class="grid-inner">
         </div>
     </div>
+
+    <div class="controls-bar">
+      <button id="undo-btn" class="glass-btn action-btn flex-1" disabled>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3" /></svg>
+        Отмена
+      </button>
+      <button id="note-btn" class="glass-btn action-btn flex-1">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" /></svg>
+        Заметки
+      </button>
+      <button id="hint-btn" class="glass-btn action-btn flex-1">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 18v-5.25m0 0a6.01 6.01 0 001.5-.189m-1.5.189a6.01 6.01 0 01-1.5-.189m3.75 7.478a12.06 12.06 0 01-4.5 0m3.75 2.383a14.406 14.406 0 01-3 0M14.25 18v-.192c0-.983.658-1.823 1.508-2.316a7.5 7.5 0 10-7.517 0c.85.493 1.509 1.333 1.509 2.316V18" /></svg>
+        <span id="hint-label">Подсказка</span>
+      </button>
+    </div>
+
+    <div class="numpad" id="numpad">
+      </div>
+    
+    <button id="new-game-btn" class="glass-btn primary" style="width: 100%; padding: 14px; border-radius: 14px;">Новая игра</button>
   </div>
 
   <div id="menu-modal" class="modal-overlay">
-    <div class="modal-content glass">
-      <div class="flex justify-between items-center mb-6">
-        <h2 class="text-2xl font-bold">Меню</h2>
-        <button class="close-modal text-2xl opacity-70 hover:opacity-100">&times;</button>
+    <div class="ios-modal">
+      <div class="modal-header"><div class="modal-title">Меню</div></div>
+      <div class="modal-body">
+        <div class="list-item" id="stats-trigger">
+          <span style="font-size:1.5rem">🏆</span>
+          <div style="flex:1">Рейтинг</div>
+          <div style="opacity:0.5">›</div>
+        </div>
+        <div class="list-item" id="theme-trigger">
+          <span style="font-size:1.5rem">🎨</span>
+          <div style="flex:1">Темы</div>
+          <div style="opacity:0.5">›</div>
+        </div>
+        <div class="list-item" id="history-trigger">
+          <span style="font-size:1.5rem">📜</span>
+          <div style="flex:1">История игр</div>
+          <div style="opacity:0.5">›</div>
+        </div>
+         <div class="list-item" id="sound-trigger">
+          <span style="font-size:1.5rem">🔊</span>
+          <div style="flex:1">Звук</div>
+          <div id="sound-status" style="color:var(--accent-color); font-weight:600">ВКЛ</div>
+        </div>
       </div>
-
-      <div class="space-y-4">
-        <div>
-          <label class="text-sm text-secondary block mb-2">Сложность</label>
-          <div class="flex bg-black/20 p-1 rounded-xl">
-            <button class="diff-select flex-1 py-2 text-sm rounded-lg transition-colors bg-white/10" data-val="easy">Easy</button>
-            <button class="diff-select flex-1 py-2 text-sm rounded-lg transition-colors opacity-60" data-val="medium">Mid</button>
-            <button class="diff-select flex-1 py-2 text-sm rounded-lg transition-colors opacity-60" data-val="hard">Hard</button>
-          </div>
-          <button id="new-game-btn" class="w-full mt-3 glass-btn py-3 rounded-xl font-bold text-accent">Новая игра</button>
-        </div>
-
-        <hr class="border-white/10 my-4">
-
-        <div>
-           <label class="text-sm text-secondary block mb-2">Тема</label>
-           <div class="flex gap-3 justify-center">
-             <div class="w-8 h-8 rounded-full cursor-pointer border-2 border-white theme-opt" style="background:#222" data-theme="dark"></div>
-             <div class="w-8 h-8 rounded-full cursor-pointer border-2 border-transparent theme-opt" style="background:#eee" data-theme="light"></div>
-             <div class="w-8 h-8 rounded-full cursor-pointer border-2 border-transparent theme-opt bg-purple-500" data-theme="purple"></div>
-             <div class="w-8 h-8 rounded-full cursor-pointer border-2 border-transparent theme-opt bg-yellow-400" data-theme="gold"></div>
-           </div>
-        </div>
-
-        <hr class="border-white/10 my-4">
-
-        <div class="grid grid-cols-2 gap-3">
-          <button id="rating-btn" class="glass-btn py-3 rounded-xl">🏆 Рейтинг</button>
-          <button id="history-btn" class="glass-btn py-3 rounded-xl">📜 История</button>
-          <button id="tutorial-btn" class="glass-btn py-3 rounded-xl">🎓 Обучение</button>
-          <button id="sound-btn" class="glass-btn py-3 rounded-xl">🔊 Звук</button>
-        </div>
+      <div class="modal-action-bar">
+        <button class="modal-close" onclick="ui.closeModals()">Закрыть</button>
       </div>
     </div>
   </div>
 
-  <div id="content-modal" class="modal-overlay">
-    <div class="modal-content glass">
-      <div class="flex justify-between items-center mb-4">
-        <h2 id="modal-title" class="text-xl font-bold">Заголовок</h2>
-        <button class="close-content-modal text-2xl">&times;</button>
+  <div id="theme-modal" class="modal-overlay">
+    <div class="ios-modal">
+      <div class="modal-header"><div class="modal-title">Выберите тему</div></div>
+      <div class="theme-grid">
+        <div class="theme-circle active" style="background: linear-gradient(135deg, #2b32b2, #1488cc);" data-theme="default"></div>
+        <div class="theme-circle" style="background: linear-gradient(135deg, #0f2027, #2c5364);" data-theme="ocean"></div>
+        <div class="theme-circle" style="background: linear-gradient(135deg, #240b36, #c31432);" data-theme="purple"></div>
+        <div class="theme-circle" style="background: #000; border: 1px solid #333;" data-theme="amoled"></div>
       </div>
-      <div id="modal-body"></div>
+      <div class="modal-action-bar">
+        <button class="modal-close" onclick="ui.closeModals()">Готово</button>
+      </div>
     </div>
   </div>
 
   <div id="win-modal" class="modal-overlay">
-    <div class="modal-content glass text-center">
-      <div class="text-6xl mb-4">🎉</div>
-      <h2 class="text-2xl font-bold mb-2">Победа!</h2>
-      <p id="win-details" class="text-secondary mb-6 text-sm"></p>
-      <button class="glass-btn btn-primary w-full py-3 rounded-xl font-bold close-win-modal">Круто!</button>
+    <div class="ios-modal" style="text-align: center;">
+      <div style="padding: 30px;">
+        <div style="font-size: 3rem; margin-bottom: 10px;">🎉</div>
+        <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 10px;">Победа!</h2>
+        <p style="color: var(--text-secondary); margin-bottom: 20px;" id="win-text">Отличная работа!</p>
+        <div style="background: rgba(255,255,255,0.1); padding: 10px; border-radius: 10px; margin-bottom: 20px;">
+          <div style="font-size: 0.9rem;">Время: <span id="win-time" style="font-weight:700; color:#fff"></span></div>
+          <div style="font-size: 0.9rem;">Сложность: <span id="win-diff" style="font-weight:700; color:#fff"></span></div>
+        </div>
+        <button class="glass-btn primary" style="width: 100%; padding: 12px;" onclick="ui.closeModals(); game.startNew()">Играть снова</button>
+      </div>
     </div>
   </div>
 
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
-
   <script>
-    /* --- LOGIC PRESERVED & ADAPTED --- */
+    /**
+     * SUDOKU APP LOGIC
+     * Pattern: Module Pattern to separate UI, Game Logic, and Data.
+     */
 
-    // 1. Firebase Config
-    const firebaseConfig = {
-      apiKey: "AIzaSyBkYQ7tRMrZ-mghBnkJ_EvuzHpjs_p8hOY",
-      authDomain: "sudo-9fbfc.firebaseapp.com",
-      projectId: "sudo-9fbfc",
-      storageBucket: "sudo-9fbfc.appspot.com",
-      messagingSenderId: "927814106972",
-      appId: "1:927814106972:web:71e0773453f9d16f598b99"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-    const auth = firebase.auth();
-    const usersCollection = db.collection('users');
-    const recordsCollection = db.collection('timeRecords');
-
-    // 2. Global State
-    let grid = [], solution = [], givenCells = new Set();
-    let timerInterval, startTime = 0;
-    let activeCell = null; // [row, col]
-    let activeTool = null; // number or 'erase'
-    let isGameFinished = false;
-    let hintCount = 0;
-    let undoStack = [];
-    let isSoundEnabled = localStorage.getItem('sudoku-sound') !== 'false';
-    let currentDifficulty = 'easy';
-    
-    let currentUser = { 
-        id: null, 
-        username: 'Guest', 
-        avatar: 'https://t.me/i/userpic/320/default.jpg', 
-        score: 0, 
-        bestTimes: { easy: null, medium: null, hard: null } 
+    // --- CONFIG & UTILS ---
+    const CONFIG = {
+      sounds: {
+        click: 'https://github.com/codex-cdx/sudo/raw/refs/heads/main/%D0%9F%D0%BB%D0%B0%D0%BC%D0%B1.mp3',
+        win: 'https://actions.google.com/sounds/v1/cartoon/cartoon_boing.ogg' // Placeholder for win
+      },
+      firebase: {
+        apiKey: "AIzaSyBkYQ7tRMrZ-mghBnkJ_EvuzHpjs_p8hOY",
+        authDomain: "sudo-9fbfc.firebaseapp.com",
+        projectId: "sudo-9fbfc",
+        storageBucket: "sudo-9fbfc.appspot.com",
+        messagingSenderId: "927814106972",
+        appId: "1:927814106972:web:71e0773453f9d16f598b99"
+      }
     };
 
-    const CLICK_SOUND = new Audio('https://github.com/codex-cdx/sudo/raw/refs/heads/main/%D0%9F%D0%BB%D0%B0%D0%BC%D0%B1.mp3');
-    
-    // 3. UI Helpers
-    const playSound = () => {
-        if (!isSoundEnabled) return;
-        CLICK_SOUND.currentTime = 0;
-        CLICK_SOUND.play().catch(() => {});
-        // Telegram Haptic
-        if(window.Telegram?.WebApp?.HapticFeedback) {
-            window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
+    const Utils = {
+      formatTime: (s) => {
+        const m = Math.floor(s / 60).toString().padStart(2, '0');
+        const sec = (s % 60).toString().padStart(2, '0');
+        return `${m}:${sec}`;
+      },
+      shuffle: (arr) => arr.sort(() => Math.random() - 0.5),
+      haptic: (style = 'light') => {
+        if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
+          window.Telegram.WebApp.HapticFeedback.impactOccurred(style);
+        } else if (navigator.vibrate) {
+          navigator.vibrate(10);
         }
+      }
     };
 
-    const formatTime = (s) => {
-        if (s == null) return '--:--';
-        return `${Math.floor(s/60).toString().padStart(2,'0')}:${(s%60).toString().padStart(2,'0')}`;
+    // --- SOUND MANAGER ---
+    const Sound = {
+      enabled: localStorage.getItem('sound') !== 'false',
+      clickAudio: new Audio(CONFIG.sounds.click),
+      
+      init() {
+        this.clickAudio.preload = 'auto';
+        this.updateUI();
+      },
+      playClick() {
+        if (this.enabled) {
+          this.clickAudio.currentTime = 0;
+          this.clickAudio.play().catch(()=>{});
+        }
+      },
+      toggle() {
+        this.enabled = !this.enabled;
+        localStorage.setItem('sound', this.enabled);
+        this.updateUI();
+        Utils.haptic('medium');
+      },
+      updateUI() {
+        const el = document.getElementById('sound-status');
+        if(el) el.textContent = this.enabled ? 'ВКЛ' : 'ВЫКЛ';
+      }
     };
 
-    // 4. Game Logic (Core)
-    function createGrid() {
-        const gridEl = document.getElementById('grid');
-        gridEl.innerHTML = '';
-        // Create 81 cells
-        for(let i=0; i<81; i++) {
+    // --- GAME ENGINE (Logic only) ---
+    const Engine = {
+      grid: [],
+      solution: [],
+      given: [],
+      
+      generate(difficulty) {
+        // 1. Create solved board
+        this.solution = Array(9).fill().map(() => Array(9).fill(0));
+        this.fillDiagonal();
+        this.solve(this.solution);
+        
+        // 2. Remove digits based on difficulty
+        // Easy: 40 removed, Medium: 50, Hard: 60
+        let attempts = difficulty === 'easy' ? 40 : difficulty === 'medium' ? 50 : 60;
+        
+        this.grid = this.solution.map(r => [...r]);
+        this.given = Array(9).fill().map(() => Array(9).fill(false));
+        
+        while (attempts > 0) {
+          let row = Math.floor(Math.random() * 9);
+          let col = Math.floor(Math.random() * 9);
+          while (this.grid[row][col] === 0) {
+            row = Math.floor(Math.random() * 9);
+            col = Math.floor(Math.random() * 9);
+          }
+          this.grid[row][col] = 0;
+          attempts--;
+        }
+
+        // Mark givens
+        for(let r=0; r<9; r++) {
+          for(let c=0; c<9; c++) {
+            if(this.grid[r][c] !== 0) this.given[r][c] = true;
+          }
+        }
+        return { grid: this.grid, given: this.given };
+      },
+
+      fillDiagonal() {
+        for (let i = 0; i < 9; i = i + 3) this.fillBox(i, i);
+      },
+      fillBox(row, col) {
+        let num;
+        for (let i = 0; i < 3; i++) {
+          for (let j = 0; j < 3; j++) {
+            do { num = Math.floor(Math.random() * 9) + 1; } 
+            while (!this.isSafeBox(row, col, num));
+            this.solution[row + i][col + j] = num;
+          }
+        }
+      },
+      isSafeBox(rowStart, colStart, num) {
+        for (let i = 0; i < 3; i++)
+          for (let j = 0; j < 3; j++)
+            if (this.solution[rowStart + i][colStart + j] === num) return false;
+        return true;
+      },
+      isSafe(board, row, col, num) {
+        for (let d = 0; d < 9; d++) {
+          if (board[row][d] === num) return false;
+          if (board[d][col] === num) return false;
+        }
+        let sRow = row - row % 3, sCol = col - col % 3;
+        for (let i = 0; i < 3; i++)
+          for (let j = 0; j < 3; j++)
+            if (board[i + sRow][j + sCol] === num) return false;
+        return true;
+      },
+      solve(board) {
+        let row = -1, col = -1, isEmpty = true;
+        for (let i = 0; i < 9; i++) {
+          for (let j = 0; j < 9; j++) {
+            if (board[i][j] === 0) { row = i; col = j; isEmpty = false; break; }
+          }
+          if (!isEmpty) break;
+        }
+        if (isEmpty) return true;
+        for (let num = 1; num <= 9; num++) {
+          if (this.isSafe(board, row, col, num)) {
+            board[row][col] = num;
+            if (this.solve(board)) return true;
+            board[row][col] = 0;
+          }
+        }
+        return false;
+      },
+      checkWin() {
+        for(let r=0; r<9; r++) {
+          for(let c=0; c<9; c++) {
+            if(this.grid[r][c] !== this.solution[r][c]) return false;
+          }
+        }
+        return true;
+      },
+      getHint() {
+        // Find an empty cell or wrong cell
+        let candidates = [];
+        for(let r=0; r<9; r++) {
+          for(let c=0; c<9; c++) {
+            if(this.grid[r][c] === 0 || this.grid[r][c] !== this.solution[r][c]) {
+              candidates.push({r,c, val: this.solution[r][c]});
+            }
+          }
+        }
+        if(candidates.length === 0) return null;
+        return candidates[Math.floor(Math.random() * candidates.length)];
+      }
+    };
+
+    // --- UI CONTROLLER ---
+    const UI = {
+      elements: {},
+      selectedCell: null,
+      notesMode: false,
+      
+      init() {
+        // Cache DOM elements
+        this.elements = {
+          grid: document.getElementById('grid'),
+          numpad: document.getElementById('numpad'),
+          timer: document.getElementById('timer'),
+          diffBtns: document.querySelectorAll('.diff-btn'),
+          undoBtn: document.getElementById('undo-btn'),
+          noteBtn: document.getElementById('note-btn'),
+          hintBtn: document.getElementById('hint-btn'),
+          newGameBtn: document.getElementById('new-game-btn'),
+          menuBtn: document.getElementById('menu-btn'),
+          modals: document.querySelectorAll('.modal-overlay'),
+          themeCircles: document.querySelectorAll('.theme-circle')
+        };
+
+        this.renderNumpad();
+        this.bindEvents();
+        this.applyTheme(localStorage.getItem('theme') || 'default');
+      },
+
+      bindEvents() {
+        // Difficulty Select
+        this.elements.diffBtns.forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            Utils.haptic();
+            this.setDifficulty(e.target.dataset.val);
+            Game.startNew();
+          });
+        });
+
+        // Numpad Delegation
+        this.elements.numpad.addEventListener('click', (e) => {
+          const btn = e.target.closest('.num-btn');
+          if (!btn) return;
+          Utils.haptic('light');
+          const val = btn.dataset.val;
+          if (val === 'erase') Game.input(0);
+          else Game.input(parseInt(val));
+        });
+
+        // Tools
+        this.elements.noteBtn.addEventListener('click', () => {
+          this.notesMode = !this.notesMode;
+          this.elements.noteBtn.style.color = this.notesMode ? 'var(--accent-color)' : 'inherit';
+          this.elements.noteBtn.style.background = this.notesMode ? 'rgba(255,255,255,0.1)' : 'transparent';
+          Utils.haptic();
+        });
+        
+        this.elements.undoBtn.addEventListener('click', () => Game.undo());
+        this.elements.hintBtn.addEventListener('click', () => Game.useHint());
+        this.elements.newGameBtn.addEventListener('click', () => Game.startNew());
+        
+        // Modals
+        this.elements.menuBtn.addEventListener('click', () => this.openModal('menu-modal'));
+        document.getElementById('theme-trigger').addEventListener('click', () => this.openModal('theme-modal'));
+        document.getElementById('sound-trigger').addEventListener('click', () => Sound.toggle());
+        
+        // Themes
+        this.elements.themeCircles.forEach(c => {
+          c.addEventListener('click', (e) => {
+            this.applyTheme(e.target.dataset.theme);
+            Utils.haptic();
+          });
+        });
+      },
+
+      renderGrid(gridData, givenData) {
+        this.elements.grid.innerHTML = '';
+        for (let r = 0; r < 9; r++) {
+          for (let c = 0; c < 9; c++) {
             const cell = document.createElement('div');
             cell.className = 'cell';
-            cell.dataset.index = i;
-            cell.innerHTML = '<span class="cell-content"></span>';
-            cell.addEventListener('click', (e) => handleCellClick(i));
-            gridEl.appendChild(cell);
-        }
-        grid = Array(9).fill().map(() => Array(9).fill(0));
-    }
-
-    function generatePuzzle(diff) {
-        // Simple generation logic preserved
-        let board = Array(9).fill().map(() => Array(9).fill(0));
-        fillBoard(board);
-        solution = board.map(r => [...r]);
-        
-        let attempts = diff === 'easy' ? 30 : diff === 'medium' ? 45 : 55; // Holes to make
-        while (attempts > 0) {
-            let row = Math.floor(Math.random() * 9);
-            let col = Math.floor(Math.random() * 9);
-            if (board[row][col] !== 0) {
-                board[row][col] = 0;
-                attempts--;
-            }
-        }
-        
-        grid = board;
-        givenCells.clear();
-        for(let r=0; r<9; r++) 
-            for(let c=0; c<9; c++) 
-                if(grid[r][c] !== 0) givenCells.add(`${r},${c}`);
-        
-        renderGrid();
-    }
-
-    function fillBoard(board) {
-        // Backtracking filler
-        for(let i=0; i<81; i++) {
-            let r = Math.floor(i/9), c = i%9;
-            if(board[r][c] === 0) {
-                let nums = [1,2,3,4,5,6,7,8,9].sort(() => Math.random() - 0.5);
-                for(let num of nums) {
-                    if(isSafe(board, r, c, num)) {
-                        board[r][c] = num;
-                        if(fillBoard(board)) return true;
-                        board[r][c] = 0;
-                    }
-                }
-                return false;
-            }
-        }
-        return true;
-    }
-
-    function isSafe(board, row, col, num) {
-        for(let x=0; x<9; x++) if(board[row][x] === num || board[x][col] === num) return false;
-        let startRow = row - row%3, startCol = col - col%3;
-        for(let i=0; i<3; i++) for(let j=0; j<3; j++) if(board[i+startRow][j+startCol] === num) return false;
-        return true;
-    }
-
-    function renderGrid(resetT = true) {
-        const cells = document.querySelectorAll('.cell');
-        cells.forEach((cell, i) => {
-            const r = Math.floor(i/9), c = i%9;
-            const val = grid[r][c];
-            const content = cell.querySelector('.cell-content');
-            content.textContent = val === 0 ? '' : val;
+            if (givenData[r][c]) cell.classList.add('given');
+            else if (gridData[r][c] !== 0) cell.classList.add('user-input');
             
-            cell.className = 'cell'; // Reset classes
-            if(givenCells.has(`${r},${c}`)) cell.classList.add('given');
-            else if(val !== 0) cell.classList.add('user-input');
+            cell.textContent = gridData[r][c] === 0 ? '' : gridData[r][c];
+            cell.dataset.r = r;
+            cell.dataset.c = c;
+            
+            cell.addEventListener('click', () => this.selectCell(cell, r, c, gridData[r][c]));
+            this.elements.grid.appendChild(cell);
+          }
+        }
+      },
+
+      renderNumpad() {
+        this.elements.numpad.innerHTML = '';
+        for (let i = 1; i <= 9; i++) {
+          const btn = document.createElement('div');
+          btn.className = 'glass-btn num-btn';
+          btn.textContent = i;
+          btn.dataset.val = i;
+          this.elements.numpad.appendChild(btn);
+        }
+        const erase = document.createElement('div');
+        erase.className = 'glass-btn num-btn erase';
+        erase.innerHTML = '✕';
+        erase.dataset.val = 'erase';
+        this.elements.numpad.appendChild(erase);
+      },
+
+      selectCell(el, r, c, val) {
+        if(Game.isFinished) return;
+        
+        // Clear previous
+        document.querySelectorAll('.cell').forEach(c => {
+          c.classList.remove('selected', 'highlight', 'same-num');
         });
-        updateNumberPad();
-        if(resetT) startTimer();
-    }
 
-    // 5. Interaction Logic
-    function handleCellClick(index) {
-        playSound();
-        if (isGameFinished) return;
-        const r = Math.floor(index/9), c = index%9;
-
-        // If tool selected (Number or Erase)
-        if (activeTool) {
-            if (givenCells.has(`${r},${c}`)) return; // Can't edit givens
-            
-            const prev = grid[r][c];
-            const newVal = activeTool === 'erase' ? 0 : activeTool;
-            
-            if (prev !== newVal) {
-                undoStack.push({r, c, prev, new: newVal});
-                grid[r][c] = newVal;
-                const cell = document.querySelectorAll('.cell')[index];
-                const content = cell.querySelector('.cell-content');
-                content.textContent = newVal === 0 ? '' : newVal;
-                cell.classList.remove('error');
-                cell.classList.toggle('user-input', newVal !== 0);
-                
-                checkHighlights(r, c);
-                updateUndoBtn();
-                updateNumberPad();
-            }
-            return;
-        }
-
-        // Just select
-        selectCell(r, c);
-    }
-
-    function selectCell(r, c) {
-        activeCell = [r, c];
-        // Visual updates
-        document.querySelectorAll('.cell').forEach(el => el.classList.remove('active-cell', 'area-highlight', 'highlight'));
+        this.selectedCell = { r, c, el };
+        el.classList.add('selected');
         
-        const index = r*9 + c;
-        const cells = document.querySelectorAll('.cell');
-        cells[index].classList.add('active-cell');
+        // Highlight logic
+        document.querySelectorAll('.cell').forEach(cell => {
+          const cr = parseInt(cell.dataset.r);
+          const cc = parseInt(cell.dataset.c);
+          
+          // Highlight Row/Col
+          if (cr === r || cc === c) cell.classList.add('highlight');
+          
+          // Highlight Box
+          if (Math.floor(cr/3) === Math.floor(r/3) && Math.floor(cc/3) === Math.floor(c/3)) cell.classList.add('highlight');
 
-        // Highlight Row, Col, Box
-        for(let i=0; i<81; i++) {
-            let tr = Math.floor(i/9), tc = i%9;
-            let sameBox = Math.floor(tr/3) === Math.floor(r/3) && Math.floor(tc/3) === Math.floor(c/3);
-            if (tr === r || tc === c || sameBox) cells[i].classList.add('area-highlight');
-        }
-
-        // Highlight same numbers
-        const val = grid[r][c];
-        if (val !== 0) {
-            for(let i=0; i<81; i++) {
-                let tr = Math.floor(i/9), tc = i%9;
-                if(grid[tr][tc] === val) cells[i].classList.add('highlight');
-            }
-        }
-    }
-    
-    // Checks highlights after a move without changing selection
-    function checkHighlights(r, c) {
-        if(activeCell && activeCell[0] === r && activeCell[1] === c) {
-             selectCell(r, c);
-        }
-        // Also if we just placed a number, highlight all instances of it temporarily? 
-        // Let's stick to standard selection logic.
-    }
-
-    function handleNumberPad(num) {
-        playSound();
-        if(activeCell) {
-            // Apply number to selected cell
-            const [r, c] = activeCell;
-            if(givenCells.has(`${r},${c}`)) return;
-            
-            const prev = grid[r][c];
-            if(prev !== num) {
-                undoStack.push({r, c, prev, new: num});
-                grid[r][c] = num;
-                const cell = document.querySelectorAll('.cell')[r*9+c];
-                cell.querySelector('.cell-content').textContent = num;
-                cell.classList.add('user-input');
-                cell.classList.remove('error');
-                updateUndoBtn();
-                updateNumberPad();
-                selectCell(r, c); // Re-highlight
-            }
-        } else {
-            // Select tool
-            if(activeTool === num) {
-                activeTool = null;
-                document.querySelectorAll('.num-btn').forEach(b => b.classList.remove('selected'));
-            } else {
-                activeTool = num;
-                activeCell = null; // Deselect cell when picking tool
-                document.querySelectorAll('.cell').forEach(c => c.classList.remove('active-cell', 'area-highlight'));
-                
-                document.querySelectorAll('.num-btn').forEach(b => b.classList.remove('selected'));
-                document.getElementById('erase-button').classList.remove('btn-primary'); // Remove highlight from eraser
-                const btn = document.querySelector(`.num-btn[data-num="${num}"]`);
-                if(btn) btn.classList.add('selected');
-                
-                // Highlight all instances of this number
-                document.querySelectorAll('.cell').forEach(el => el.classList.remove('highlight'));
-                 for(let i=0; i<81; i++) {
-                    let tr = Math.floor(i/9), tc = i%9;
-                    if(grid[tr][tc] === num) document.querySelectorAll('.cell')[i].classList.add('highlight');
-                }
-            }
-        }
-    }
-
-    function updateNumberPad() {
-        const counts = Array(10).fill(0);
-        grid.forEach(row => row.forEach(n => counts[n]++));
-        
-        const pad = document.getElementById('number-row');
-        pad.innerHTML = '';
-        for(let i=1; i<=9; i++) {
-            const btn = document.createElement('button');
-            btn.className = 'glass-btn num-btn';
-            btn.textContent = i;
-            btn.dataset.num = i;
-            if(counts[i] >= 9) btn.disabled = true;
-            if(activeTool === i) btn.classList.add('selected');
-            btn.onclick = () => handleNumberPad(i);
-            pad.appendChild(btn);
-        }
-    }
-
-    // 6. Utility Functions (Undo, Erase, Hint, Check)
-    document.getElementById('undo-button').addEventListener('click', () => {
-        playSound();
-        if(undoStack.length === 0) return;
-        const action = undoStack.pop();
-        grid[action.r][action.c] = action.prev;
-        const cell = document.querySelectorAll('.cell')[action.r*9 + action.c];
-        cell.querySelector('.cell-content').textContent = action.prev || '';
-        if(action.prev === 0) cell.classList.remove('user-input');
-        updateUndoBtn();
-        updateNumberPad();
-        if(activeCell) selectCell(activeCell[0], activeCell[1]);
-    });
-
-    function updateUndoBtn() {
-        document.getElementById('undo-button').disabled = undoStack.length === 0;
-    }
-
-    document.getElementById('erase-button').addEventListener('click', function() {
-        playSound();
-        if(activeCell) {
-             const [r, c] = activeCell;
-             if(!givenCells.has(`${r},${c}`)) {
-                 undoStack.push({r, c, prev: grid[r][c], new: 0});
-                 grid[r][c] = 0;
-                 const cell = document.querySelectorAll('.cell')[r*9+c];
-                 cell.querySelector('.cell-content').textContent = '';
-                 cell.classList.remove('user-input', 'error');
-                 updateUndoBtn();
-                 updateNumberPad();
-             }
-        } else {
-            // Toggle tool mode
-            if(activeTool === 'erase') {
-                activeTool = null;
-                this.classList.remove('btn-primary');
-            } else {
-                activeTool = 'erase';
-                document.querySelectorAll('.num-btn').forEach(b => b.classList.remove('selected'));
-                this.classList.add('btn-primary');
-            }
-        }
-    });
-
-    document.getElementById('hint-button').addEventListener('click', () => {
-        playSound();
-        if(hintCount >= 3 || isGameFinished) return;
-        
-        // Find a mistake or empty cell
-        let targets = [];
-        for(let r=0; r<9; r++) for(let c=0; c<9; c++) {
-            if(givenCells.has(`${r},${c}`)) continue;
-            if(grid[r][c] === 0 || grid[r][c] !== solution[r][c]) targets.push([r,c]);
-        }
-        
-        if(targets.length === 0) return;
-        
-        const [tr, tc] = targets[Math.floor(Math.random() * targets.length)];
-        grid[tr][tc] = solution[tr][tc];
-        
-        const cell = document.querySelectorAll('.cell')[tr*9+tc];
-        cell.querySelector('.cell-content').textContent = solution[tr][tc];
-        cell.classList.add('hinted', 'user-input');
-        cell.classList.remove('error');
-        
-        hintCount++;
-        document.getElementById('hint-count-display').textContent = `${3 - hintCount}`;
-        if(hintCount >= 3) document.getElementById('hint-button').disabled = true;
-    });
-
-    document.getElementById('check-btn').addEventListener('click', () => {
-        playSound();
-        if(isGameFinished) return;
-        
-        let errors = 0;
-        let filled = 0;
-        const cells = document.querySelectorAll('.cell');
-        
-        for(let r=0; r<9; r++) for(let c=0; c<9; c++) {
-            if(grid[r][c] !== 0) filled++;
-            if(grid[r][c] !== 0 && !givenCells.has(`${r},${c}`) && grid[r][c] !== solution[r][c]) {
-                cells[r*9+c].classList.add('error');
-                errors++;
-            }
-        }
-        
-        if(filled === 81 && errors === 0) {
-            handleWin();
-        } else if (errors === 0 && filled < 81) {
-             // Incomplete but correct so far
-             if(window.Telegram?.WebApp?.HapticFeedback) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-        } else {
-             if(window.Telegram?.WebApp?.HapticFeedback) window.Telegram.WebApp.HapticFeedback.notificationOccurred('error');
-        }
-    });
-
-    function handleWin() {
-        isGameFinished = true;
-        clearInterval(timerInterval);
-        const timeSpent = Math.floor((Date.now() - startTime)/1000);
-        
-        // Score calc
-        let base = currentDifficulty === 'easy' ? 100 : currentDifficulty === 'medium' ? 250 : 500;
-        let score = Math.max(10, base - (hintCount * 50) + (base - timeSpent));
-        
-        currentUser.score += score;
-        document.getElementById('user-score').textContent = currentUser.score;
-        saveUserData();
-        saveTimeRecord(currentDifficulty, timeSpent);
-        
-        document.getElementById('win-details').innerHTML = `Сложность: ${currentDifficulty.toUpperCase()}<br>Время: ${formatTime(timeSpent)}<br>Очки: +${score}`;
-        document.getElementById('win-modal').classList.add('open');
-        
-        if(window.Telegram?.WebApp) {
-            window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-        }
-    }
-
-    // 7. Data & User
-    async function initUser() {
-        try {
-            await auth.signInAnonymously();
-            
-            // Telegram Check
-            if (window.Telegram?.WebApp?.initDataUnsafe?.user) {
-                const tgUser = window.Telegram.WebApp.initDataUnsafe.user;
-                currentUser.id = String(tgUser.id);
-                currentUser.username = tgUser.username || tgUser.first_name || 'Player';
-                if(tgUser.photo_url) currentUser.avatar = tgUser.photo_url;
-            } else {
-                currentUser.id = auth.currentUser.uid;
-            }
-
-            document.getElementById('username').textContent = currentUser.username;
-            document.getElementById('user-avatar').src = currentUser.avatar;
-
-            // Load Data
-            const doc = await usersCollection.doc(currentUser.id).get();
-            if(doc.exists) {
-                const d = doc.data();
-                currentUser.score = d.score || 0;
-                currentUser.bestTimes = d.bestTimes || currentUser.bestTimes;
-            } else {
-                saveUserData();
-            }
-            document.getElementById('user-score').textContent = currentUser.score;
-            
-        } catch(e) { console.error(e); }
-    }
-
-    async function saveUserData() {
-        if(!currentUser.id) return;
-        await usersCollection.doc(currentUser.id).set({
-            username: currentUser.username,
-            avatar: currentUser.avatar,
-            score: currentUser.score,
-            bestTimes: currentUser.bestTimes
-        }, {merge: true});
-    }
-
-    async function saveTimeRecord(diff, time) {
-        // Save global record
-        await recordsCollection.add({
-            userId: currentUser.id,
-            username: currentUser.username,
-            avatar: currentUser.avatar,
-            difficulty: diff,
-            time: time,
-            date: new Date().toISOString()
+          // Highlight same numbers
+          if (val !== 0 && cell.textContent == val) cell.classList.add('same-num');
         });
         
-        // Update personal best
-        if(!currentUser.bestTimes[diff] || time < currentUser.bestTimes[diff]) {
-            currentUser.bestTimes[diff] = time;
-            saveUserData();
+        Utils.haptic('light');
+      },
+
+      updateCell(r, c, val, type = 'input') {
+        const index = r * 9 + c;
+        const cell = this.elements.grid.children[index];
+        cell.textContent = val === 0 ? '' : val;
+        
+        // Remove old classes
+        cell.classList.remove('user-input', 'error', 'hinted');
+        
+        if (val === 0) return;
+
+        if (type === 'hint') {
+          cell.classList.add('hinted');
+        } else {
+          cell.classList.add('user-input');
+          // Simple error check against solution immediately for UX
+          if (Engine.solution[r][c] !== val) {
+            cell.classList.add('error');
+            Utils.haptic('error'); // Heavy vibration on error
+          }
         }
-    }
+      },
 
-    function startTimer() {
-        clearInterval(timerInterval);
-        startTime = Date.now();
-        timerInterval = setInterval(() => {
-            const el = Math.floor((Date.now() - startTime)/1000);
-            document.getElementById('timer').textContent = formatTime(el);
-        }, 1000);
-    }
-
-    // 8. Modals & Menus logic
-    const menuModal = document.getElementById('menu-modal');
-    const contentModal = document.getElementById('content-modal');
-    
-    document.getElementById('menu-btn').onclick = () => { playSound(); menuModal.classList.add('open'); };
-    document.querySelector('.close-modal').onclick = () => { playSound(); menuModal.classList.remove('open'); };
-    document.querySelector('.close-content-modal').onclick = () => { playSound(); contentModal.classList.remove('open'); };
-    document.querySelector('.close-win-modal').onclick = () => { playSound(); document.getElementById('win-modal').classList.remove('open'); menuModal.classList.add('open'); };
-
-    // New Game / Difficulty
-    document.querySelectorAll('.diff-select').forEach(btn => {
-        btn.onclick = () => {
-            playSound();
-            document.querySelectorAll('.diff-select').forEach(b => {
-                b.style.opacity = '0.6'; 
-                b.style.backgroundColor = 'rgba(255,255,255,0.1)';
-            });
-            btn.style.opacity = '1';
-            btn.style.backgroundColor = 'var(--accent-color)';
-            currentDifficulty = btn.dataset.val;
-        };
-    });
-    // Set default diff visual
-    document.querySelector('[data-val="easy"]').click();
-
-    document.getElementById('new-game-btn').onclick = () => {
-        playSound();
-        menuModal.classList.remove('open');
-        isGameFinished = false;
-        undoStack = [];
-        hintCount = 0;
-        activeTool = null;
-        document.getElementById('hint-button').disabled = false;
-        document.getElementById('hint-count-display').textContent = '3';
-        document.getElementById('difficulty-badge').textContent = currentDifficulty.charAt(0).toUpperCase() + currentDifficulty.slice(1);
-        
-        createGrid();
-        generatePuzzle(currentDifficulty);
-    };
-
-    // Theming
-    document.querySelectorAll('.theme-opt').forEach(t => {
-        t.onclick = () => {
-            playSound();
-            document.body.dataset.theme = t.dataset.theme === 'dark' ? '' : t.dataset.theme; // '' is default dark
-            localStorage.setItem('sudoku-theme', t.dataset.theme);
-        };
-    });
-    const savedTheme = localStorage.getItem('sudoku-theme');
-    if(savedTheme && savedTheme !== 'dark') document.body.dataset.theme = savedTheme;
-
-    // Leaderboard Render
-    document.getElementById('rating-btn').onclick = async () => {
-        playSound();
-        const body = document.getElementById('modal-body');
-        document.getElementById('modal-title').textContent = "Топ игроков";
-        body.innerHTML = '<div class="text-center p-4">Загрузка...</div>';
-        contentModal.classList.add('open');
-        
-        const snap = await usersCollection.orderBy('score', 'desc').limit(20).get();
-        body.innerHTML = '<div class="flex flex-col gap-2"></div>';
-        const list = body.querySelector('div');
-        
-        let i = 1;
-        snap.forEach(doc => {
-            const u = doc.data();
-            const div = document.createElement('div');
-            div.className = 'rank-item';
-            div.innerHTML = `
-                <div class="rank-badge ${i===1?'rank-1':i===2?'rank-2':i===3?'rank-3':'bg-white/10'}">${i}</div>
-                <img src="${u.avatar}" class="w-8 h-8 rounded-full">
-                <div class="flex-1 font-bold">${u.username}</div>
-                <div class="text-accent">${u.score}</div>
-            `;
-            list.appendChild(div);
-            i++;
+      setDifficulty(diff) {
+        this.elements.diffBtns.forEach(b => {
+          if (b.dataset.val === diff) {
+            b.style.background = 'var(--accent-color)';
+            b.style.color = '#fff';
+            b.style.opacity = '1';
+          } else {
+            b.style.background = 'transparent';
+            b.style.color = 'var(--text-main)';
+            b.style.opacity = '0.7';
+          }
         });
-    };
+      },
 
-    // Tutorial Render (Simplified logic from original)
-    document.getElementById('tutorial-btn').onclick = () => {
-         playSound();
-         document.getElementById('modal-title').textContent = "Как играть";
-         document.getElementById('modal-body').innerHTML = `
-            <div class="p-2 space-y-4">
-                <p>1. Каждая строка должна содержать цифры 1-9.</p>
-                <p>2. Каждый столбец должен содержать цифры 1-9.</p>
-                <p>3. Каждый квадрат 3x3 должен содержать цифры 1-9.</p>
-                <div class="glass p-3 rounded-lg text-sm text-secondary">
-                   Совет: Нажмите на клетку, затем на цифру внизу. Или выберите цифру (инструмент) и нажимайте на клетки.
-                </div>
-            </div>
-         `;
-         contentModal.classList.add('open');
-    };
-    
-    // History
-    document.getElementById('history-btn').onclick = () => {
-        playSound();
-        document.getElementById('modal-title').textContent = "Мои рекорды";
-        const t = currentUser.bestTimes;
-        document.getElementById('modal-body').innerHTML = `
-            <div class="space-y-3 p-2">
-                <div class="glass p-3 rounded flex justify-between"><span>Easy</span> <span class="font-bold text-accent">${formatTime(t.easy)}</span></div>
-                <div class="glass p-3 rounded flex justify-between"><span>Medium</span> <span class="font-bold text-accent">${formatTime(t.medium)}</span></div>
-                <div class="glass p-3 rounded flex justify-between"><span>Hard</span> <span class="font-bold text-accent">${formatTime(t.hard)}</span></div>
-            </div>
-        `;
-        contentModal.classList.add('open');
-    };
+      updateTimer(str) {
+        this.elements.timer.textContent = str;
+      },
 
-    // Sound toggle
-    document.getElementById('sound-btn').onclick = () => {
-        isSoundEnabled = !isSoundEnabled;
-        localStorage.setItem('sudoku-sound', isSoundEnabled);
-        playSound();
-        alert(isSoundEnabled ? "Звук включен" : "Звук выключен");
-    };
+      openModal(id) {
+        const modal = document.getElementById(id);
+        modal.classList.add('active');
+        Utils.haptic('medium');
+      },
+      closeModals() {
+        this.elements.modals.forEach(m => m.classList.remove('active'));
+      },
 
-    // --- Init ---
-    window.onload = async () => {
-        if(window.Telegram?.WebApp) {
-            window.Telegram.WebApp.ready();
-            window.Telegram.WebApp.expand();
-            window.Telegram.WebApp.enableClosingConfirmation();
+      applyTheme(name) {
+        document.body.dataset.theme = name;
+        localStorage.setItem('theme', name);
+        this.elements.themeCircles.forEach(c => {
+          c.classList.toggle('active', c.dataset.theme === name);
+        });
+      },
+      
+      showWin(time, diff) {
+        document.getElementById('win-time').textContent = time;
+        document.getElementById('win-diff').textContent = diff.toUpperCase();
+        this.openModal('win-modal');
+        // Confetti could be added here
+        if(window.Telegram && window.Telegram.WebApp) {
+           window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
         }
-        createGrid();
+      }
+    };
+
+    // --- MAIN GAME CONTROLLER ---
+    const Game = {
+      difficulty: 'easy',
+      timer: 0,
+      timerInterval: null,
+      history: [],
+      hintsLeft: 3,
+      isFinished: false,
+
+      init() {
+        // Init Telegram
+        if (window.Telegram && window.Telegram.WebApp) {
+          const tg = window.Telegram.WebApp;
+          tg.ready();
+          tg.expand();
+          // Adjust colors to match theme if needed, or force dark
+          tg.setHeaderColor('#000000');
+          tg.setBackgroundColor('#000000');
+          
+          if(tg.initDataUnsafe && tg.initDataUnsafe.user) {
+            document.getElementById('username').textContent = tg.initDataUnsafe.user.first_name;
+            // Avatar logic would go here
+          }
+        }
+
+        // Init Firebase (Auth only for simplicity in this demo)
+        firebase.initializeApp(CONFIG.firebase);
+        firebase.auth().signInAnonymously().catch(console.error);
+
+        Sound.init();
+        UI.init();
         
         // Hide loader
-        await initUser();
-        generatePuzzle('easy');
         setTimeout(() => {
-            document.getElementById('loading-screen').style.opacity = '0';
-            setTimeout(() => document.getElementById('loading-screen').style.display = 'none', 500);
+          document.getElementById('loading-screen').style.opacity = '0';
+          setTimeout(() => document.getElementById('loading-screen').style.display = 'none', 600);
         }, 1000);
+
+        this.startNew();
+      },
+
+      startNew() {
+        this.isFinished = false;
+        this.stopTimer();
+        this.timer = 0;
+        this.history = [];
+        this.hintsLeft = 3;
+        UI.elements.undoBtn.disabled = true;
+        document.getElementById('hint-label').textContent = `Подсказка (${this.hintsLeft})`;
+        
+        const data = Engine.generate(this.difficulty);
+        UI.renderGrid(data.grid, data.given);
+        this.startTimer();
+      },
+
+      input(num) {
+        if (!UI.selectedCell || this.isFinished) return;
+        const { r, c } = UI.selectedCell;
+        
+        // Cannot edit given cells
+        if (Engine.given[r][c]) return;
+
+        const prevVal = Engine.grid[r][c];
+        if (prevVal === num) return;
+
+        // Save history
+        this.history.push({ r, c, val: prevVal });
+        UI.elements.undoBtn.disabled = false;
+
+        Engine.grid[r][c] = num;
+        UI.updateCell(r, c, num);
+        Sound.playClick();
+
+        if (Engine.checkWin()) {
+          this.win();
+        }
+        
+        // Re-trigger select to update highlights
+        UI.selectCell(UI.selectedCell.el, r, c, num);
+      },
+
+      undo() {
+        if (this.history.length === 0 || this.isFinished) return;
+        const last = this.history.pop();
+        Engine.grid[last.r][last.c] = last.val;
+        UI.updateCell(last.r, last.c, last.val);
+        Sound.playClick();
+        if (this.history.length === 0) UI.elements.undoBtn.disabled = true;
+      },
+
+      useHint() {
+        if (this.hintsLeft <= 0 || this.isFinished) return;
+        const hint = Engine.getHint();
+        if (!hint) return; // Board full/solved
+        
+        this.hintsLeft--;
+        document.getElementById('hint-label').textContent = `Подсказка (${this.hintsLeft})`;
+        
+        Engine.grid[hint.r][hint.c] = hint.val;
+        UI.updateCell(hint.r, hint.c, hint.val, 'hint');
+        Utils.haptic('medium');
+        
+        if (Engine.checkWin()) this.win();
+      },
+
+      startTimer() {
+        this.timerInterval = setInterval(() => {
+          this.timer++;
+          UI.updateTimer(Utils.formatTime(this.timer));
+        }, 1000);
+      },
+      stopTimer() {
+        clearInterval(this.timerInterval);
+      },
+
+      win() {
+        this.isFinished = true;
+        this.stopTimer();
+        const winSound = new Audio(CONFIG.sounds.win);
+        if(Sound.enabled) winSound.play();
+        UI.showWin(Utils.formatTime(this.timer), this.difficulty);
+      }
     };
+
+    // Attach to window for UI calls
+    window.ui = UI;
+    window.game = Game;
+
+    // Boot
+    document.addEventListener('DOMContentLoaded', () => Game.init());
 
   </script>
 </body>
