@@ -3,164 +3,243 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Glass Sudoku</title>
+  <title>Sudoku Premium</title>
   
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
-
+  
   <style>
-    /* --- FONTS & BASICS --- */
+    /* --- Шрифты и База --- */
     :root {
-      /* Palette Definition */
-      --glass-border: rgba(255, 255, 255, 0.08);
-      --glass-surface: rgba(30, 30, 30, 0.65);
-      --glass-highlight: rgba(255, 255, 255, 0.12);
-      --primary-color: #0A84FF; /* iOS Blue */
-      --primary-glow: rgba(10, 132, 255, 0.5);
-      --text-main: #FFFFFF;
-      --text-muted: #8E8E93;
-      --error-color: #FF453A;
-      --grid-line: rgba(255, 255, 255, 0.15);
-      --cell-bg: rgba(0, 0, 0, 0.2);
-      --active-cell: rgba(10, 132, 255, 0.25);
-      --highlight-num: rgba(10, 132, 255, 0.6);
-      
-      --anim-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    }
-
-    /* Light Mode Override */
-    body[data-theme="light"] {
-      --glass-border: rgba(0, 0, 0, 0.05);
-      --glass-surface: rgba(255, 255, 255, 0.65);
-      --glass-highlight: rgba(0, 0, 0, 0.05);
-      --primary-color: #007AFF;
-      --primary-glow: rgba(0, 122, 255, 0.3);
-      --text-main: #000000;
-      --text-muted: #8E8E93;
-      --grid-line: rgba(0, 0, 0, 0.1);
-      --cell-bg: rgba(255, 255, 255, 0.4);
-      --active-cell: rgba(0, 122, 255, 0.2);
-    }
-
-    * {
-      box-sizing: border-box;
-      -webkit-tap-highlight-color: transparent;
-      user-select: none;
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      --font-stack: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+      --safe-area-top: env(safe-area-inset-top);
+      --safe-area-bottom: env(safe-area-inset-bottom);
     }
 
     body {
-      background-color: #000;
+      font-family: var(--font-stack);
       margin: 0;
       padding: 0;
-      height: 100dvh; /* Dynamic Height for Mobile Browsers */
-      overflow: hidden;
-      color: var(--text-main);
-      transition: color 0.3s ease;
+      overflow-x: hidden;
+      /* Отключаем выделение текста для ощущения приложения */
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      background-color: #000; /* Fallback */
+      transition: background 0.5s ease;
     }
 
-    /* --- BACKGROUND BLOBS (AMBIENT) --- */
-    .ambient-bg {
-      position: fixed;
-      top: 0; left: 0; width: 100%; height: 100%;
-      z-index: -1;
-      background: radial-gradient(circle at 10% 20%, #1a1a2e, #000000);
-      overflow: hidden;
-    }
+    /* --- ТЕМЫ (CSS Variables) --- */
     
-    body[data-theme="light"] .ambient-bg {
-       background: radial-gradient(circle at 10% 20%, #f0f2f5, #ffffff);
+    /* 1. Dark Glass (Default/Premium) */
+    body[data-theme="darkGlass"] {
+      --bg-gradient: radial-gradient(circle at 50% 0%, #2c3e50 0%, #000000 100%);
+      --glass-bg: rgba(30, 30, 30, 0.65);
+      --glass-border: rgba(255, 255, 255, 0.12);
+      --text-main: #ffffff;
+      --text-muted: #8e8e93;
+      --primary-accent: #0A84FF; /* iOS Blue */
+      --primary-hover: #0071e3;
+      --cell-bg: rgba(255, 255, 255, 0.05);
+      --grid-line: rgba(255, 255, 255, 0.15);
+      --highlight-bg: rgba(10, 132, 255, 0.25);
+      --highlight-text: #ffffff;
+      --active-cell-bg: rgba(10, 132, 255, 0.4);
+      --error-text: #ff453a;
+      --given-text: #ffffff;
+      --user-text: #64d2ff;
+      --area-highlight: rgba(255, 255, 255, 0.07);
+      --modal-bg: rgba(30, 30, 30, 0.85);
     }
 
-    .blob {
-      position: absolute;
-      border-radius: 50%;
-      filter: blur(60px);
-      opacity: 0.4;
-      animation: float 10s infinite ease-in-out;
+    /* 2. Light Glass */
+    body[data-theme="lightGlass"] {
+      --bg-gradient: radial-gradient(circle at 50% 0%, #e0eafc 0%, #cfdef3 100%);
+      --glass-bg: rgba(255, 255, 255, 0.65);
+      --glass-border: rgba(255, 255, 255, 0.5);
+      --text-main: #000000;
+      --text-muted: #666666;
+      --primary-accent: #007AFF;
+      --primary-hover: #005ecb;
+      --cell-bg: rgba(255, 255, 255, 0.4);
+      --grid-line: rgba(0, 0, 0, 0.1);
+      --highlight-bg: rgba(0, 122, 255, 0.2);
+      --highlight-text: #000000;
+      --active-cell-bg: rgba(0, 122, 255, 0.3);
+      --error-text: #ff3b30;
+      --given-text: #000000;
+      --user-text: #007AFF;
+      --area-highlight: rgba(0, 0, 0, 0.05);
+      --modal-bg: rgba(240, 240, 240, 0.85);
     }
-    .blob-1 { width: 300px; height: 300px; background: var(--primary-color); top: -100px; left: -50px; }
-    .blob-2 { width: 250px; height: 250px; background: purple; bottom: -50px; right: -50px; animation-delay: -2s; }
-    .blob-3 { width: 200px; height: 200px; background: cyan; top: 40%; left: 30%; opacity: 0.2; animation-delay: -5s; }
 
-    @keyframes float {
-      0%, 100% { transform: translate(0, 0); }
-      50% { transform: translate(20px, 30px); }
+    /* 3. Deep Purple (Midnight) */
+    body[data-theme="midnight"] {
+      --bg-gradient: radial-gradient(circle at top, #2b1055, #7597de);
+      --glass-bg: rgba(20, 10, 40, 0.6);
+      --glass-border: rgba(255, 255, 255, 0.1);
+      --text-main: #e0e0e0;
+      --text-muted: #a0a0a0;
+      --primary-accent: #d946ef; /* Fuchsia */
+      --primary-hover: #c026d3;
+      --cell-bg: rgba(0, 0, 0, 0.2);
+      --grid-line: rgba(255, 255, 255, 0.15);
+      --highlight-bg: rgba(217, 70, 239, 0.25);
+      --highlight-text: #ffffff;
+      --active-cell-bg: rgba(217, 70, 239, 0.4);
+      --error-text: #ff453a;
+      --given-text: #ffffff;
+      --user-text: #f0abfc;
+      --area-highlight: rgba(255, 255, 255, 0.05);
+      --modal-bg: rgba(30, 20, 50, 0.9);
     }
 
-    /* --- GLASSMORPHISM COMPONENTS --- */
+    body {
+      background: var(--bg-gradient);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* --- GLASSMORPHISM UTILS --- */
     .glass-panel {
-      background: var(--glass-surface);
+      background: var(--glass-bg);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
       border: 1px solid var(--glass-border);
-      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
     }
 
-    .glass-btn {
-      background: var(--glass-highlight);
+    .glass-button {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
       border: 1px solid var(--glass-border);
       color: var(--text-main);
-      backdrop-filter: blur(5px);
-      transition: all 0.2s var(--anim-spring);
+      transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
     }
-    .glass-btn:active { transform: scale(0.95); background: var(--active-cell); }
-    .glass-btn.active { background: var(--primary-color); color: white; border-color: transparent; box-shadow: 0 0 15px var(--primary-glow); }
-    .glass-btn:disabled { opacity: 0.3; pointer-events: none; }
+    
+    .glass-button:active {
+      transform: scale(0.96);
+      background: rgba(255, 255, 255, 0.2);
+    }
 
-    /* --- LAYOUT --- */
+    .accent-button {
+      background: var(--primary-accent);
+      color: white;
+      border: none;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+    
+    .accent-button:active {
+      background: var(--primary-hover);
+    }
+
+    /* --- MAIN LAYOUT --- */
     #app-container {
+      width: 100%;
+      max-width: 500px; /* Ограничение ширины для десктопов */
+      height: 100vh; /* Занимаем высоту экрана */
+      height: 100dvh; /* Dynamic viewport height для мобилок */
       display: flex;
       flex-direction: column;
-      height: 100%;
-      max-width: 500px; /* Tablet constraint */
-      margin: 0 auto;
-      padding: env(safe-area-inset-top) 16px env(safe-area-inset-bottom) 16px;
+      padding: max(10px, var(--safe-area-top)) 16px max(10px, var(--safe-area-bottom)) 16px;
+      box-sizing: border-box;
+      position: relative;
+      overflow-y: auto;
     }
 
-    header {
-      flex: 0 0 auto;
-      padding: 10px 0;
+    /* Header */
+    .header-bar {
       display: flex;
       justify-content: space-between;
       align-items: center;
-    }
-
-    .game-area {
-      flex: 1 1 auto;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      position: relative;
-      width: 100%;
-    }
-
-    /* --- SUDOKU GRID --- */
-    #grid-wrapper {
-      width: 100%;
-      aspect-ratio: 1 / 1;
-      max-height: 60vh; /* Prevent grid from being too tall on weird ratios */
-      position: relative;
-      padding: 4px;
+      margin-bottom: 12px;
+      padding: 10px 14px;
       border-radius: 16px;
-      margin-bottom: 20px;
+    }
+
+    .user-pill {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .avatar-img {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 2px solid var(--primary-accent);
+      object-fit: cover;
+    }
+
+    /* Controls Bar */
+    .controls-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      gap: 8px;
+    }
+
+    .select-styled {
+      appearance: none;
+      background: var(--cell-bg);
+      color: var(--text-main);
+      border: 1px solid var(--glass-border);
+      padding: 8px 12px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 500;
+      outline: none;
+    }
+
+    .icon-btn {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+
+    /* Timer */
+    .timer-badge {
+      font-variant-numeric: tabular-nums;
+      font-weight: 600;
+      font-size: 16px;
+      color: var(--text-main);
+      padding: 6px 12px;
+      background: var(--cell-bg);
+      border-radius: 8px;
+    }
+
+    /* --- GAME GRID (Responsive) --- */
+    .grid-wrapper {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      margin-bottom: 12px;
+      flex-shrink: 0; 
     }
 
     .sudoku-grid {
       display: grid;
       grid-template-columns: repeat(9, 1fr);
-      grid-template-rows: repeat(9, 1fr);
       gap: 1px;
-      width: 100%;
-      height: 100%;
       background-color: var(--grid-line);
       border: 2px solid var(--grid-line);
       border-radius: 12px;
       overflow: hidden;
+      width: 100%;
+      /* Магия адаптивности: квадрат, но не больше доступной высоты */
+      aspect-ratio: 1 / 1; 
+      max-height: 60vh;
+      max-width: 60vh;
     }
 
     .cell {
@@ -169,821 +248,842 @@
       align-items: center;
       justify-content: center;
       font-size: clamp(16px, 5vw, 24px);
-      font-weight: 400;
-      cursor: pointer;
       position: relative;
-      transition: background-color 0.15s;
+      cursor: pointer;
+      transition: background-color 0.15s ease;
+      /* Отключаем двойной тап зум */
+      touch-action: manipulation; 
     }
 
-    /* Thick Borders logic via margin adjustments handled in JS or pseudo-elements. 
-       Easier approach: CSS nth-child */
-    .cell:nth-child(3n) { border-right: 1px solid rgba(255,255,255,0.3); }
+    /* Grid Lines (Bold Separators) */
+    .cell:nth-child(3n) { border-right: 1px solid var(--grid-line); }
     .cell:nth-child(9n) { border-right: none; }
     .cell:nth-child(n+19):nth-child(-n+27),
-    .cell:nth-child(n+46):nth-child(-n+54) { border-bottom: 1px solid rgba(255,255,255,0.3); }
-
-    /* Theme override for borders */
-    body[data-theme="light"] .cell:nth-child(3n) { border-right: 1px solid rgba(0,0,0,0.2); }
-    body[data-theme="light"] .cell:nth-child(n+19):nth-child(-n+27),
-    body[data-theme="light"] .cell:nth-child(n+46):nth-child(-n+54) { border-bottom: 1px solid rgba(0,0,0,0.2); }
-
-
-    .cell.given { font-weight: 700; color: var(--text-main); }
-    .cell.user-input { color: var(--primary-color); font-weight: 500; }
-    .cell.error { color: var(--error-color); background: rgba(255, 69, 58, 0.15); }
-    .cell.selected { background-color: var(--active-cell); box-shadow: inset 0 0 0 2px var(--primary-color); z-index: 10; }
-    .cell.highlight { background-color: var(--highlight-num); color: white !important; }
-    .cell.area { background-color: rgba(255, 255, 255, 0.05); }
-    body[data-theme="light"] .cell.area { background-color: rgba(0, 0, 0, 0.05); }
+    .cell:nth-child(n+46):nth-child(-n+54) { border-bottom: 1px solid var(--grid-line); }
     
-    .cell.hint-anim { animation: pulse 0.5s ease-in-out; background-color: #32D74B !important; color: #000 !important; }
-
-    @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
-
-    /* --- CONTROLS --- */
-    .controls-area {
-      flex: 0 0 auto;
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      padding-bottom: 10px;
+    /* Дополнительные псевдо-элементы для жирных линий */
+    .sudoku-grid {
+      position: relative;
+    }
+    .grid-overlay {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      pointer-events: none;
+      border-radius: 12px;
+      border: 2px solid var(--primary-accent);
+      opacity: 0.3;
+      display: none; /* Можно включить для стиля */
     }
 
-    .numpad {
+    /* Cell States */
+    .cell-content { font-weight: 500; z-index: 2; }
+    .cell.given { color: var(--given-text); font-weight: 700; }
+    .cell.user-input { color: var(--user-text); }
+    .cell.error { color: var(--error-text) !important; animation: shake 0.4s; }
+    .cell.highlight { background-color: var(--highlight-bg); }
+    .cell.area-highlight { background-color: var(--area-highlight); }
+    .cell.active-cell { background-color: var(--active-cell-bg); box-shadow: inset 0 0 0 2px var(--primary-accent); }
+    .cell.hinted { background-color: rgba(255, 215, 0, 0.2); animation: flash 0.5s; }
+
+    /* Separators implemented via CSS Grid Gap + margins logic is complex, 
+       using absolute separators is safer for perfect 3x3 look */
+    .v-sep { position: absolute; width: 2px; background: var(--text-muted); opacity: 0.5; top: 0; bottom: 0; pointer-events: none; }
+    .h-sep { position: absolute; height: 2px; background: var(--text-muted); opacity: 0.5; left: 0; right: 0; pointer-events: none; }
+    
+    /* --- KEYPAD (Adaptive) --- */
+    .keypad-container {
       display: grid;
-      grid-template-columns: repeat(10, 1fr); /* 1-9 + Erase */
+      grid-template-columns: repeat(10, 1fr);
       gap: 6px;
+      width: 100%;
+      margin-bottom: 12px;
+    }
+
+    /* Для очень узких экранов (iPhone 8 / SE) делаем 2 ряда */
+    @media (max-width: 370px) {
+      .keypad-container {
+        grid-template-columns: repeat(5, 1fr);
+        gap: 8px;
+      }
     }
 
     .num-btn {
-      aspect-ratio: 0.8;
-      border-radius: 8px;
+      aspect-ratio: 1/1; /* Квадратные кнопки */
+      border-radius: 10px;
+      font-size: 20px;
+      font-weight: 600;
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
-      font-size: 1.2rem;
-      font-weight: 500;
+      padding: 0;
       position: relative;
     }
-    
-    .num-btn span.count {
-        font-size: 0.6rem;
-        opacity: 0.6;
-        position: absolute;
-        bottom: 2px;
-    }
 
-    .action-row {
+    .num-btn.selected {
+      background: var(--primary-accent);
+      color: white;
+      border-color: transparent;
+    }
+    
+    .num-btn.disabled { opacity: 0.3; pointer-events: none; }
+
+    /* --- BOTTOM ACTIONS --- */
+    .actions-bar {
       display: flex;
       justify-content: space-between;
       gap: 10px;
+      margin-top: auto; /* Push to bottom */
+      padding-top: 10px;
     }
-
+    
     .action-btn {
       flex: 1;
       height: 48px;
-      border-radius: 12px;
+      border-radius: 14px;
+      font-size: 14px;
+      font-weight: 600;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 0.9rem;
-      font-weight: 600;
-    }
-    
-    .icon-btn {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+      gap: 6px;
     }
 
-    /* --- LOADING SCREEN --- */
-    #loader {
-      position: fixed; inset: 0; z-index: 9999;
-      background: #000;
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      transition: opacity 0.5s;
-    }
-    .spinner {
-      width: 40px; height: 40px;
-      border: 3px solid rgba(255,255,255,0.3);
-      border-radius: 50%;
-      border-top-color: var(--primary-color);
-      animation: spin 1s ease-in-out infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* --- MODALS (Bottom Sheet Style) --- */
+    /* --- MODALS --- */
     .modal-overlay {
-      position: fixed; inset: 0;
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
       background: rgba(0,0,0,0.6);
       backdrop-filter: blur(5px);
       z-index: 100;
       display: flex;
-      align-items: flex-end; /* Bottom sheet default */
+      align-items: center;
       justify-content: center;
-      opacity: 0; pointer-events: none;
+      opacity: 0;
+      pointer-events: none;
       transition: opacity 0.3s;
     }
-    .modal-overlay.open { opacity: 1; pointer-events: auto; }
-
+    .modal-overlay.active { opacity: 1; pointer-events: auto; }
+    
     .modal-card {
-      width: 100%; max-width: 500px;
-      background: var(--glass-surface);
-      backdrop-filter: blur(30px);
-      -webkit-backdrop-filter: blur(30px);
-      border-top: 1px solid var(--glass-border);
-      border-radius: 24px 24px 0 0;
+      background: var(--modal-bg);
+      width: 90%;
+      max-width: 400px;
+      border-radius: 24px;
       padding: 24px;
-      transform: translateY(100%);
-      transition: transform 0.4s var(--anim-spring);
+      border: 1px solid var(--glass-border);
+      transform: scale(0.9);
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
       max-height: 85vh;
       overflow-y: auto;
+      color: var(--text-main);
     }
-    .modal-overlay.open .modal-card { transform: translateY(0); }
+    .modal-overlay.active .modal-card { transform: scale(1); }
     
-    /* Centered modal variant */
-    .modal-overlay.centered { align-items: center; }
-    .modal-overlay.centered .modal-card { border-radius: 24px; width: 90%; transform: scale(0.9); opacity: 0; }
-    .modal-overlay.centered.open .modal-card { transform: scale(1); opacity: 1; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .modal-title { font-size: 22px; font-weight: 700; }
+    .close-btn { font-size: 24px; cursor: pointer; color: var(--text-muted); }
 
-    /* Utility */
+    /* --- ANIMATIONS --- */
+    @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+    @keyframes flash { 0% { background: var(--primary-accent); } 100% { background: var(--cell-bg); } }
+    @keyframes popIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+    /* Loading Screen */
+    #loading-screen {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: #000;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      transition: opacity 0.5s;
+    }
+    .loader {
+      width: 48px; height: 48px;
+      border: 5px solid #FFF;
+      border-bottom-color: transparent;
+      border-radius: 50%;
+      animation: rotation 1s linear infinite;
+    }
+    @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    /* Theme Panel */
+    .theme-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .theme-option { 
+      height: 40px; border-radius: 8px; border: 2px solid transparent; cursor: pointer; 
+      display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600;
+    }
+    .theme-option.active-theme { border-color: var(--primary-accent); }
+    
+    /* Separator Lines specifically placed */
+    .sep-v-1 { position: absolute; left: 33.33%; top: 0; bottom: 0; width: 2px; background: var(--primary-accent); opacity: 0.5; pointer-events: none; }
+    .sep-v-2 { position: absolute; left: 66.66%; top: 0; bottom: 0; width: 2px; background: var(--primary-accent); opacity: 0.5; pointer-events: none; }
+    .sep-h-1 { position: absolute; top: 33.33%; left: 0; right: 0; height: 2px; background: var(--primary-accent); opacity: 0.5; pointer-events: none; }
+    .sep-h-2 { position: absolute; top: 66.66%; left: 0; right: 0; height: 2px; background: var(--primary-accent); opacity: 0.5; pointer-events: none; }
+
     .hidden { display: none !important; }
-    .text-accent { color: var(--primary-color); }
-    
-    /* Avatar & Profile */
-    .profile-pill {
-        display: flex; align-items: center; gap: 8px;
-        background: rgba(255,255,255,0.1);
-        padding: 4px 12px 4px 4px;
-        border-radius: 20px;
-    }
-    .profile-pill img { width: 28px; height: 28px; border-radius: 50%; }
-
   </style>
 </head>
-<body>
-  
-  <div class="ambient-bg">
-    <div class="blob blob-1"></div>
-    <div class="blob blob-2"></div>
-    <div class="blob blob-3"></div>
-  </div>
+<body data-theme="darkGlass">
 
-  <div id="loader">
-    <div class="spinner"></div>
-    <div style="margin-top: 20px; font-weight: 500; letter-spacing: 1px;">SUDOKU</div>
+  <div id="loading-screen">
+    <div class="loader"></div>
+    <div style="margin-top: 20px; font-weight: 600; color: white;">Загрузка Sudoku...</div>
   </div>
 
   <div id="app-container">
-    <header>
-      <div class="profile-pill glass-panel">
-        <img id="user-avatar" src="https://t.me/i/userpic/320/default.jpg" alt="">
-        <div class="flex flex-col leading-none">
-            <span id="user-name" class="text-xs font-bold">Guest</span>
-            <span class="text-[10px] text-accent font-mono"><span id="user-score">0</span> pts</span>
+    
+    <div class="header-bar glass-panel">
+      <div class="user-pill">
+        <img id="user-avatar" src="" class="avatar-img" alt="Avatar">
+        <div>
+          <div id="username" style="font-weight: 700; font-size: 14px;">Guest</div>
+          <div style="font-size: 12px; color: var(--text-muted);">Очки: <span id="user-score" style="color: var(--primary-accent);">0</span></div>
         </div>
       </div>
+      <div style="text-align: right; font-size: 10px; color: var(--text-muted);">
+        <div>Easy: <span id="easy-record" style="color:var(--text-main)">--:--</span></div>
+        <div>Med: <span id="medium-record" style="color:var(--text-main)">--:--</span></div>
+        <div>Hard: <span id="hard-record" style="color:var(--text-main)">--:--</span></div>
+      </div>
+    </div>
+
+    <div class="controls-bar">
+      <select id="difficulty" class="select-styled">
+        <option value="easy">Лёгкий</option>
+        <option value="medium">Средний</option>
+        <option value="hard">Сложный</option>
+      </select>
+
+      <div class="timer-badge" id="timer">00:00</div>
       
-      <div class="flex gap-2">
-         <div class="glass-panel px-3 py-1 rounded-full text-sm font-mono flex items-center" id="timer">00:00</div>
-         <button id="btn-settings" class="glass-btn icon-btn"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg></button>
-      </div>
-    </header>
-
-    <div class="game-area">
-      <div class="flex justify-between w-full px-2 mb-2 items-end">
-          <select id="difficulty-select" class="glass-btn px-3 py-1 rounded-lg text-xs appearance-none font-bold tracking-wide text-center">
-              <option value="easy">Лёгкий</option>
-              <option value="medium">Средний</option>
-              <option value="hard">Сложный</option>
-          </select>
-          <div class="text-[10px] text-muted tracking-widest uppercase">Ошибки: <span id="mistake-count" class="text-white">0</span>/3</div>
-      </div>
-
-      <div id="grid-wrapper" class="glass-panel">
-        <div id="grid" class="sudoku-grid">
-           </div>
+      <div style="display:flex; gap: 8px;">
+        <button id="settings-button" class="icon-btn glass-button"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></button>
+        <button id="rating-button" class="icon-btn glass-button"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path></svg></button>
       </div>
     </div>
 
-    <div class="controls-area">
-       <div class="action-row">
-          <button id="btn-undo" class="glass-btn action-btn text-xs" disabled>
-             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg> Назад
-          </button>
-          <button id="btn-erase" class="glass-btn action-btn text-xs" data-tool="0">
-             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg> Стереть
-          </button>
-          <button id="btn-hint" class="glass-btn action-btn text-xs">
-             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548 5.478A1 1 0 0114.32 22h-3.818a1 1 0 01-.992-.883L9.172 16.29z"/></svg> 
-             <span id="hint-text">3</span>
-          </button>
-          <button id="btn-notes" class="glass-btn action-btn text-xs hidden">Notes</button> </div>
+    <div class="grid-wrapper">
+      <div id="grid" class="sudoku-grid">
+        <div class="sep-v-1"></div><div class="sep-v-2"></div>
+        <div class="sep-h-1"></div><div class="sep-h-2"></div>
+      </div>
+    </div>
 
-       <div class="numpad" id="numpad">
-          </div>
+    <div id="number-row" class="keypad-container">
+      </div>
 
-       <button id="btn-new-game" class="glass-btn action-btn mt-2 bg-primary/20 text-accent border-primary/50">Новая игра</button>
+    <div class="actions-bar">
+      <button id="undo-button" class="action-btn glass-button" disabled>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 14L4 9l5-5"/><path d="M4 9h10c4.418 0 8 3.582 8 8"/></svg>
+        Отмена
+      </button>
+      <button id="hint-button" class="action-btn glass-button">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z"/><path d="M9 21h6"/></svg>
+        <span id="hint-count-display">3/3</span>
+      </button>
+      <button id="check" class="action-btn accent-button">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+        Готово
+      </button>
+    </div>
+    
+    <div id="message" style="text-align: center; height: 20px; font-size: 14px; margin-top: 5px; color: var(--error-text);"></div>
+
+  </div>
+
+  <div id="settings-modal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title">Настройки</div>
+        <div class="close-btn" data-target="settings-modal">&times;</div>
+      </div>
+      
+      <div style="margin-bottom: 20px;">
+        <p style="margin-bottom: 10px; font-weight: 600;">Тема оформления</p>
+        <div class="theme-grid">
+          <div class="theme-option glass-button" data-theme="darkGlass" style="background: #2c3e50; color:white;">Dark</div>
+          <div class="theme-option glass-button" data-theme="lightGlass" style="background: #e0eafc; color:black;">Light</div>
+          <div class="theme-option glass-button" data-theme="midnight" style="background: #2b1055; color:#d946ef;">Midnight</div>
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-top: 1px solid var(--grid-line);">
+        <span>Звуковые эффекты</span>
+        <button id="sound-toggle" class="glass-button" style="padding: 5px 15px; border-radius: 20px;">ВКЛ</button>
+      </div>
+      
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-top: 1px solid var(--grid-line);">
+        <span>Подсветка цифр</span>
+        <button id="highlightToggle" class="glass-button" style="padding: 5px 15px; border-radius: 20px;">ВКЛ</button>
+      </div>
+
+      <div style="margin-top: 20px; gap: 10px; display: flex; flex-direction: column;">
+         <button id="tutorial-button" class="glass-button" style="width:100%; padding: 10px; border-radius: 12px;">Как играть?</button>
+         <button id="recent-games-button" class="glass-button" style="width:100%; padding: 10px; border-radius: 12px;">История игр</button>
+         <button id="newGame" class="accent-button" style="width:100%; padding: 12px; border-radius: 12px; margin-top: 10px;">Новая игра</button>
+      </div>
     </div>
   </div>
 
-  <div id="modal-settings" class="modal-overlay">
-      <div class="modal-card">
-          <h2 class="text-xl font-bold mb-4">Меню</h2>
-          
-          <div class="space-y-3">
-              <div class="flex justify-between items-center glass-panel p-3 rounded-xl">
-                  <span>Звук</span>
-                  <button id="toggle-sound" class="w-12 h-6 rounded-full bg-gray-600 relative transition-colors duration-300">
-                      <div class="w-4 h-4 bg-white rounded-full absolute top-1 left-1 transition-transform duration-300"></div>
-                  </button>
-              </div>
-              
-              <div class="glass-panel p-3 rounded-xl">
-                  <div class="text-sm mb-2">Тема</div>
-                  <div class="flex gap-2">
-                      <button class="theme-switch flex-1 py-2 rounded-lg bg-black border border-white/20 text-xs" data-set-theme="dark">Midnight</button>
-                      <button class="theme-switch flex-1 py-2 rounded-lg bg-white text-black text-xs" data-set-theme="light">Daylight</button>
-                  </div>
-              </div>
-
-              <button id="btn-leaderboard" class="w-full glass-btn py-3 rounded-xl font-bold">🏆 Рейтинг</button>
-              <button id="btn-history" class="w-full glass-btn py-3 rounded-xl font-bold">🕒 История игр</button>
-          </div>
-          
-          <button class="modal-close w-full glass-btn mt-6 py-3 rounded-xl text-red-400">Закрыть</button>
+  <div id="rating-modal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title">Лидерборд</div>
+        <div class="close-btn" data-target="rating-modal">&times;</div>
       </div>
+      <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+        <button class="glass-button rating-tab active" data-type="score" style="flex:1; border-radius:8px; padding: 8px;">Очки</button>
+        <button class="glass-button rating-tab" data-type="time" style="flex:1; border-radius:8px; padding: 8px;">Время</button>
+      </div>
+      <div id="difficulty-tabs" class="hidden" style="display: flex; gap: 5px; margin-bottom: 15px;">
+        <button class="glass-button diff-tab active" data-d="easy" style="flex:1; font-size: 12px; padding: 5px; border-radius: 6px;">Easy</button>
+        <button class="glass-button diff-tab" data-d="medium" style="flex:1; font-size: 12px; padding: 5px; border-radius: 6px;">Med</button>
+        <button class="glass-button diff-tab" data-d="hard" style="flex:1; font-size: 12px; padding: 5px; border-radius: 6px;">Hard</button>
+      </div>
+      <div id="rating-list" style="max-height: 300px; overflow-y: auto; font-size: 14px;"></div>
+    </div>
+  </div>
+  
+  <div id="recent-games-modal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header"><div class="modal-title">История</div><div class="close-btn" data-target="recent-games-modal">&times;</div></div>
+      <div id="recent-games-list"></div>
+    </div>
   </div>
 
-  <div id="modal-win" class="modal-overlay centered">
-      <div class="modal-card text-center relative overflow-hidden">
-          <div class="absolute inset-0 bg-gradient-to-b from-blue-500/20 to-transparent pointer-events-none"></div>
-          <div class="text-6xl mb-2">🎉</div>
-          <h2 class="text-2xl font-bold mb-2">Победа!</h2>
-          <p class="text-muted text-sm mb-4">Отличная работа!</p>
-          
-          <div class="grid grid-cols-2 gap-3 mb-6">
-              <div class="glass-panel p-3 rounded-xl">
-                  <div class="text-xs text-muted">Время</div>
-                  <div class="font-bold text-lg" id="win-time">05:23</div>
-              </div>
-              <div class="glass-panel p-3 rounded-xl">
-                  <div class="text-xs text-muted">Очки</div>
-                  <div class="font-bold text-lg text-accent" id="win-score">+450</div>
-              </div>
-          </div>
-          
-          <button id="btn-win-close" class="w-full glass-btn py-3 rounded-xl bg-blue-600 text-white font-bold" style="background: var(--primary-color);">Продолжить</button>
+  <div id="tutorial-modal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header"><div class="modal-title" id="tutorial-title"></div><div class="close-btn" data-target="tutorial-modal">&times;</div></div>
+      <div id="tutorial-grid" class="sudoku-grid" style="width: 200px; margin: 0 auto; pointer-events: none;"></div>
+      <p id="tutorial-text" style="text-align: center; margin: 15px 0; min-height: 40px;"></p>
+      <div style="display:flex; justify-content: space-between;">
+        <button id="tutorial-prev" class="glass-button" style="padding: 8px 16px; border-radius: 8px;">Назад</button>
+        <span id="tutorial-step-indicator" style="font-size: 12px; opacity: 0.7; align-self: center;"></span>
+        <button id="tutorial-next" class="accent-button" style="padding: 8px 16px; border-radius: 8px;">Далее</button>
       </div>
+    </div>
   </div>
 
-  <div id="modal-leaderboard" class="modal-overlay">
-      <div class="modal-card">
-          <h2 class="text-xl font-bold mb-4">Топ игроков</h2>
-          <div id="leaderboard-list" class="space-y-2 max-h-[50vh] overflow-y-auto pr-1">
-              </div>
-          <button class="modal-close w-full glass-btn mt-4 py-3 rounded-xl">Закрыть</button>
-      </div>
+  <div id="win-modal" class="modal-overlay">
+    <div class="modal-card" style="text-align: center;">
+      <h2 style="color: var(--primary-accent); font-size: 28px; margin: 0 0 10px 0;">Победа!</h2>
+      <p id="win-modal-message" style="margin-bottom: 20px;"></p>
+      <button id="win-modal-close-btn" class="accent-button" style="width: 100%; padding: 12px; border-radius: 12px;">Отлично!</button>
+    </div>
   </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
 
   <script>
-    /* --- CONFIG & STATE --- */
-    const firebaseConfig = {
-      apiKey: "AIzaSyBkYQ7tRMrZ-mghBnkJ_EvuzHpjs_p8hOY",
-      authDomain: "sudo-9fbfc.firebaseapp.com",
-      projectId: "sudo-9fbfc",
-      storageBucket: "sudo-9fbfc.appspot.com",
-      messagingSenderId: "927814106972",
-      appId: "1:927814106972:web:71e0773453f9d16f598b99"
+    /* --- LOGIC START --- */
+    const firebaseConfig = { apiKey: "AIzaSyBkYQ7tRMrZ-mghBnkJ_EvuzHpjs_p8hOY", authDomain: "sudo-9fbfc.firebaseapp.com", projectId: "sudo-9fbfc", storageBucket: "sudo-9fbfc.appspot.com", messagingSenderId: "927814106972", appId: "1:927814106972:web:71e0773453f9d16f598b99" };
+    
+    // Инициализация
+    try { firebase.initializeApp(firebaseConfig); } catch(e){ console.error(e); }
+    const db = firebase.firestore();
+    const auth = firebase.auth();
+    const usersCollection = db.collection('users');
+    const recordsCollection = db.collection('timeRecords');
+
+    // State Variables
+    let grid = [], solution = [], givenCells = new Set(), timerInterval, startTime=0;
+    let activeCell = null, activeTool = null, highlightEnabled = true, undoStack = [];
+    let hintCount = 0, isGameFinished = false, isSoundEnabled = true;
+    let currentUser = { id: null, username: 'Guest', avatar: 'https://t.me/i/userpic/320/default.jpg', score: 0, bestTimes: { easy: null, medium: null, hard: null } };
+    let currentRatingType = 'score', currentRatingDifficulty = 'easy';
+
+    // Elements
+    const el = (id) => document.getElementById(id);
+    const elements = {
+      grid: el('grid'), numberRow: el('number-row'), difficulty: el('difficulty'),
+      newGameBtn: el('newGame'), checkBtn: el('check'), undoBtn: el('undo-button'),
+      hintBtn: el('hint-button'), timer: el('timer'), message: el('message'),
+      userAvatar: el('user-avatar'), username: el('username'), userScore: el('user-score'),
+      loadingScreen: el('loading-screen'), winModal: el('win-modal'),
+      settingsModal: el('settings-modal'), ratingModal: el('rating-modal'),
+      recentModal: el('recent-games-modal'), tutorialModal: el('tutorial-modal')
     };
 
-    // State
-    const state = {
-        grid: [],
-        solution: [],
-        given: new Set(),
-        selected: null, // {r, c}
-        mode: 'input', // input, erase
-        difficulty: 'easy',
-        mistakes: 0,
-        hints: 3,
-        timer: 0,
-        timerId: null,
-        isPlaying: false,
-        history: [], // Undo stack
-        user: { id: null, name: 'Guest', avatar: '', score: 0 },
-        sound: true,
-        theme: 'dark'
-    };
-
-    // DOM Elements Cache
-    const UI = {
-        grid: document.getElementById('grid'),
-        numpad: document.getElementById('numpad'),
-        timer: document.getElementById('timer'),
-        score: document.getElementById('user-score'),
-        mistakeCount: document.getElementById('mistake-count'),
-        hintBtn: document.getElementById('btn-hint'),
-        hintText: document.getElementById('hint-text'),
-        eraseBtn: document.getElementById('btn-erase'),
-        undoBtn: document.getElementById('btn-undo'),
-        loader: document.getElementById('loader'),
-        modals: {
-            settings: document.getElementById('modal-settings'),
-            win: document.getElementById('modal-win'),
-            leaderboard: document.getElementById('modal-leaderboard')
-        }
-    };
-
-    // Audio
+    // Sound
     const clickSound = new Audio('https://github.com/codex-cdx/sudo/raw/refs/heads/main/%D0%9F%D0%BB%D0%B0%D0%BC%D0%B1.mp3');
+    function playSound() { if(isSoundEnabled) { clickSound.currentTime = 0; clickSound.play().catch(()=>{}); } }
 
-    /* --- INITIALIZATION --- */
-    document.addEventListener('DOMContentLoaded', async () => {
-        // Init Firebase
-        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-        const auth = firebase.auth();
-
-        // 1. Auth & User Logic
-        try {
-            await auth.signInAnonymously();
-            
-            // Telegram Data Integration
-            if (window.Telegram?.WebApp) {
-                const tg = window.Telegram.WebApp;
-                tg.ready();
-                tg.expand();
-                // Set iOS Theme color
-                tg.setHeaderColor('#000000');
-                
-                if (tg.initDataUnsafe?.user) {
-                    const u = tg.initDataUnsafe.user;
-                    state.user.id = String(u.id);
-                    state.user.name = u.first_name; // + ' ' + u.last_name
-                    state.user.avatar = u.photo_url || state.user.avatar;
-                } else {
-                    state.user.id = auth.currentUser.uid;
-                }
-            } else {
-                state.user.id = auth.currentUser.uid;
-            }
-
-            // Load User Data from Firestore
-            if (state.user.id) {
-                const docRef = db.collection('users').doc(state.user.id);
-                const docSnap = await docRef.get();
-                if (docSnap.exists) {
-                    const data = docSnap.data();
-                    state.user.score = data.score || 0;
-                } else {
-                    await docRef.set({
-                        username: state.user.name,
-                        avatar: state.user.avatar,
-                        score: 0
-                    });
-                }
-            }
-            updateProfileUI();
-
-        } catch (e) {
-            console.error("Auth failed", e);
-        }
-
-        // 2. Setup UI
-        setupNumpad();
-        setupGridListeners();
-        setupControls();
-        setupModals();
-        
-        // 3. Start Game
-        startNewGame();
-        
-        // Hide Loader
-        setTimeout(() => {
-            UI.loader.style.opacity = '0';
-            setTimeout(() => UI.loader.style.display = 'none', 500);
-        }, 800);
-    });
-
-    /* --- GAME LOGIC --- */
-
-    function startNewGame() {
-        clearInterval(state.timerId);
-        state.timer = 0;
-        state.mistakes = 0;
-        state.hints = 3;
-        state.history = [];
-        state.selected = null;
-        state.mode = 'input';
-        state.difficulty = document.getElementById('difficulty-select').value;
-        state.isPlaying = true;
-
-        generateSudoku(state.difficulty);
-        renderGrid();
-        updateStatsUI();
-        startTimer();
-        
-        // Reset tool states
-        document.querySelectorAll('.glass-btn').forEach(b => b.classList.remove('active'));
+    // Helpers
+    function formatTime(s) { if(s==null) return '--:--'; return `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`; }
+    function toggleModal(modalId, show) { 
+      const m = el(modalId); 
+      if(show) { m.classList.remove('hidden'); requestAnimationFrame(()=>m.classList.add('active')); }
+      else { m.classList.remove('active'); setTimeout(()=>m.classList.add('hidden'), 300); }
     }
 
-    function generateSudoku(diff) {
-        // Simple backtracking generator + remover
-        // 1. Create full solution
-        const base = Array(9).fill(0).map(() => Array(9).fill(0));
-        solveSudoku(base); 
-        state.solution = base.map(r => [...r]);
-
-        // 2. Remove digits based on difficulty
-        const removeCount = { 'easy': 30, 'medium': 45, 'hard': 54 }[diff] || 30;
-        const puzzle = base.map(r => [...r]);
-        
-        let attempts = removeCount;
-        while (attempts > 0) {
-            let r = Math.floor(Math.random() * 9);
-            let c = Math.floor(Math.random() * 9);
-            if (puzzle[r][c] !== 0) {
-                puzzle[r][c] = 0;
-                attempts--;
-            }
-        }
-        
-        state.grid = puzzle;
-        state.given = new Set();
-        for(let r=0; r<9; r++){
-            for(let c=0; c<9; c++){
-                if(puzzle[r][c] !== 0) state.given.add(`${r},${c}`);
-            }
-        }
+    // --- GRID LOGIC ---
+    function createGrid() {
+      elements.grid.innerHTML = '<div class="sep-v-1"></div><div class="sep-v-2"></div><div class="sep-h-1"></div><div class="sep-h-2"></div>';
+      grid = Array(9).fill().map(()=>Array(9).fill(0));
+      givenCells.clear();
+      for(let i=0; i<81; i++) {
+        const d = document.createElement('div');
+        d.className = 'cell';
+        d.dataset.idx = i;
+        const span = document.createElement('span');
+        span.className = 'cell-content';
+        d.appendChild(span);
+        d.addEventListener('click', (e) => { e.stopPropagation(); handleCellClick(Math.floor(i/9), i%9); });
+        elements.grid.appendChild(d);
+      }
     }
 
-    function solveSudoku(board) {
-        for (let r = 0; r < 9; r++) {
-            for (let c = 0; c < 9; c++) {
-                if (board[r][c] === 0) {
-                    const nums = [1,2,3,4,5,6,7,8,9].sort(() => Math.random() - 0.5);
-                    for (let n of nums) {
-                        if (isValid(board, r, c, n)) {
-                            board[r][c] = n;
-                            if (solveSudoku(board)) return true;
-                            board[r][c] = 0;
-                        }
-                    }
-                    return false;
-                }
-            }
-        }
-        return true;
+    function createKeypad() {
+      elements.numberRow.innerHTML = '';
+      for(let i=1; i<=9; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'num-btn glass-button';
+        btn.textContent = i;
+        btn.dataset.val = i;
+        btn.onclick = () => { playSound(); selectTool(i); };
+        elements.numberRow.appendChild(btn);
+      }
+      const eraseBtn = document.createElement('button');
+      eraseBtn.className = 'num-btn glass-button';
+      eraseBtn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 4H8l-7 8 7 8h13v-16z"/><line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/></svg>';
+      eraseBtn.dataset.val = 'erase';
+      eraseBtn.onclick = () => { playSound(); selectTool('erase'); };
+      elements.numberRow.appendChild(eraseBtn);
     }
 
-    function isValid(board, row, col, num) {
-        for (let x = 0; x < 9; x++) {
-            if (board[row][x] === num || board[x][col] === num || 
-                board[3 * Math.floor(row/3) + Math.floor(x/3)][3 * Math.floor(col/3) + x%3] === num) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    /* --- UI RENDERING --- */
-    function renderGrid() {
-        UI.grid.innerHTML = '';
-        for (let r = 0; r < 9; r++) {
-            for (let c = 0; c < 9; c++) {
-                const cell = document.createElement('div');
-                cell.className = 'cell';
-                cell.dataset.r = r;
-                cell.dataset.c = c;
-                
-                const val = state.grid[r][c];
-                if (val !== 0) {
-                    cell.textContent = val;
-                    if (state.given.has(`${r},${c}`)) cell.classList.add('given');
-                    else cell.classList.add('user-input');
-                }
-                UI.grid.appendChild(cell);
-            }
-        }
-    }
-
-    function setupNumpad() {
-        UI.numpad.innerHTML = '';
-        for (let i = 1; i <= 9; i++) {
-            const btn = document.createElement('button');
-            btn.className = 'glass-btn num-btn';
-            btn.innerHTML = `${i} <span class="count" id="count-${i}"></span>`;
-            btn.onclick = () => handleInput(i);
-            UI.numpad.appendChild(btn);
-        }
-        updateNumberCounts();
-    }
-
-    function updateNumberCounts() {
-        const counts = Array(10).fill(0);
-        state.grid.flat().forEach(n => counts[n]++);
-        for(let i=1; i<=9; i++) {
-            const el = document.getElementById(`count-${i}`);
-            if(el) el.textContent = 9 - counts[i] > 0 ? 9 - counts[i] : '✓';
-            const btn = el.parentElement;
-            if(counts[i] >= 9) btn.disabled = true;
-            else btn.disabled = false;
-        }
-    }
-
-    /* --- INTERACTIONS --- */
-    function setupGridListeners() {
-        UI.grid.addEventListener('click', (e) => {
-            const cell = e.target.closest('.cell');
-            if (!cell) return;
-            selectCell(parseInt(cell.dataset.r), parseInt(cell.dataset.c));
-        });
+    // --- GAMEPLAY ---
+    function handleCellClick(r, c) {
+      playSound();
+      if(isGameFinished) return;
+      if(activeTool) {
+        // Mode: Action (Placement)
+        const cellVal = grid[r][c];
+        if(givenCells.has(`${r},${c}`)) return; // Immutable
+        if(activeTool === 'erase') performAction(0, r, c);
+        else performAction(activeTool, r, c);
+      } else {
+        // Mode: Selection
+        selectCell(r, c);
+      }
     }
 
     function selectCell(r, c) {
-        if (state.mode === 'erase' && !state.given.has(`${r},${c}`)) {
-             handleInput(0, r, c);
-             return;
-        }
+      if(isGameFinished) return;
+      clearHighlights();
+      activeCell = [r, c];
+      const cells = document.querySelectorAll('.cell');
+      
+      // Highlight Area (Row, Col, Box)
+      cells.forEach((cell, idx) => {
+        const cr = Math.floor(idx/9), cc = idx%9;
+        const sameRow = cr === r;
+        const sameCol = cc === c;
+        const sameBox = Math.floor(cr/3) === Math.floor(r/3) && Math.floor(cc/3) === Math.floor(c/3);
+        if(sameRow || sameCol || sameBox) cell.classList.add('area-highlight');
+      });
 
-        playSound();
-        state.selected = {r, c};
-        
-        // Visual updates
-        document.querySelectorAll('.cell').forEach(el => {
-            el.classList.remove('selected', 'area', 'highlight');
-            const dr = parseInt(el.dataset.r);
-            const dc = parseInt(el.dataset.c);
-            
-            // Highlight selected
-            if (dr === r && dc === c) el.classList.add('selected');
-            
-            // Highlight Area (Row, Col, Box)
-            const sameBox = Math.floor(dr/3) === Math.floor(r/3) && Math.floor(dc/3) === Math.floor(c/3);
-            if (dr === r || dc === c || sameBox) el.classList.add('area');
+      // Active Cell
+      const target = cells[r*9+c];
+      target.classList.add('active-cell');
 
-            // Highlight Same Numbers
-            const val = state.grid[r][c];
-            if (val !== 0 && state.grid[dr][dc] === val) el.classList.add('highlight');
-        });
+      // Highlight Similar
+      const val = grid[r][c];
+      if(val !== 0 && highlightEnabled) highlightSimilar(val);
     }
 
-    function handleInput(num, forceR = null, forceC = null) {
-        playSound();
-        const r = forceR !== null ? forceR : (state.selected ? state.selected.r : null);
-        const c = forceC !== null ? forceC : (state.selected ? state.selected.c : null);
+    function selectTool(val) {
+      if(isGameFinished) return;
+      if(activeTool === val) activeTool = null; // Toggle off
+      else activeTool = val;
+      
+      // UI Update
+      document.querySelectorAll('.num-btn').forEach(b => {
+        b.classList.toggle('selected', b.dataset.val == activeTool);
+      });
 
-        if (r === null || c === null) return;
-        if (state.given.has(`${r},${c}`)) return; // Immutable
-
-        const prevVal = state.grid[r][c];
-        if (prevVal === num) return; // No change
-
-        // Push to history
-        state.history.push({r, c, prev: prevVal, curr: num});
-        UI.undoBtn.disabled = false;
-
-        // Update Data
-        state.grid[r][c] = num;
-        
-        // Update UI
-        const cell = document.querySelector(`.cell[data-r="${r}"][data-c="${c}"]`);
-        cell.textContent = num === 0 ? '' : num;
-        cell.classList.remove('error', 'user-input', 'hint-anim');
-        if (num !== 0) cell.classList.add('user-input');
-
-        // Logic check
-        if (num !== 0) {
-            if (num !== state.solution[r][c]) {
-                cell.classList.add('error');
-                state.mistakes++;
-                updateStatsUI();
-                checkLose();
-            } else {
-                checkWin();
-            }
-        }
-        
-        updateNumberCounts();
-        
-        // Re-highlight if cell is still selected
-        if (state.selected && state.selected.r === r && state.selected.c === c) {
-            selectCell(r, c);
-        }
+      activeCell = null;
+      clearHighlights();
+      if(activeTool && activeTool !== 'erase' && highlightEnabled) highlightSimilar(activeTool);
     }
 
-    function checkWin() {
-        // Simple check: no zeros and no errors
-        const flat = state.grid.flat();
-        if (!flat.includes(0) && document.querySelectorAll('.error').length === 0) {
-            gameWon();
-        }
+    function highlightSimilar(val) {
+      document.querySelectorAll('.cell').forEach((c, idx) => {
+        const r = Math.floor(idx/9), col = idx%9;
+        if(grid[r][col] === val) c.classList.add('highlight');
+      });
     }
 
-    function checkLose() {
-        if (state.mistakes >= 3) {
-            alert('Игра окончена! Слишком много ошибок.');
-            startNewGame();
-        }
+    function clearHighlights() {
+      document.querySelectorAll('.cell').forEach(c => c.classList.remove('active-cell', 'area-highlight', 'highlight'));
     }
 
-    async function gameWon() {
-        state.isPlaying = false;
-        clearInterval(state.timerId);
-        
-        // Calc Score
-        const baseScore = { 'easy': 50, 'medium': 100, 'hard': 200 }[state.difficulty];
-        const timeBonus = Math.max(0, 300 - state.timer);
-        const points = baseScore + timeBonus - (state.mistakes * 20);
-        
-        // Save to Firebase
-        state.user.score += points;
-        updateProfileUI();
-        
-        if (state.user.id) {
-            const db = firebase.firestore();
-            db.collection('users').doc(state.user.id).update({ score: state.user.score });
-        }
-
-        // Show Modal
-        document.getElementById('win-time').textContent = formatTime(state.timer);
-        document.getElementById('win-score').textContent = `+${points}`;
-        UI.modals.win.classList.add('open');
+    function performAction(val, r, c) {
+      const prev = grid[r][c];
+      if(prev === val) return;
+      
+      undoStack.push({r, c, prev, val});
+      grid[r][c] = val;
+      
+      const cell = document.querySelectorAll('.cell')[r*9+c];
+      cell.querySelector('.cell-content').textContent = val === 0 ? '' : val;
+      cell.classList.remove('error', 'hinted');
+      cell.classList.toggle('user-input', val !== 0);
+      
+      updateUI();
+      if(highlightEnabled) { clearHighlights(); if(val!==0) highlightSimilar(val); }
     }
 
-    /* --- TOOLS --- */
+    function updateUI() {
+      // Undo Button
+      elements.undoBtn.disabled = undoStack.length === 0;
+      // Hint Button
+      el('hint-count-display').textContent = `${3-hintCount}/3`;
+      el('hint-button').disabled = hintCount >= 3;
+      // Number Pad Limit
+      const counts = Array(10).fill(0);
+      grid.flat().forEach(v => counts[v]++);
+      document.querySelectorAll('.num-btn').forEach(btn => {
+         const val = parseInt(btn.dataset.val);
+         if(val && counts[val] >= 9) {
+             btn.classList.add('disabled');
+             if(activeTool === val) selectTool(null);
+         } else {
+             btn.classList.remove('disabled');
+         }
+      });
+    }
+
     function undo() {
-        if (!state.history.length) return;
-        const action = state.history.pop();
-        if (!state.history.length) UI.undoBtn.disabled = true;
+      playSound();
+      if(!undoStack.length) return;
+      const last = undoStack.pop();
+      grid[last.r][last.c] = last.prev;
+      const cell = document.querySelectorAll('.cell')[last.r*9+last.c];
+      cell.querySelector('.cell-content').textContent = last.prev || '';
+      cell.classList.remove('error');
+      cell.classList.toggle('user-input', last.prev !== 0);
+      updateUI();
+      selectCell(last.r, last.c);
+    }
 
-        state.grid[action.r][action.c] = action.prev;
-        
-        const cell = document.querySelector(`.cell[data-r="${action.r}"][data-c="${action.c}"]`);
-        cell.textContent = action.prev === 0 ? '' : action.prev;
-        cell.classList.remove('error', 'user-input');
-        if (action.prev !== 0) {
-             cell.classList.add('user-input');
-             // Re-check error status visually if undoing to a wrong number (unlikely but logic safe)
-             if (action.prev !== state.solution[action.r][action.c]) cell.classList.add('error');
+    // --- SUDOKU GENERATOR ---
+    function generatePuzzle(diff) {
+      function shuffle(a) { for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]} }
+      function solve(b) {
+        for(let i=0;i<81;i++){
+          if(b[Math.floor(i/9)][i%9]===0){
+             for(let n=1;n<=9;n++){
+               if(isValid(b,Math.floor(i/9),i%9,n)){
+                 b[Math.floor(i/9)][i%9]=n;
+                 if(solve(b))return true;
+                 b[Math.floor(i/9)][i%9]=0;
+               }
+             }
+             return false;
+          }
         }
-        updateNumberCounts();
-    }
+        return true;
+      }
+      function isValid(b,r,c,n){
+        for(let i=0;i<9;i++) if(b[r][i]===n||b[i][c]===n||b[3*Math.floor(r/3)+Math.floor(i/3)][3*Math.floor(c/3)+i%3]===n)return false;
+        return true;
+      }
+      
+      // 1. Full Solution
+      const base = Array(9).fill().map(()=>Array(9).fill(0));
+      // Randomize first row for variety
+      const firstRow = [1,2,3,4,5,6,7,8,9]; shuffle(firstRow);
+      base[0] = firstRow;
+      solve(base);
+      solution = base.map(r=>[...r]);
 
-    function giveHint() {
-        if (state.hints <= 0 || !state.isPlaying) return;
-        
-        // Find empty cell
-        const empties = [];
-        for(let r=0; r<9; r++){
-            for(let c=0; c<9; c++){
-                if(state.grid[r][c] === 0) empties.push({r,c});
-            }
+      // 2. Remove cells
+      grid = base.map(r=>[...r]);
+      const attempts = {easy:40, medium:50, hard:60}[diff] || 40;
+      let removed = 0;
+      while(removed < attempts) {
+        let r=Math.floor(Math.random()*9), c=Math.floor(Math.random()*9);
+        if(grid[r][c]!==0) { grid[r][c]=0; removed++; }
+      }
+      
+      // Render
+      const cells = document.querySelectorAll('.cell');
+      givenCells.clear();
+      for(let i=0; i<81; i++) {
+        const val = grid[Math.floor(i/9)][i%9];
+        const cell = cells[i];
+        cell.className = 'cell';
+        cell.querySelector('.cell-content').textContent = val || '';
+        if(val!==0) {
+          givenCells.add(`${Math.floor(i/9)},${i%9}`);
+          cell.classList.add('given');
         }
-        if (empties.length === 0) return;
-
-        const target = empties[Math.floor(Math.random() * empties.length)];
-        const val = state.solution[target.r][target.c];
-        
-        state.hints--;
-        handleInput(val, target.r, target.c);
-        
-        // Visual Hint animation
-        const cell = document.querySelector(`.cell[data-r="${target.r}"][data-c="${target.c}"]`);
-        cell.classList.add('hint-anim');
-        updateStatsUI();
+      }
+      updateUI();
     }
 
-    /* --- HELPERS & MODALS --- */
-    function setupControls() {
-        UI.eraseBtn.onclick = () => {
-             // Toggle erase mode visually
-             state.mode = state.mode === 'erase' ? 'input' : 'erase';
-             UI.eraseBtn.classList.toggle('active', state.mode === 'erase');
-        };
-        UI.undoBtn.onclick = undo;
-        UI.hintBtn.onclick = giveHint;
-        document.getElementById('btn-new-game').onclick = startNewGame;
-        document.getElementById('btn-settings').onclick = () => openModal('settings');
-        document.getElementById('btn-leaderboard').onclick = showLeaderboard;
-        document.getElementById('btn-win-close').onclick = () => { closeModal('win'); startNewGame(); };
-        
-        // Difficulty change
-        document.getElementById('difficulty-select').onchange = startNewGame;
+    // --- GAME CONTROL ---
+    function startGame() {
+      isGameFinished = false;
+      undoStack = [];
+      hintCount = 0;
+      clearInterval(timerInterval);
+      startTime = Date.now();
+      timerInterval = setInterval(() => {
+        elements.timer.textContent = formatTime(Math.floor((Date.now()-startTime)/1000));
+      }, 1000);
+      
+      elements.checkBtn.disabled = false;
+      elements.checkBtn.textContent = 'Готово';
+      elements.message.textContent = '';
+      
+      createGrid();
+      createKeypad();
+      generatePuzzle(elements.difficulty.value);
+      toggleModal('settings-modal', false);
+    }
 
-        // Theme Switch
-        document.querySelectorAll('.theme-switch').forEach(btn => {
-            btn.onclick = (e) => {
-                const theme = e.target.dataset.setTheme;
-                document.body.dataset.theme = theme;
-                // Toggle active visuals
-                e.target.parentNode.querySelectorAll('button').forEach(b => {
-                    b.classList.remove('bg-black', 'text-white');
-                    b.style.opacity = '0.5';
-                });
-                e.target.style.opacity = '1';
-            }
-        });
-
-        // Sound Toggle
-        document.getElementById('toggle-sound').onclick = (e) => {
-            state.sound = !state.sound;
-            const toggle = e.currentTarget.querySelector('div');
-            e.currentTarget.classList.toggle('bg-green-500', state.sound);
-            toggle.style.transform = state.sound ? 'translateX(24px)' : 'translateX(0)';
+    function checkGame() {
+      playSound();
+      if(isGameFinished) return;
+      
+      let error = false;
+      let full = true;
+      
+      const cells = document.querySelectorAll('.cell');
+      cells.forEach((c, idx) => {
+        const r = Math.floor(idx/9), col = idx%9;
+        const val = grid[r][col];
+        if(val === 0) full = false;
+        else if(val !== solution[r][col]) {
+           c.classList.add('error');
+           error = true;
         }
+      });
+
+      if(error) elements.message.textContent = "Найдена ошибка!";
+      else if(!full) elements.message.textContent = "Поле не заполнено.";
+      else {
+        // Win!
+        isGameFinished = true;
+        clearInterval(timerInterval);
+        const time = Math.floor((Date.now()-startTime)/1000);
+        const pts = calculatePoints(time, hintCount);
+        saveWin(time, pts);
+      }
     }
 
-    function setupModals() {
-        document.querySelectorAll('.modal-close').forEach(btn => {
-            btn.onclick = () => {
-                document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('open'));
-            };
-        });
+    function getHint() {
+      playSound();
+      if(hintCount >= 3 || isGameFinished) return;
+      
+      // Find empty or wrong
+      const candidates = [];
+      for(let r=0;r<9;r++) for(let c=0;c<9;c++) {
+        if(!givenCells.has(`${r},${c}`) && grid[r][c] !== solution[r][c]) candidates.push([r,c]);
+      }
+      if(!candidates.length) return;
+      
+      hintCount++;
+      const [r,c] = candidates[Math.floor(Math.random()*candidates.length)];
+      performAction(solution[r][c], r, c);
+      const cell = document.querySelectorAll('.cell')[r*9+c];
+      cell.classList.add('hinted');
+      updateUI();
+    }
+
+    function calculatePoints(time, hints) {
+      const base = {easy:100, medium:250, hard:500}[elements.difficulty.value];
+      return Math.max(10, base - (time/2) - (hints*50));
+    }
+
+    // --- DATABASE & USER ---
+    async function initUser() {
+      try {
+        await auth.signInAnonymously();
+        let uid = auth.currentUser.uid;
+        let userData = { username: 'Guest', avatar: currentUser.avatar };
         
-        // Close on overlay click
-        document.querySelectorAll('.modal-overlay').forEach(overlay => {
-            overlay.onclick = (e) => {
-                if(e.target === overlay) overlay.classList.remove('open');
-            }
-        });
+        // Telegram Data override
+        if(window.Telegram?.WebApp?.initDataUnsafe?.user) {
+          const tgUser = window.Telegram.WebApp.initDataUnsafe.user;
+          uid = String(tgUser.id); // Stable ID
+          userData.username = tgUser.username || tgUser.first_name;
+          if(tgUser.photo_url) userData.avatar = tgUser.photo_url;
+        }
+        
+        currentUser.id = uid;
+        currentUser.username = userData.username;
+        currentUser.avatar = userData.avatar;
+        
+        // UI Update
+        elements.username.textContent = currentUser.username;
+        elements.userAvatar.src = currentUser.avatar;
+
+        // Fetch Data
+        const doc = await usersCollection.doc(uid).get();
+        if(doc.exists) {
+          const data = doc.data();
+          currentUser.score = data.score || 0;
+          currentUser.bestTimes = data.bestTimes || {easy:null, medium:null, hard:null};
+        } else {
+          await usersCollection.doc(uid).set({ ...userData, score:0, bestTimes: {} });
+        }
+        
+        elements.userScore.textContent = Math.floor(currentUser.score);
+        updateRecordDisplay();
+      } catch(e) { console.error("Auth error", e); }
+      
+      // Finish loading
+      setTimeout(() => {
+        elements.loadingScreen.style.opacity = '0';
+        setTimeout(()=> elements.loadingScreen.style.display='none', 500);
+      }, 1000);
     }
 
-    function openModal(name) {
-        UI.modals[name].classList.add('open');
+    async function saveWin(time, pts) {
+      currentUser.score += pts;
+      elements.userScore.textContent = Math.floor(currentUser.score);
+      const diff = elements.difficulty.value;
+      
+      let newRecord = false;
+      if(!currentUser.bestTimes[diff] || time < currentUser.bestTimes[diff]) {
+        currentUser.bestTimes[diff] = time;
+        newRecord = true;
+      }
+      
+      updateRecordDisplay();
+      
+      // Save to DB
+      if(currentUser.id) {
+        usersCollection.doc(currentUser.id).set({
+          score: currentUser.score,
+          bestTimes: currentUser.bestTimes,
+          username: currentUser.username,
+          avatar: currentUser.avatar
+        }, {merge:true});
+        
+        recordsCollection.add({
+          userId: currentUser.id,
+          username: currentUser.username,
+          avatar: currentUser.avatar,
+          difficulty: diff,
+          time: time,
+          date: new Date().toISOString()
+        });
+      }
+      
+      el('win-modal-message').innerHTML = `Сложность: <b>${diff}</b><br>Время: ${formatTime(time)}<br>Очки: +${Math.floor(pts)}${newRecord ? '<br><br>🏆 <b>Новый рекорд!</b>' : ''}`;
+      toggleModal('win-modal', true);
+    }
+
+    function updateRecordDisplay() {
+      el('easy-record').textContent = formatTime(currentUser.bestTimes.easy);
+      el('medium-record').textContent = formatTime(currentUser.bestTimes.medium);
+      el('hard-record').textContent = formatTime(currentUser.bestTimes.hard);
     }
     
-    function closeModal(name) {
-        UI.modals[name].classList.remove('open');
+    // --- LEADERBOARDS ---
+    async function loadLeaderboard() {
+      const list = el('rating-list');
+      list.innerHTML = '<div style="text-align:center; padding:20px;">Загрузка...</div>';
+      
+      let query;
+      if(currentRatingType === 'score') {
+        query = usersCollection.orderBy('score', 'desc').limit(20);
+      } else {
+        query = recordsCollection.where('difficulty', '==', currentRatingDifficulty).orderBy('time', 'asc').limit(20);
+      }
+      
+      try {
+        const snap = await query.get();
+        list.innerHTML = '';
+        snap.forEach((doc, idx) => {
+          const d = doc.data();
+          const row = document.createElement('div');
+          row.style.cssText = "display:flex; align-items:center; gap:10px; padding:8px; border-bottom:1px solid var(--grid-line);";
+          row.innerHTML = `
+            <div style="font-weight:bold; width:20px;">${idx+1}</div>
+            <img src="${d.avatar}" style="width:30px; height:30px; border-radius:50%;">
+            <div style="flex:1; overflow:hidden; text-overflow:ellipsis;">${d.username}</div>
+            <div style="font-weight:bold;">${currentRatingType === 'score' ? Math.floor(d.score) : formatTime(d.time)}</div>
+          `;
+          list.appendChild(row);
+        });
+        if(snap.empty) list.innerHTML = '<div style="text-align:center; padding:20px;">Пока пусто</div>';
+      } catch(e) { list.textContent = "Ошибка загрузки"; console.error(e); }
     }
 
-    async function showLeaderboard() {
-        const list = document.getElementById('leaderboard-list');
-        list.innerHTML = '<div class="text-center p-4">Загрузка...</div>';
-        openModal('leaderboard');
-        
-        try {
-            const db = firebase.firestore();
-            const snapshot = await db.collection('users').orderBy('score', 'desc').limit(20).get();
-            list.innerHTML = '';
-            
-            snapshot.forEach((doc, idx) => {
-                const d = doc.data();
-                const isMe = doc.id === state.user.id;
-                const item = document.createElement('div');
-                item.className = `glass-panel p-3 rounded-xl flex items-center gap-3 ${isMe ? 'border-blue-500 border' : ''}`;
-                item.innerHTML = `
-                    <div class="font-bold w-6 text-center text-muted">${idx+1}</div>
-                    <img src="${d.avatar || 'https://t.me/i/userpic/320/default.jpg'}" class="w-8 h-8 rounded-full">
-                    <div class="flex-1 font-medium truncate">${d.username}</div>
-                    <div class="font-bold text-accent">${d.score}</div>
-                `;
-                list.appendChild(item);
-            });
-        } catch(e) {
-            list.innerHTML = '<div class="text-red-400 text-center">Ошибка загрузки</div>';
-        }
-    }
+    // --- EVENTS & INIT ---
+    document.addEventListener('DOMContentLoaded', () => {
+      // Buttons
+      elements.newGameBtn.onclick = startGame;
+      elements.checkBtn.onclick = checkGame;
+      elements.hintBtn.onclick = getHint;
+      elements.undoBtn.onclick = undo;
+      el('settings-button').onclick = () => toggleModal('settings-modal', true);
+      el('rating-button').onclick = () => { toggleModal('rating-modal', true); loadLeaderboard(); };
+      el('recent-games-button').onclick = () => { toggleModal('recent-games-modal', true); /* Add Logic if needed */ };
+      el('tutorial-button').onclick = () => { toggleModal('tutorial-modal', true); /* Add Logic */ };
+      el('win-modal-close-btn').onclick = () => toggleModal('win-modal', false);
+      
+      // Close Modals
+      document.querySelectorAll('.close-btn').forEach(b => {
+        b.onclick = () => toggleModal(b.dataset.target, false);
+      });
+      document.querySelectorAll('.modal-overlay').forEach(o => {
+        o.onclick = (e) => { if(e.target === o) toggleModal(o.id, false); };
+      });
 
-    function startTimer() {
-        state.timerId = setInterval(() => {
-            state.timer++;
-            UI.timer.textContent = formatTime(state.timer);
-        }, 1000);
-    }
+      // Settings
+      el('sound-toggle').onclick = (e) => { 
+        isSoundEnabled = !isSoundEnabled; 
+        e.target.textContent = isSoundEnabled ? "ВКЛ" : "ВЫКЛ"; 
+      };
+      el('highlightToggle').onclick = (e) => { 
+        highlightEnabled = !highlightEnabled; 
+        e.target.textContent = highlightEnabled ? "ВКЛ" : "ВЫКЛ"; 
+        if(!highlightEnabled) clearHighlights();
+      };
+      
+      // Theme Switcher
+      document.querySelectorAll('.theme-option').forEach(opt => {
+        opt.onclick = () => {
+          document.body.dataset.theme = opt.dataset.theme;
+          localStorage.setItem('sudo-theme', opt.dataset.theme);
+        };
+      });
+      
+      // Rating Tabs
+      document.querySelectorAll('.rating-tab').forEach(t => {
+         t.onclick = () => {
+           currentRatingType = t.dataset.type;
+           document.querySelectorAll('.rating-tab').forEach(x => x.classList.remove('active'));
+           t.classList.add('active');
+           el('difficulty-tabs').classList.toggle('hidden', currentRatingType !== 'time');
+           loadLeaderboard();
+         }
+      });
+      document.querySelectorAll('.diff-tab').forEach(t => {
+         t.onclick = () => {
+           currentRatingDifficulty = t.dataset.d;
+           document.querySelectorAll('.diff-tab').forEach(x => x.classList.remove('active'));
+           t.classList.add('active');
+           loadLeaderboard();
+         }
+      });
 
-    function formatTime(s) {
-        const m = Math.floor(s / 60).toString().padStart(2, '0');
-        const sec = (s % 60).toString().padStart(2, '0');
-        return `${m}:${sec}`;
-    }
+      // Restore Theme
+      const savedTheme = localStorage.getItem('sudo-theme');
+      if(savedTheme) document.body.dataset.theme = savedTheme;
 
-    function updateStatsUI() {
-        UI.mistakeCount.textContent = state.mistakes;
-        UI.hintText.textContent = state.hints;
-        if (state.hints === 0) UI.hintBtn.disabled = true;
-        else UI.hintBtn.disabled = false;
-    }
-
-    function updateProfileUI() {
-        document.getElementById('user-name').textContent = state.user.name;
-        document.getElementById('user-score').textContent = state.user.score;
-        document.getElementById('user-avatar').src = state.user.avatar || 'https://t.me/i/userpic/320/default.jpg';
-    }
-
-    function playSound() {
-        if (state.sound) {
-            clickSound.currentTime = 0;
-            clickSound.play().catch(() => {});
-        }
-    }
-
+      // Start
+      initUser();
+      startGame();
+    });
   </script>
 </body>
 </html>
