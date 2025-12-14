@@ -3,19 +3,33 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Aero Sudoku Premium</title>
+  <title>Sudoku Premium Sky</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
   
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   
   <style>
-    /* --- Шрифты и Основа --- */
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
-
+    /* --- БАЗОВЫЕ НАСТРОЙКИ --- */
     :root {
-      --font-stack: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      --safe-top: env(safe-area-inset-top, 20px);
-      --safe-bottom: env(safe-area-inset-bottom, 20px);
+      --font-stack: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+      --safe-area-top: env(safe-area-inset-top);
+      --safe-area-bottom: env(safe-area-inset-bottom);
+      
+      /* Цветовая палитра */
+      --glass-base: rgba(18, 20, 40, 0.65);
+      --glass-border: rgba(255, 255, 255, 0.12);
+      --glass-highlight: rgba(255, 255, 255, 0.05);
+      --primary-glow: rgba(56, 189, 248, 0.6);
+      --text-main: #ffffff;
+      --text-muted: rgba(255, 255, 255, 0.6);
+      --accent-color: #38bdf8; /* Sky Blue */
+      
+      --cell-border: rgba(255, 255, 255, 0.08);
+      --cell-active-bg: rgba(56, 189, 248, 0.25);
     }
 
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -23,432 +37,374 @@
     body {
       font-family: var(--font-stack);
       margin: 0; padding: 0;
-      overflow: hidden; /* Убираем скролл body */
-      background-color: #000;
-      color: #fff;
-      height: 100dvh;
+      overflow: hidden; /* Чтобы фон не скроллился */
+      background-color: #0f172a;
+      color: var(--text-main);
+      height: 100vh;
       width: 100vw;
       display: flex;
       flex-direction: column;
       align-items: center;
-      transition: all 0.5s ease;
-    }
-
-    /* --- ФОНЫ (High Quality Sky) --- */
-    .bg-layer {
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      /* Красивое фоновое изображение неба */
+      background: url('https://images.unsplash.com/photo-1519681393784-d120267933ba?q=80&w=2070&auto=format&fit=crop') no-repeat center center fixed;
       background-size: cover;
-      background-position: center;
-      z-index: -2;
-      transition: opacity 0.8s ease;
     }
 
-    .bg-overlay {
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    /* Затемняющий слой поверх фото для читаемости */
+    body::before {
+      content: '';
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      background: linear-gradient(180deg, rgba(15, 23, 42, 0.4) 0%, rgba(15, 23, 42, 0.8) 100%);
       z-index: -1;
-      backdrop-filter: blur(0px); /* Можно увеличить для размытия фона */
-    }
-
-    /* Анимация медленного движения облаков */
-    @keyframes skyMove {
-      0% { transform: scale(1.05) translate(0, 0); }
-      50% { transform: scale(1.1) translate(-2%, -1%); }
-      100% { transform: scale(1.05) translate(0, 0); }
-    }
-
-    /* THEME: Night (Default) */
-    body[data-theme="darkGlass"] .bg-layer {
-      background-image: url('https://images.unsplash.com/photo-1536766820879-059fec98ec0a?q=80&w=1920&auto=format&fit=crop');
-      animation: skyMove 60s ease-in-out infinite alternate;
-    }
-    body[data-theme="darkGlass"] {
-      --glass-bg: rgba(20, 25, 40, 0.65);
-      --glass-border: rgba(255, 255, 255, 0.12);
-      --glass-highlight: rgba(255, 255, 255, 0.07);
-      --text-main: #ffffff;
-      --text-muted: #94a3b8;
-      --accent: #38bdf8; /* Sky Blue */
-      --accent-glow: rgba(56, 189, 248, 0.6);
-      --cell-line: rgba(255, 255, 255, 0.15);
-      --active-cell: rgba(56, 189, 248, 0.3);
-      --modal-bg: rgba(15, 23, 42, 0.85);
-      --error: #fb7185;
-    }
-
-    /* THEME: Day */
-    body[data-theme="lightGlass"] .bg-layer {
-      background-image: url('https://images.unsplash.com/photo-1605218427306-022ba8c6fa41?q=80&w=1920&auto=format&fit=crop');
-      animation: skyMove 50s ease-in-out infinite alternate;
-    }
-    body[data-theme="lightGlass"] {
-      --glass-bg: rgba(255, 255, 255, 0.55);
-      --glass-border: rgba(255, 255, 255, 0.8);
-      --glass-highlight: rgba(255, 255, 255, 0.4);
-      --text-main: #0f172a;
-      --text-muted: #475569;
-      --accent: #2563eb;
-      --accent-glow: rgba(37, 99, 235, 0.5);
-      --cell-line: rgba(0, 0, 0, 0.1);
-      --active-cell: rgba(37, 99, 235, 0.25);
-      --modal-bg: rgba(240, 249, 255, 0.85);
-      --error: #e11d48;
-    }
-
-    /* THEME: Sunset/Midnight */
-    body[data-theme="midnight"] .bg-layer {
-      background-image: url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1920&auto=format&fit=crop');
-       animation: skyMove 55s ease-in-out infinite alternate;
-    }
-    body[data-theme="midnight"] {
-      --glass-bg: rgba(45, 10, 50, 0.6);
-      --glass-border: rgba(255, 200, 255, 0.15);
-      --glass-highlight: rgba(255, 255, 255, 0.05);
-      --text-main: #fae8ff;
-      --text-muted: #d8b4fe;
-      --accent: #f472b6;
-      --accent-glow: rgba(244, 114, 182, 0.6);
-      --cell-line: rgba(255, 255, 255, 0.15);
-      --active-cell: rgba(244, 114, 182, 0.35);
-      --modal-bg: rgba(40, 10, 40, 0.9);
-      --error: #fb7185;
+      backdrop-filter: blur(2px);
     }
 
     /* --- PREMIUM GLASS UTILS --- */
     .glass-panel {
-      background: var(--glass-bg);
-      backdrop-filter: blur(20px) saturate(160%);
-      -webkit-backdrop-filter: blur(20px) saturate(160%);
+      background: var(--glass-base);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
       border: 1px solid var(--glass-border);
-      border-top: 1px solid rgba(255,255,255,0.3); /* Top light reflection */
-      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+      border-radius: 24px;
+      /* Тонкий блик сверху */
+      border-top: 1px solid rgba(255, 255, 255, 0.2);
     }
 
-    .glass-btn {
-      background: rgba(255, 255, 255, 0.1);
-      backdrop-filter: blur(10px);
-      border: 1px solid var(--glass-border);
-      border-top: 1px solid rgba(255,255,255,0.25);
+    .glass-button {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
       color: var(--text-main);
+      transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
       position: relative;
       overflow: hidden;
-      transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+      border-radius: 16px;
+      backdrop-filter: blur(10px);
     }
-    .glass-btn:active { transform: scale(0.95); background: rgba(255,255,255,0.2); }
     
-    .accent-btn {
-      background: var(--accent);
+    .glass-button:active {
+      transform: scale(0.95);
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    .accent-button {
+      background: linear-gradient(135deg, #38bdf8 0%, #2563eb 100%);
       color: white;
       border: none;
-      box-shadow: 0 4px 20px var(--accent-glow);
-      text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+      box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
+      font-weight: 700;
     }
-    .accent-btn:active { transform: scale(0.96); box-shadow: 0 2px 10px var(--accent-glow); }
+    .accent-button:active { transform: scale(0.96); box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3); }
 
     /* --- LAYOUT --- */
-    #app {
-      width: 100%; max-width: 500px; height: 100%;
+    #app-container {
+      width: 100%; max-width: 450px; height: 100dvh;
       display: flex; flex-direction: column;
-      padding: var(--safe-top) 20px var(--safe-bottom) 20px;
+      padding: max(16px, var(--safe-area-top)) 20px max(24px, var(--safe-area-bottom)) 20px;
       position: relative; z-index: 1;
     }
 
-    /* HEADER */
-    .top-bar {
+    /* Header */
+    .header-bar {
       display: flex; justify-content: space-between; align-items: center;
-      margin-bottom: 12px; padding: 10px 16px; border-radius: 24px;
-    }
-    .profile { display: flex; align-items: center; gap: 12px; }
-    .avatar { 
-      width: 44px; height: 44px; border-radius: 50%; object-fit: cover; 
-      border: 2px solid var(--accent); box-shadow: 0 0 10px var(--accent-glow);
-    }
-    .stats-mini { font-size: 11px; text-align: right; color: var(--text-muted); font-weight: 500; line-height: 1.3; }
-
-    /* INFO BAR */
-    .info-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; gap: 10px; }
-    .diff-select {
-      background: var(--glass-bg); color: var(--text-main);
-      border: 1px solid var(--glass-border); padding: 8px 12px;
-      border-radius: 14px; font-weight: 600; font-size: 14px; outline: none;
-      backdrop-filter: blur(12px);
-    }
-    .timer {
-      font-variant-numeric: tabular-nums; font-weight: 700; font-size: 18px;
-      padding: 6px 14px; border-radius: 12px;
-      background: rgba(0,0,0,0.15); color: var(--text-main);
-      border: 1px solid var(--glass-border);
-      text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      margin-bottom: 20px; padding: 12px 16px;
     }
 
-    /* --- SUDOKU GRID --- */
-    .grid-container {
-      width: 100%; display: flex; justify-content: center;
-      flex-grow: 1; align-items: center; max-height: 52vh; margin-bottom: 10px;
+    .user-pill { display: flex; align-items: center; gap: 12px; }
+    .avatar-img {
+      width: 44px; height: 44px; border-radius: 50%;
+      border: 2px solid var(--accent-color);
+      box-shadow: 0 0 15px var(--primary-glow);
+      object-fit: cover;
     }
-    .board {
+    .user-info div { line-height: 1.2; }
+    #username { font-weight: 800; font-size: 16px; letter-spacing: 0.5px; }
+    .stats-text { font-size: 11px; color: var(--text-muted); font-weight: 600; text-align: right; line-height: 1.5; }
+
+    /* Controls */
+    .controls-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; gap: 8px; }
+    
+    .select-wrapper { position: relative; }
+    .select-styled {
+      appearance: none; background: rgba(0,0,0,0.2); border: 1px solid var(--glass-border);
+      color: white; padding: 8px 32px 8px 16px; border-radius: 12px; font-family: var(--font-stack); font-weight: 600; font-size: 14px;
+    }
+
+    .timer-badge {
+      font-family: 'Outfit', monospace; font-variant-numeric: tabular-nums;
+      font-weight: 700; font-size: 20px; color: #fff;
+      text-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+    }
+
+    .icon-btn { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 12px; cursor: pointer; }
+
+    /* --- GRID (Центральный элемент) --- */
+    .grid-wrapper { display: flex; justify-content: center; margin-bottom: 24px; flex-shrink: 0; }
+    
+    .sudoku-grid {
       display: grid; grid-template-columns: repeat(9, 1fr);
-      background: transparent;
-      border: 2px solid var(--glass-border);
-      border-radius: 16px; overflow: hidden;
-      width: 100%; aspect-ratio: 1/1;
-      box-shadow: 0 25px 60px -10px rgba(0,0,0,0.4);
+      background-color: rgba(0,0,0,0.2); /* Темная подложка */
+      border: 2px solid rgba(255,255,255,0.15);
+      border-radius: 20px; overflow: hidden;
+      width: 100%; aspect-ratio: 1/1; max-height: 50vh;
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
     }
+
     .cell {
       display: flex; align-items: center; justify-content: center;
-      font-size: clamp(18px, 6vw, 26px); font-weight: 500;
-      background: rgba(255,255,255,0.02);
-      cursor: pointer; position: relative;
-      border-right: 1px solid var(--cell-line); border-bottom: 1px solid var(--cell-line);
-      transition: background 0.1s;
+      font-size: clamp(20px, 6vw, 28px);
+      position: relative; cursor: pointer;
+      border-right: 1px solid var(--cell-border);
+      border-bottom: 1px solid var(--cell-border);
+      transition: background 0.15s ease;
     }
-    /* Границы блоков 3x3 */
-    .cell:nth-child(3n) { border-right: 1.5px solid rgba(255,255,255,0.5); }
+
+    /* Убираем внешние границы ячеек */
     .cell:nth-child(9n) { border-right: none; }
-    .cell:nth-child(n+19):nth-child(-n+27),
-    .cell:nth-child(n+46):nth-child(-n+54) { border-bottom: 1.5px solid rgba(255,255,255,0.5); }
     .cell:nth-child(n+73) { border-bottom: none; }
 
-    /* Theme override for lines in Light mode */
-    body[data-theme="lightGlass"] .cell:nth-child(3n),
-    body[data-theme="lightGlass"] .cell:nth-child(n+19):nth-child(-n+27),
-    body[data-theme="lightGlass"] .cell:nth-child(n+46):nth-child(-n+54) { border-color: rgba(0,0,0,0.3); }
+    /* Жирные линии 3x3 (Светящиеся) */
+    .cell:nth-child(3n) { border-right: 1px solid rgba(255,255,255,0.3); } 
+    .cell:nth-child(9n) { border-right: none; }
+    .cell:nth-child(n+19):nth-child(-n+27),
+    .cell:nth-child(n+46):nth-child(-n+54) { border-bottom: 1px solid rgba(255,255,255,0.3); }
 
-    /* States */
-    .cell.given { font-weight: 800; color: var(--text-main); }
-    .cell.user { color: var(--accent); text-shadow: 0 0 12px var(--accent-glow); }
-    .cell.error { background: rgba(255, 50, 50, 0.15) !important; color: var(--error) !important; }
-    .cell.active { background: var(--active-cell); box-shadow: inset 0 0 0 2px var(--accent); }
-    .cell.highlight { background: rgba(255,255,255,0.1); }
-    .cell.same-num { background: var(--active-cell); }
+    /* Состояния ячеек */
+    .cell-content { z-index: 2; pointer-events: none; }
+    .cell.given { color: #fff; font-weight: 800; }
+    .cell.user-input { color: #7dd3fc; font-weight: 500; text-shadow: 0 0 8px rgba(125, 211, 252, 0.6); }
+    .cell.error { color: #fb7185 !important; background: rgba(251, 113, 133, 0.15); animation: shake 0.4s; }
+    .cell.highlight { background-color: rgba(56, 189, 248, 0.15); }
+    .cell.area-highlight { background-color: rgba(255, 255, 255, 0.03); }
+    
+    .cell.active-cell { 
+      background-color: var(--cell-active-bg); 
+      box-shadow: inset 0 0 0 2px var(--accent-color);
+    }
+    .cell.hinted { background-color: rgba(255, 215, 0, 0.25); animation: flash 0.6s; }
 
     /* --- KEYPAD --- */
-    .numpad {
-      display: grid; grid-template-columns: repeat(10, 1fr); gap: 6px;
-      width: 100%; margin-bottom: 14px;
+    .keypad-container {
+      display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px;
+      width: 100%; margin-bottom: auto;
     }
-    @media (max-width: 370px) { .numpad { grid-template-columns: repeat(5, 1fr); } }
+    
+    @media (min-width: 380px) {
+      .keypad-container { grid-template-columns: repeat(10, 1fr); gap: 8px; }
+    }
 
     .num-btn {
-      aspect-ratio: 1/1; border-radius: 12px;
+      aspect-ratio: 1/1; border-radius: 14px;
       font-size: 20px; font-weight: 600;
       display: flex; align-items: center; justify-content: center;
-      padding: 0;
+      color: rgba(255,255,255,0.9);
+      background: rgba(255,255,255,0.03);
     }
-    .num-btn.active-tool {
-      background: var(--accent); color: white;
-      box-shadow: 0 0 15px var(--accent-glow);
-      border-color: transparent;
-      transform: translateY(-2px);
-    }
-    .num-btn.completed { opacity: 0.3; pointer-events: none; }
 
-    /* --- ACTION BUTTONS --- */
-    .actions { display: flex; gap: 12px; height: 56px; }
-    .act-btn {
-      flex: 1; border-radius: 18px; font-weight: 600; font-size: 15px;
+    .num-btn.selected {
+      background: var(--accent-color); color: #000;
+      box-shadow: 0 0 15px var(--primary-glow); border-color: transparent;
+    }
+    .num-btn.disabled { opacity: 0.15; pointer-events: none; }
+
+    /* --- BOTTOM ACTIONS --- */
+    .actions-bar {
+      display: flex; justify-content: space-between; gap: 12px; margin-top: 20px;
+    }
+    .action-btn {
+      flex: 1; height: 56px; border-radius: 18px;
+      font-size: 16px; font-weight: 600;
       display: flex; align-items: center; justify-content: center; gap: 8px;
     }
 
-    /* --- MODALS --- */
-    .modal-wrap {
-      position: fixed; inset: 0; z-index: 100;
-      background: rgba(0,0,0,0.6); backdrop-filter: blur(8px);
-      display: flex; justify-content: center; align-items: center;
-      opacity: 0; pointer-events: none; transition: opacity 0.3s;
+    /* --- MODALS & OVERLAYS --- */
+    .modal-overlay {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      z-index: 100; opacity: 0; pointer-events: none;
+      display: flex; align-items: center; justify-content: center;
+      transition: opacity 0.3s ease;
     }
-    .modal-wrap.show { opacity: 1; pointer-events: auto; }
+    .modal-overlay.active { opacity: 1; pointer-events: auto; }
     
-    .modal-box {
-      background: var(--modal-bg);
-      width: 90%; max-width: 400px;
-      border-radius: 32px; padding: 24px;
-      border: 1px solid var(--glass-border);
-      box-shadow: 0 25px 80px rgba(0,0,0,0.5);
-      transform: scale(0.9) translateY(30px);
-      transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      color: var(--text-main);
+    .modal-card {
+      background: rgba(15, 23, 42, 0.95);
+      width: 90%; max-width: 400px; border-radius: 32px;
+      padding: 30px;
+      border: 1px solid rgba(255,255,255,0.1);
+      box-shadow: 0 25px 80px rgba(0,0,0,0.6);
+      transform: scale(0.9) translateY(20px);
+      transition: transform 0.4s cubic-bezier(0.19, 1, 0.22, 1);
       max-height: 85vh; overflow-y: auto;
     }
-    .modal-wrap.show .modal-box { transform: scale(1) translateY(0); }
+    .modal-overlay.active .modal-card { transform: scale(1) translateY(0); }
     
-    .modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-    .modal-title { font-size: 22px; font-weight: 800; }
-    .close { font-size: 24px; opacity: 0.6; cursor: pointer; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+    .modal-title { font-size: 26px; font-weight: 800; color: white; }
+    .close-btn { font-size: 32px; cursor: pointer; color: var(--text-muted); line-height: 0.8; transition: color 0.2s; }
+    .close-btn:hover { color: white; }
 
-    /* LEADERBOARD FIX */
-    .rank-row {
-      display: flex; align-items: center; padding: 10px 0;
-      border-bottom: 1px solid var(--glass-border);
-      font-size: 15px;
+    /* --- LEADERBOARD FIX --- */
+    .rank-row { 
+      display: flex; align-items: center; gap: 12px; padding: 14px 0; 
+      border-bottom: 1px solid rgba(255,255,255,0.05); 
     }
-    .rank-pos {
-      width: 36px; display: flex; justify-content: center; align-items: center;
-      font-weight: 700; margin-right: 10px;
+    .rank-row:last-child { border-bottom: none; }
+    
+    .rank-cell { 
+      width: 36px; height: 36px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; border-radius: 10px; background: rgba(255,255,255,0.05);
+      color: var(--text-muted); font-size: 14px;
     }
-    .rank-circle {
-      width: 24px; height: 24px; border-radius: 50%; background: rgba(255,255,255,0.1);
-      display: flex; justify-content: center; align-items: center; font-size: 12px;
-    }
-    /* Медали */
-    .rank-1 .rank-circle { background: linear-gradient(135deg, #FFD700, #FDB931); color: #000; box-shadow: 0 0 10px rgba(255, 215, 0, 0.5); }
-    .rank-2 .rank-circle { background: linear-gradient(135deg, #E0E0E0, #BDBDBD); color: #000; }
-    .rank-3 .rank-circle { background: linear-gradient(135deg, #CD7F32, #A0522D); color: #fff; }
+    /* Medals */
+    .rank-1 { background: linear-gradient(135deg, #FFD700 0%, #FDB931 100%); color: #4a3b00; box-shadow: 0 0 10px rgba(255, 215, 0, 0.4); font-size: 16px; }
+    .rank-2 { background: linear-gradient(135deg, #E0E0E0 0%, #BDBDBD 100%); color: #3d3d3d; box-shadow: 0 0 10px rgba(192, 192, 192, 0.4); font-size: 16px; }
+    .rank-3 { background: linear-gradient(135deg, #CD7F32 0%, #A0522D 100%); color: #3d220b; box-shadow: 0 0 10px rgba(205, 127, 50, 0.4); font-size: 16px; }
 
-    .user-info { flex: 1; display: flex; align-items: center; gap: 10px; overflow: hidden; }
-    .u-img { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--glass-border); }
-    .u-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 500; }
-    .u-val { font-weight: 700; font-feature-settings: "tnum"; color: var(--accent); }
-
-    /* Theme Picker */
-    .themes { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px; }
-    .theme-card {
-      height: 60px; border-radius: 14px; position: relative; cursor: pointer;
-      border: 2px solid transparent; overflow: hidden;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-    }
-    .theme-card.selected { border-color: var(--accent); transform: scale(1.05); }
-    .t-dark { background: linear-gradient(to bottom right, #0f2027, #2c5364); }
-    .t-light { background: linear-gradient(to bottom right, #8ec5fc, #e0c3fc); }
-    .t-mid { background: linear-gradient(to bottom right, #240b36, #c31432); }
+    .player-info { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .player-name { font-weight: 600; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .player-date { font-size: 11px; color: var(--text-muted); }
+    .player-score { font-weight: 800; color: var(--accent-color); font-feature-settings: 'tnum'; }
 
     /* Loader */
-    #loader {
-      position: fixed; inset: 0; background: #000; z-index: 999;
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      transition: opacity 0.5s;
+    #loading-screen {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: #0f172a; z-index: 9999;
+      display: flex; flex-direction: column; justify-content: center; align-items: center;
+      transition: opacity 0.6s ease;
     }
-    .spinner {
-      width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.1);
-      border-top-color: var(--accent); border-radius: 50%;
-      animation: spin 0.8s linear infinite;
+    .loader {
+      width: 50px; height: 50px;
+      border: 4px solid rgba(255,255,255,0.1);
+      border-left-color: var(--accent-color);
+      border-radius: 50%;
+      animation: rotation 1s linear infinite;
     }
-    @keyframes spin { to { transform: rotate(360deg); } }
 
+    /* Animations */
+    @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+    @keyframes flash { 0% { background: var(--accent-color); } 100% { background: transparent; } }
+    
     .hidden { display: none !important; }
+
   </style>
 </head>
-<body data-theme="darkGlass">
+<body>
 
-  <div class="bg-layer"></div>
-  <div class="bg-overlay"></div>
-
-  <div id="loader">
-    <div class="spinner"></div>
-    <div style="margin-top:20px; font-weight:700; letter-spacing:1px; font-size:14px; color:#fff;">LOADING SKY</div>
+  <div id="loading-screen">
+    <div class="loader"></div>
+    <div style="margin-top: 24px; font-weight: 800; font-size: 20px; letter-spacing: 1px; color:white;">SUDOKU SKY</div>
   </div>
 
-  <div id="app">
-    <div class="top-bar glass-panel">
-      <div class="profile">
-        <img id="u-avatar" src="" class="avatar">
-        <div>
-          <div id="u-name" style="font-weight: 800; font-size: 15px;">Guest</div>
-          <div style="font-size: 12px; color: var(--accent); font-weight: 700;">Score: <span id="u-score">0</span></div>
+  <div id="app-container">
+    
+    <div class="header-bar glass-panel">
+      <div class="user-pill">
+        <img id="user-avatar" src="" class="avatar-img" alt="User">
+        <div class="user-info">
+          <div id="username">Guest</div>
+          <div style="font-size: 12px; color: var(--text-muted);">Score: <span id="user-score" style="color: var(--accent-color); font-weight: 700;">0</span></div>
         </div>
       </div>
-      <div class="stats-mini">
-        <div>E: <span id="rec-easy">--</span></div>
-        <div>M: <span id="rec-med">--</span></div>
-        <div>H: <span id="rec-hard">--</span></div>
+      <div class="stats-text">
+        <div>Easy: <span id="easy-record" style="color:white">--:--</span></div>
+        <div>Med: <span id="medium-record" style="color:white">--:--</span></div>
+        <div>Hard: <span id="hard-record" style="color:white">--:--</span></div>
       </div>
     </div>
 
-    <div class="info-bar">
-      <select id="diff-select" class="diff-select">
-        <option value="easy">Easy</option>
-        <option value="medium">Medium</option>
-        <option value="hard">Hard</option>
-      </select>
+    <div class="controls-bar">
+      <div class="select-wrapper">
+        <select id="difficulty" class="select-styled glass-button">
+          <option value="easy">Easy</option>
+          <option value="medium">Medium</option>
+          <option value="hard">Hard</option>
+        </select>
+      </div>
+
+      <div class="timer-badge" id="timer">00:00</div>
       
-      <div id="timer" class="timer">00:00</div>
-
-      <div style="display:flex; gap:8px;">
-        <button onclick="openModal('settings')" class="glass-btn" style="width:40px; height:40px; border-radius:12px; display:flex; align-items:center; justify-content:center;">
-          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-        </button>
-        <button onclick="openLeaderboard()" class="glass-btn" style="width:40px; height:40px; border-radius:12px; display:flex; align-items:center; justify-content:center;">
-          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
-        </button>
+      <div style="display:flex; gap: 8px;">
+        <button id="rating-button" class="icon-btn glass-button"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path></svg></button>
+        <button id="settings-button" class="icon-btn glass-button"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></button>
       </div>
     </div>
 
-    <div class="grid-container">
-      <div id="board" class="board glass-panel"></div>
+    <div class="grid-wrapper">
+      <div id="grid" class="sudoku-grid glass-panel"></div>
     </div>
 
-    <div id="numpad" class="numpad"></div>
+    <div id="number-row" class="keypad-container"></div>
 
-    <div class="actions">
-      <button id="btn-undo" class="act-btn glass-btn">
-        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg> Undo
+    <div class="actions-bar">
+      <button id="undo-button" class="action-btn glass-button" disabled>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 14L4 9l5-5"/><path d="M4 9h10c4.418 0 8 3.582 8 8"/></svg>
       </button>
-      <button id="btn-hint" class="act-btn glass-btn">
-        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg> <span id="hint-val">3</span>
+      <button id="hint-button" class="action-btn glass-button">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z"/><path d="M9 21h6"/></svg>
+        <span id="hint-count-display">3/3</span>
       </button>
-      <button id="btn-check" class="act-btn accent-btn">Done</button>
+      <button id="check" class="action-btn accent-button">
+        Done
+      </button>
     </div>
     
-    <div id="status-msg" style="text-align: center; height: 20px; margin-top: 8px; font-size: 13px; font-weight: 700; color: var(--error);"></div>
+    <div id="message" style="text-align: center; height: 24px; font-size: 15px; margin-top: 15px; font-weight: 600; color: #fb7185;"></div>
+
   </div>
 
-  <div id="modal-settings" class="modal-wrap">
-    <div class="modal-box">
-      <div class="modal-head">
+  <div id="settings-modal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
         <div class="modal-title">Settings</div>
-        <div class="close" onclick="closeModal('settings')">&times;</div>
-      </div>
-      
-      <div style="margin-bottom: 20px;">
-        <div style="font-size:12px; font-weight:700; text-transform:uppercase; color:var(--text-muted); margin-bottom:10px;">Theme</div>
-        <div class="themes">
-          <div class="theme-card t-dark" onclick="setTheme('darkGlass')"></div>
-          <div class="theme-card t-light" onclick="setTheme('lightGlass')"></div>
-          <div class="theme-card t-mid" onclick="setTheme('midnight')"></div>
-        </div>
-      </div>
-      
-      <div style="display:flex; justify-content:space-between; padding:15px 0; border-top:1px solid var(--glass-border);">
-        <span style="font-weight:600;">Sound</span>
-        <button id="toggle-sound" class="glass-btn" style="padding:4px 12px; border-radius:12px; font-size:12px; font-weight:700;">ON</button>
-      </div>
-      
-      <div style="display:flex; justify-content:space-between; padding:15px 0; border-top:1px solid var(--glass-border); border-bottom:1px solid var(--glass-border); margin-bottom:20px;">
-        <span style="font-weight:600;">Highlight</span>
-        <button id="toggle-hl" class="glass-btn" style="padding:4px 12px; border-radius:12px; font-size:12px; font-weight:700;">ON</button>
+        <div class="close-btn" data-target="settings-modal">&times;</div>
       </div>
 
-      <button onclick="closeModal('settings'); startGame()" class="accent-btn" style="width:100%; padding:14px; border-radius:16px; font-weight:700; font-size:16px;">New Game</button>
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 0; border-bottom: 1px solid rgba(255,255,255,0.1);">
+        <span style="font-weight: 500; color: white;">Sound Effects</span>
+        <button id="sound-toggle" class="glass-button" style="padding: 8px 20px; border-radius: 20px; font-size: 13px; font-weight: 700;">ON</button>
+      </div>
+      
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 0; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 24px;">
+        <span style="font-weight: 500; color: white;">Highlight Digits</span>
+        <button id="highlightToggle" class="glass-button" style="padding: 8px 20px; border-radius: 20px; font-size: 13px; font-weight: 700;">ON</button>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+         <button id="newGame" class="accent-button" style="width:100%; padding: 18px; border-radius: 20px; font-size: 16px;">New Game</button>
+      </div>
     </div>
   </div>
 
-  <div id="modal-leaderboard" class="modal-wrap">
-    <div class="modal-box">
-      <div class="modal-head">
+  <div id="rating-modal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
         <div class="modal-title">Leaderboard</div>
-        <div class="close" onclick="closeModal('leaderboard')">&times;</div>
+        <div class="close-btn" data-target="rating-modal">&times;</div>
+      </div>
+      <div style="display: flex; gap: 8px; margin-bottom: 20px; padding: 4px; background: rgba(0,0,0,0.3); border-radius: 16px;">
+        <button class="glass-button rating-tab active" data-type="score" style="flex:1; border-radius:12px; padding: 10px; border:none; background:transparent; font-weight:600;">Score</button>
+        <button class="glass-button rating-tab" data-type="time" style="flex:1; border-radius:12px; padding: 10px; border:none; background:transparent; font-weight:600;">Time</button>
+      </div>
+      <div id="difficulty-tabs" class="hidden" style="display: flex; gap: 8px; margin-bottom: 15px;">
+        <button class="glass-button diff-tab active" data-d="easy" style="flex:1; font-size: 12px; padding: 8px; border-radius: 10px;">Easy</button>
+        <button class="glass-button diff-tab" data-d="medium" style="flex:1; font-size: 12px; padding: 8px; border-radius: 10px;">Med</button>
+        <button class="glass-button diff-tab" data-d="hard" style="flex:1; font-size: 12px; padding: 8px; border-radius: 10px;">Hard</button>
       </div>
       
-      <div style="display:flex; background:rgba(0,0,0,0.2); padding:4px; border-radius:12px; margin-bottom:15px;">
-        <button class="glass-btn rank-tab active" data-t="score" style="flex:1; border:none; background:transparent; border-radius:8px; padding:8px;">Score</button>
-        <button class="glass-btn rank-tab" data-t="time" style="flex:1; border:none; background:transparent; border-radius:8px; padding:8px;">Time</button>
-      </div>
-
-      <div id="diff-tabs" class="hidden" style="display:flex; gap:6px; margin-bottom:15px;">
-        <button class="glass-btn d-tab active" data-d="easy" style="flex:1; font-size:12px; padding:6px; border-radius:8px;">Easy</button>
-        <button class="glass-btn d-tab" data-d="medium" style="flex:1; font-size:12px; padding:6px; border-radius:8px;">Med</button>
-        <button class="glass-btn d-tab" data-d="hard" style="flex:1; font-size:12px; padding:6px; border-radius:8px;">Hard</button>
-      </div>
-
-      <div id="rank-list" style="height:300px; overflow-y:auto;">Loading...</div>
+      <div id="rating-list" style="min-height: 200px;"></div>
     </div>
   </div>
 
-  <div id="modal-win" class="modal-wrap">
-    <div class="modal-box" style="text-align:center;">
-      <div style="font-size:50px; margin-bottom:10px;">🏆</div>
-      <h2 style="margin:0 0 10px; color:var(--accent);">Excellent!</h2>
-      <div id="win-msg" style="color:var(--text-muted); margin-bottom:25px; line-height:1.6;"></div>
-      <button onclick="closeModal('win')" class="accent-btn" style="width:100%; padding:14px; border-radius:16px; font-weight:700;">Continue</button>
+  <div id="win-modal" class="modal-overlay">
+    <div class="modal-card" style="text-align: center; padding-top: 40px; background: rgba(20, 30, 50, 0.98);">
+      <div style="font-size: 70px; margin-bottom: 10px; text-shadow: 0 0 30px rgba(255,215,0,0.5);">🏆</div>
+      <h2 style="background: linear-gradient(to right, #38bdf8, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 36px; margin: 0 0 10px 0; font-weight: 800;">Victory!</h2>
+      <p id="win-modal-message" style="margin-bottom: 30px; line-height: 1.6; font-size: 16px; color: var(--text-muted);"></p>
+      <button id="win-modal-close-btn" class="accent-button" style="width: 100%; padding: 16px; border-radius: 18px; font-size: 18px;">Awesome!</button>
     </div>
   </div>
 
@@ -457,419 +413,486 @@
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
 
   <script>
-    /* CONFIG & STATE */
-    const fbConfig = { apiKey: "AIzaSyBkYQ7tRMrZ-mghBnkJ_EvuzHpjs_p8hOY", authDomain: "sudo-9fbfc.firebaseapp.com", projectId: "sudo-9fbfc" };
-    try { firebase.initializeApp(fbConfig); } catch(e){}
+    /* --- LOGIC PRESERVED & UI ENHANCED --- */
+    const firebaseConfig = { apiKey: "AIzaSyBkYQ7tRMrZ-mghBnkJ_EvuzHpjs_p8hOY", authDomain: "sudo-9fbfc.firebaseapp.com", projectId: "sudo-9fbfc", storageBucket: "sudo-9fbfc.appspot.com", messagingSenderId: "927814106972", appId: "1:927814106972:web:71e0773453f9d16f598b99" };
+    try { firebase.initializeApp(firebaseConfig); } catch(e){ console.error(e); }
     const db = firebase.firestore();
     const auth = firebase.auth();
-    
-    let state = {
-      grid: [], sol: [], given: new Set(),
-      timer: 0, interval: null,
-      selCell: null, selTool: null,
-      undoStack: [], hints: 3,
-      user: { id: null, name: 'Guest', pic: 'https://cdn-icons-png.flaticon.com/512/847/847969.png', score: 0, recs: {} },
-      sound: true, highlight: true, done: false,
-      rankType: 'score', rankDiff: 'easy'
+    const usersCollection = db.collection('users');
+    const recordsCollection = db.collection('timeRecords');
+
+    let grid = [], solution = [], givenCells = new Set(), timerInterval, startTime=0;
+    let activeCell = null, activeTool = null, highlightEnabled = true, undoStack = [];
+    let hintCount = 0, isGameFinished = false, isSoundEnabled = true;
+    let currentUser = { id: null, username: 'Guest', avatar: 'https://t.me/i/userpic/320/default.jpg', score: 0, bestTimes: { easy: null, medium: null, hard: null } };
+    let currentRatingType = 'score', currentRatingDifficulty = 'easy';
+
+    const el = (id) => document.getElementById(id);
+    const elements = {
+      grid: el('grid'), numberRow: el('number-row'), difficulty: el('difficulty'),
+      newGameBtn: el('newGame'), checkBtn: el('check'), undoBtn: el('undo-button'),
+      hintBtn: el('hint-button'), timer: el('timer'), message: el('message'),
+      userAvatar: el('user-avatar'), username: el('username'), userScore: el('user-score'),
+      loadingScreen: el('loading-screen'), winModal: el('win-modal'),
+      settingsModal: el('settings-modal'), ratingModal: el('rating-modal')
     };
 
-    const el = id => document.getElementById(id);
-    const audio = new Audio('https://github.com/codex-cdx/sudo/raw/refs/heads/main/%D0%9F%D0%BB%D0%B0%D0%BC%D0%B1.mp3');
+    const clickSound = new Audio('https://github.com/codex-cdx/sudo/raw/refs/heads/main/%D0%9F%D0%BB%D0%B0%D0%BC%D0%B1.mp3');
+    function playSound() { if(isSoundEnabled) { clickSound.currentTime = 0; clickSound.play().catch(()=>{}); } }
+
+    function formatTime(s) { if(s==null) return '--:--'; return `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`; }
     
-    /* UTILS */
-    const playSnd = () => { if(state.sound){ audio.currentTime=0; audio.play().catch(()=>{}); }};
-    const fmtTime = s => s==null?'--:--':`${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
-    const openModal = m => { el(`modal-${m}`).classList.add('show'); };
-    const closeModal = m => { el(`modal-${m}`).classList.remove('show'); };
+    function toggleModal(modalId, show) { 
+      const m = el(modalId); 
+      if(show) { m.classList.remove('hidden'); requestAnimationFrame(()=>m.classList.add('active')); }
+      else { m.classList.remove('active'); setTimeout(()=>m.classList.add('hidden'), 300); }
+    }
 
-    /* THEME ENGINE */
-    const setTheme = t => {
-      document.body.dataset.theme = t;
-      document.querySelectorAll('.theme-card').forEach(c => c.classList.remove('selected'));
-      const map = {'darkGlass':0, 'lightGlass':1, 'midnight':2};
-      document.querySelectorAll('.theme-card')[map[t]].classList.add('selected');
-      localStorage.setItem('sudo_theme', t);
-    };
-
-    /* GRID LOGIC */
-    const createBoard = () => {
-      const b = el('board'); b.innerHTML = '';
+    // --- GRID ---
+    function createGrid() {
+      elements.grid.innerHTML = '';
+      grid = Array(9).fill().map(()=>Array(9).fill(0));
+      givenCells.clear();
       for(let i=0; i<81; i++) {
         const d = document.createElement('div');
-        d.className = 'cell'; d.dataset.idx = i;
-        d.onclick = (e) => { e.stopPropagation(); clickCell(i); };
-        b.appendChild(d);
+        d.className = 'cell';
+        const span = document.createElement('span');
+        span.className = 'cell-content';
+        d.appendChild(span);
+        d.addEventListener('click', (e) => { e.stopPropagation(); handleCellClick(Math.floor(i/9), i%9); });
+        elements.grid.appendChild(d);
       }
-    };
+    }
 
-    const createNumpad = () => {
-      const p = el('numpad'); p.innerHTML = '';
+    function createKeypad() {
+      elements.numberRow.innerHTML = '';
       for(let i=1; i<=9; i++) {
-        const b = document.createElement('button');
-        b.className = 'num-btn glass-btn'; b.textContent = i;
-        b.onclick = () => { playSnd(); setTool(i); };
-        p.appendChild(b);
+        const btn = document.createElement('button');
+        btn.className = 'num-btn glass-button';
+        btn.textContent = i;
+        btn.dataset.val = i;
+        btn.onclick = () => { playSound(); selectTool(i); };
+        elements.numberRow.appendChild(btn);
       }
-      const e = document.createElement('button');
-      e.className = 'num-btn glass-btn'; 
-      e.innerHTML = '<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 4H8l-7 8 7 8h13v-16z"/><line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/></svg>';
-      e.onclick = () => { playSnd(); setTool('erase'); };
-      p.appendChild(e);
-    };
+      const eraseBtn = document.createElement('button');
+      eraseBtn.className = 'num-btn glass-button';
+      eraseBtn.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 4H8l-7 8 7 8h13v-16z"/><line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/></svg>';
+      eraseBtn.dataset.val = 'erase';
+      eraseBtn.onclick = () => { playSound(); selectTool('erase'); };
+      elements.numberRow.appendChild(eraseBtn);
+    }
 
-    /* GAMEPLAY */
-    const startGame = () => {
-      state.done = false; state.undoStack = []; state.hints = 3;
-      state.timer = 0; clearInterval(state.interval);
-      state.interval = setInterval(() => el('timer').innerText = fmtTime(++state.timer), 1000);
-      
-      el('status-msg').innerText = '';
-      el('btn-check').disabled = false;
-      updateUI();
-
-      // Gen Logic (Simple)
-      const diff = el('diff-select').value;
-      const base = Array(9).fill().map(()=>Array(9).fill(0));
-      // Simple filler for demo (in prod use proper solver/shuffler)
-      const r1 = [1,2,3,4,5,6,7,8,9].sort(()=>Math.random()-0.5);
-      base[0] = r1;
-      solve(base);
-      state.sol = base.map(r=>[...r]);
-      state.grid = base.map(r=>[...r]);
-      
-      // Remove cells
-      let amt = {easy:30, medium:45, hard:55}[diff] || 30;
-      while(amt>0) {
-        let r=Math.floor(Math.random()*9), c=Math.floor(Math.random()*9);
-        if(state.grid[r][c]!==0){ state.grid[r][c]=0; amt--; }
+    function handleCellClick(r, c) {
+      playSound();
+      if(isGameFinished) return;
+      if(activeTool) {
+        if(givenCells.has(`${r},${c}`)) return; 
+        if(activeTool === 'erase') performAction(0, r, c);
+        else performAction(activeTool, r, c);
+      } else {
+        selectCell(r, c);
       }
+    }
 
-      state.given.clear();
+    function selectCell(r, c) {
+      if(isGameFinished) return;
+      clearHighlights();
+      activeCell = [r, c];
       const cells = document.querySelectorAll('.cell');
-      cells.forEach((c, i) => {
-        const val = state.grid[Math.floor(i/9)][i%9];
-        c.innerText = val || '';
-        c.className = 'cell';
-        if(val) { c.classList.add('given'); state.given.add(i); }
+      
+      cells.forEach((cell, idx) => {
+        const cr = Math.floor(idx/9), cc = idx%9;
+        const sameRow = cr === r;
+        const sameCol = cc === c;
+        const sameBox = Math.floor(cr/3) === Math.floor(r/3) && Math.floor(cc/3) === Math.floor(c/3);
+        if(sameRow || sameCol || sameBox) cell.classList.add('area-highlight');
       });
-    };
 
-    const solve = (b) => {
-       for(let i=0;i<81;i++){
-          let r=Math.floor(i/9), c=i%9;
-          if(b[r][c]===0){
+      cells[r*9+c].classList.add('active-cell');
+      const val = grid[r][c];
+      if(val !== 0 && highlightEnabled) highlightSimilar(val);
+    }
+
+    function selectTool(val) {
+      if(isGameFinished) return;
+      if(activeTool === val) activeTool = null; 
+      else activeTool = val;
+      
+      document.querySelectorAll('.num-btn').forEach(b => {
+        b.classList.toggle('selected', b.dataset.val == activeTool);
+      });
+
+      activeCell = null;
+      clearHighlights();
+      if(activeTool && activeTool !== 'erase' && highlightEnabled) highlightSimilar(activeTool);
+    }
+
+    function highlightSimilar(val) {
+      document.querySelectorAll('.cell').forEach((c, idx) => {
+        const r = Math.floor(idx/9), col = idx%9;
+        if(grid[r][col] === val) c.classList.add('highlight');
+      });
+    }
+
+    function clearHighlights() {
+      document.querySelectorAll('.cell').forEach(c => c.classList.remove('active-cell', 'area-highlight', 'highlight'));
+    }
+
+    function performAction(val, r, c) {
+      const prev = grid[r][c];
+      if(prev === val) return;
+      
+      undoStack.push({r, c, prev, val});
+      grid[r][c] = val;
+      
+      const cell = document.querySelectorAll('.cell')[r*9+c];
+      cell.querySelector('.cell-content').textContent = val === 0 ? '' : val;
+      cell.classList.remove('error', 'hinted');
+      cell.classList.toggle('user-input', val !== 0);
+      
+      updateUI();
+      if(highlightEnabled) { clearHighlights(); if(val!==0) highlightSimilar(val); }
+    }
+
+    function updateUI() {
+      elements.undoBtn.disabled = undoStack.length === 0;
+      el('hint-count-display').textContent = `${3-hintCount}/3`;
+      el('hint-button').disabled = hintCount >= 3;
+      
+      const counts = Array(10).fill(0);
+      grid.flat().forEach(v => counts[v]++);
+      document.querySelectorAll('.num-btn').forEach(btn => {
+         const val = parseInt(btn.dataset.val);
+         if(val && counts[val] >= 9) {
+             btn.classList.add('disabled');
+             if(activeTool === val) selectTool(null);
+         } else {
+             btn.classList.remove('disabled');
+         }
+      });
+    }
+
+    function undo() {
+      playSound();
+      if(!undoStack.length) return;
+      const last = undoStack.pop();
+      grid[last.r][last.c] = last.prev;
+      const cell = document.querySelectorAll('.cell')[last.r*9+last.c];
+      cell.querySelector('.cell-content').textContent = last.prev || '';
+      cell.classList.remove('error');
+      cell.classList.toggle('user-input', last.prev !== 0);
+      updateUI();
+      selectCell(last.r, last.c);
+    }
+
+    // --- GAME LOGIC ---
+    function generatePuzzle(diff) {
+      // Simple solver/generator for demo
+      function shuffle(a) { for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]} }
+      function solve(b) {
+        for(let i=0;i<81;i++){
+          if(b[Math.floor(i/9)][i%9]===0){
              for(let n=1;n<=9;n++){
-               if(isValid(b,r,c,n)){
-                 b[r][c]=n;
+               if(isValid(b,Math.floor(i/9),i%9,n)){
+                 b[Math.floor(i/9)][i%9]=n;
                  if(solve(b))return true;
-                 b[r][c]=0;
+                 b[Math.floor(i/9)][i%9]=0;
                }
              }
              return false;
           }
-       }
-       return true;
-    }
-    const isValid = (b,r,c,n) => {
-      for(let i=0;i<9;i++) if(b[r][i]===n || b[i][c]===n || b[3*Math.floor(r/3)+Math.floor(i/3)][3*Math.floor(c/3)+i%3]===n) return false;
-      return true;
-    }
-
-    /* INTERACTION */
-    const clickCell = (idx) => {
-      if(state.done) return;
-      playSnd();
-      const r = Math.floor(idx/9), c = idx%9;
-      
-      if(state.selTool) {
-        if(state.given.has(idx)) return;
-        const val = state.selTool === 'erase' ? 0 : state.selTool;
-        if(state.grid[r][c] === val) return;
-        
-        state.undoStack.push({idx, old: state.grid[r][c], new: val});
-        state.grid[r][c] = val;
-        const dom = document.querySelectorAll('.cell')[idx];
-        dom.innerText = val || '';
-        dom.classList.remove('error');
-        dom.classList.toggle('user', !!val);
-        
-        drawHighlights();
-        checkNums();
-        el('btn-undo').disabled = false;
-      } else {
-        state.selCell = idx;
-        drawHighlights();
+        }
+        return true;
       }
-    };
+      function isValid(b,r,c,n){
+        for(let i=0;i<9;i++) if(b[r][i]===n||b[i][c]===n||b[3*Math.floor(r/3)+Math.floor(i/3)][3*Math.floor(c/3)+i%3]===n)return false;
+        return true;
+      }
+      
+      const base = Array(9).fill().map(()=>Array(9).fill(0));
+      const firstRow = [1,2,3,4,5,6,7,8,9]; shuffle(firstRow);
+      base[0] = firstRow;
+      solve(base);
+      solution = base.map(r=>[...r]);
 
-    const setTool = (t) => {
-      if(state.done) return;
-      state.selTool = (state.selTool === t) ? null : t;
-      state.selCell = null;
-      document.querySelectorAll('.num-btn').forEach(b => {
-         b.classList.toggle('active-tool', (b.textContent == state.selTool) || (t==='erase' && b.innerHTML.includes('path')));
-      });
-      drawHighlights();
-    };
-
-    const drawHighlights = () => {
+      grid = base.map(r=>[...r]);
+      const attempts = {easy:30, medium:45, hard:55}[diff] || 30; // removed cells
+      let removed = 0;
+      while(removed < attempts) {
+        let r=Math.floor(Math.random()*9), c=Math.floor(Math.random()*9);
+        if(grid[r][c]!==0) { grid[r][c]=0; removed++; }
+      }
+      
       const cells = document.querySelectorAll('.cell');
-      cells.forEach(c => c.classList.remove('active', 'highlight', 'same-num'));
-      
-      if(state.selCell !== null) {
-        // Selection Mode
-        const idx = state.selCell;
-        cells[idx].classList.add('active');
-        const r = Math.floor(idx/9), c = idx%9;
-        const val = state.grid[r][c];
-        
-        cells.forEach((cell, i) => {
-           let cr = Math.floor(i/9), cc = i%9;
-           if(cr===r || cc===c || (Math.floor(cr/3)===Math.floor(r/3) && Math.floor(cc/3)===Math.floor(c/3))) 
-             cell.classList.add('highlight');
-           if(state.highlight && val && state.grid[cr][cc]===val) cell.classList.add('same-num');
-        });
-
-      } else if (state.selTool && typeof state.selTool === 'number' && state.highlight) {
-        // Tool Mode
-        cells.forEach((cell, i) => {
-           let r = Math.floor(i/9), c = i%9;
-           if(state.grid[r][c] === state.selTool) cell.classList.add('same-num');
-        });
-      }
-    };
-
-    const undo = () => {
-      if(!state.undoStack.length) return;
-      playSnd();
-      const act = state.undoStack.pop();
-      const r = Math.floor(act.idx/9), c = act.idx%9;
-      state.grid[r][c] = act.old;
-      const dom = document.querySelectorAll('.cell')[act.idx];
-      dom.innerText = act.old || '';
-      dom.classList.toggle('user', !!act.old);
-      dom.classList.remove('error');
-      checkNums();
-      el('btn-undo').disabled = !state.undoStack.length;
-    };
-
-    const hint = () => {
-      if(!state.hints || state.done) return;
-      playSnd();
-      // Find empty or wrong
-      let opts = [];
+      givenCells.clear();
       for(let i=0; i<81; i++) {
-        let r=Math.floor(i/9), c=i%9;
-        if(state.grid[r][c] !== state.sol[r][c]) opts.push(i);
+        const val = grid[Math.floor(i/9)][i%9];
+        const cell = cells[i];
+        cell.className = 'cell';
+        cell.querySelector('.cell-content').textContent = val || '';
+        if(val!==0) {
+          givenCells.add(`${Math.floor(i/9)},${i%9}`);
+          cell.classList.add('given');
+        }
       }
-      if(!opts.length) return;
-      
-      state.hints--;
       updateUI();
-      const idx = opts[Math.floor(Math.random()*opts.length)];
-      const r=Math.floor(idx/9), c=idx%9;
-      const val = state.sol[r][c];
-      
-      state.grid[r][c] = val;
-      const dom = document.querySelectorAll('.cell')[idx];
-      dom.innerText = val;
-      dom.className = 'cell given'; // Make it look permanent
-      state.given.add(idx); // Lock it
-    };
+    }
 
-    const check = () => {
-      playSnd();
-      let err = false, empty = false;
-      const cells = document.querySelectorAll('.cell');
+    function startGame() {
+      isGameFinished = false;
+      undoStack = [];
+      hintCount = 0;
+      clearInterval(timerInterval);
+      startTime = Date.now();
+      timerInterval = setInterval(() => {
+        elements.timer.textContent = formatTime(Math.floor((Date.now()-startTime)/1000));
+      }, 1000);
       
-      cells.forEach((dom, i) => {
-        const r=Math.floor(i/9), c=i%9;
-        if(state.grid[r][c]===0) empty=true;
-        else if(state.grid[r][c] !== state.sol[r][c]) {
-          dom.classList.add('error');
-          err = true;
+      elements.checkBtn.disabled = false;
+      elements.checkBtn.textContent = 'Done';
+      elements.message.textContent = '';
+      
+      createGrid();
+      createKeypad();
+      generatePuzzle(elements.difficulty.value);
+      toggleModal('settings-modal', false);
+    }
+
+    function checkGame() {
+      playSound();
+      if(isGameFinished) return;
+      
+      let error = false;
+      let full = true;
+      
+      const cells = document.querySelectorAll('.cell');
+      cells.forEach((c, idx) => {
+        const r = Math.floor(idx/9), col = idx%9;
+        const val = grid[r][col];
+        if(val === 0) full = false;
+        else if(val !== solution[r][col]) {
+           c.classList.add('error');
+           error = true;
         }
       });
-      
-      if(err) el('status-msg').innerText = "Mistakes found!";
-      else if(empty) el('status-msg').innerText = "Not finished yet.";
-      else win();
-    };
 
-    const win = () => {
-      state.done = true;
-      clearInterval(state.interval);
-      // Calc score
-      const base = {easy:100, medium:250, hard:500}[el('diff-select').value];
-      const pts = Math.max(10, base - (state.timer/2) - ((3-state.hints)*50));
-      
-      state.user.score += pts;
-      el('u-score').innerText = Math.floor(state.user.score);
-      
-      // Save Rec
-      const d = el('diff-select').value;
-      if(!state.user.recs[d] || state.timer < state.user.recs[d]) state.user.recs[d] = state.timer;
-      
-      saveData();
-      
-      el('win-msg').innerHTML = `Time: <b>${fmtTime(state.timer)}</b><br>Score: <b style="color:var(--accent)">+${Math.floor(pts)}</b>`;
-      openModal('win');
-    };
+      if(error) elements.message.textContent = "Oops! Mistakes found.";
+      else if(!full) elements.message.textContent = "Board not full.";
+      else {
+        isGameFinished = true;
+        clearInterval(timerInterval);
+        const time = Math.floor((Date.now()-startTime)/1000);
+        const pts = calculatePoints(time, hintCount);
+        saveWin(time, pts);
+      }
+    }
 
-    const checkNums = () => {
-       const counts = Array(10).fill(0);
-       state.grid.flat().forEach(x => counts[x]++);
-       document.querySelectorAll('.num-btn').forEach(b => {
-         const v = parseInt(b.innerText);
-         if(v && counts[v]>=9) b.classList.add('completed');
-         else b.classList.remove('completed');
-       });
-    };
-
-    const updateUI = () => {
-      el('hint-val').innerText = `${state.hints}/3`;
-      el('btn-hint').disabled = state.hints<=0;
-      el('rec-easy').innerText = fmtTime(state.user.recs.easy);
-      el('rec-med').innerText = fmtTime(state.user.recs.medium);
-      el('rec-hard').innerText = fmtTime(state.user.recs.hard);
-    };
-
-    /* DATA */
-    const initApp = async () => {
-      const theme = localStorage.getItem('sudo_theme') || 'darkGlass';
-      setTheme(theme);
+    function getHint() {
+      playSound();
+      if(hintCount >= 3 || isGameFinished) return;
       
-      createBoard(); createNumpad();
+      const candidates = [];
+      for(let r=0;r<9;r++) for(let c=0;c<9;c++) {
+        if(!givenCells.has(`${r},${c}`) && grid[r][c] !== solution[r][c]) candidates.push([r,c]);
+      }
+      if(!candidates.length) return;
       
-      // Auth & Load
+      hintCount++;
+      const [r,c] = candidates[Math.floor(Math.random()*candidates.length)];
+      performAction(solution[r][c], r, c);
+      const cell = document.querySelectorAll('.cell')[r*9+c];
+      cell.classList.add('hinted');
+      updateUI();
+    }
+
+    function calculatePoints(time, hints) {
+      const base = {easy:100, medium:250, hard:500}[elements.difficulty.value];
+      return Math.max(10, base - (time/2) - (hints*50));
+    }
+
+    // --- USER & LEADERBOARD ---
+    async function initUser() {
       try {
         await auth.signInAnonymously();
         let uid = auth.currentUser.uid;
-        // TG Check
-        if(window.Telegram?.WebApp?.initDataUnsafe?.user) {
-          const u = window.Telegram.WebApp.initDataUnsafe.user;
-          uid = String(u.id);
-          state.user.name = u.username || u.first_name;
-          if(u.photo_url) state.user.pic = u.photo_url;
-        }
-        state.user.id = uid;
-        el('u-name').innerText = state.user.name;
-        el('u-avatar').src = state.user.pic;
+        let userData = { username: 'Guest', avatar: 'https://cdn-icons-png.flaticon.com/512/847/847969.png' };
         
-        const snap = await db.collection('users').doc(uid).get();
-        if(snap.exists) {
-          const d = snap.data();
-          state.user.score = d.score || 0;
-          state.user.recs = d.recs || {};
+        if(window.Telegram?.WebApp?.initDataUnsafe?.user) {
+          const tgUser = window.Telegram.WebApp.initDataUnsafe.user;
+          uid = String(tgUser.id);
+          userData.username = tgUser.username || tgUser.first_name;
+          if(tgUser.photo_url) userData.avatar = tgUser.photo_url;
         }
-      } catch(e) { console.log(e); }
+        
+        currentUser.id = uid;
+        currentUser.username = userData.username;
+        currentUser.avatar = userData.avatar;
+        
+        elements.username.textContent = currentUser.username;
+        elements.userAvatar.src = currentUser.avatar;
 
-      el('u-score').innerText = Math.floor(state.user.score);
-      updateUI();
-      startGame();
+        const doc = await usersCollection.doc(uid).get();
+        if(doc.exists) {
+          const data = doc.data();
+          currentUser.score = data.score || 0;
+          currentUser.bestTimes = data.bestTimes || {easy:null, medium:null, hard:null};
+        } else {
+          await usersCollection.doc(uid).set({ ...userData, score:0, bestTimes: {} });
+        }
+        
+        elements.userScore.textContent = Math.floor(currentUser.score);
+        updateRecordDisplay();
+      } catch(e) { console.error("Auth error", e); }
       
-      setTimeout(() => el('loader').style.opacity = 0, 800);
-      setTimeout(() => el('loader').classList.add('hidden'), 1300);
-    };
+      setTimeout(() => {
+        elements.loadingScreen.style.opacity = '0';
+        setTimeout(()=> elements.loadingScreen.style.display='none', 600);
+      }, 1000);
+    }
 
-    const saveData = () => {
-       if(!state.user.id) return;
-       db.collection('users').doc(state.user.id).set({
-         score: state.user.score,
-         recs: state.user.recs,
-         name: state.user.name,
-         pic: state.user.pic
-       }, {merge:true});
-       
-       db.collection('records').add({
-         uid: state.user.id,
-         name: state.user.name,
-         pic: state.user.pic,
-         diff: el('diff-select').value,
-         time: state.timer,
-         score: state.user.score, // Snapshot score
-         date: new Date()
-       });
-    };
-
-    /* LEADERBOARD FIXED */
-    const openLeaderboard = () => {
-      openModal('leaderboard');
-      loadRanks();
-    };
-
-    const loadRanks = async () => {
-      const list = el('rank-list');
-      list.innerHTML = '<div style="text-align:center; padding:20px; opacity:0.5;">Loading...</div>';
+    async function saveWin(time, pts) {
+      currentUser.score += pts;
+      elements.userScore.textContent = Math.floor(currentUser.score);
+      const diff = elements.difficulty.value;
       
-      let q;
-      if(state.rankType === 'score') {
-         q = db.collection('users').orderBy('score', 'desc').limit(20);
+      let newRecord = false;
+      if(!currentUser.bestTimes[diff] || time < currentUser.bestTimes[diff]) {
+        currentUser.bestTimes[diff] = time;
+        newRecord = true;
+      }
+      
+      updateRecordDisplay();
+      
+      if(currentUser.id) {
+        usersCollection.doc(currentUser.id).set({
+          score: currentUser.score,
+          bestTimes: currentUser.bestTimes,
+          username: currentUser.username,
+          avatar: currentUser.avatar
+        }, {merge:true});
+        
+        recordsCollection.add({
+          userId: currentUser.id,
+          username: currentUser.username,
+          avatar: currentUser.avatar,
+          difficulty: diff,
+          time: time,
+          date: new Date().toISOString()
+        });
+      }
+      
+      el('win-modal-message').innerHTML = `Difficulty: <b style="color:white">${diff}</b><br>Time: <span style="font-feature-settings: 'tnum';">${formatTime(time)}</span><br>Score: <span style="color:var(--accent-color)">+${Math.floor(pts)}</span>${newRecord ? '<br><br>🏆 <b>New Record!</b>' : ''}`;
+      toggleModal('win-modal', true);
+    }
+
+    function updateRecordDisplay() {
+      el('easy-record').textContent = formatTime(currentUser.bestTimes.easy);
+      el('medium-record').textContent = formatTime(currentUser.bestTimes.medium);
+      el('hard-record').textContent = formatTime(currentUser.bestTimes.hard);
+    }
+
+    // --- LEADERBOARD FIX ---
+    async function loadLeaderboard() {
+      const list = el('rating-list');
+      list.innerHTML = '<div style="text-align:center; padding:30px; opacity:0.6;">Loading...</div>';
+      
+      let query;
+      if(currentRatingType === 'score') {
+        query = usersCollection.orderBy('score', 'desc').limit(20);
       } else {
-         q = db.collection('records').where('diff', '==', state.rankDiff).orderBy('time', 'asc').limit(20);
+        query = recordsCollection.where('difficulty', '==', currentRatingDifficulty).orderBy('time', 'asc').limit(20);
       }
       
       try {
-        const snap = await q.get();
+        const snap = await query.get();
         list.innerHTML = '';
-        if(snap.empty) { list.innerHTML = '<div style="text-align:center; padding:20px;">No records yet</div>'; return; }
-        
-        let i = 1;
-        snap.forEach(doc => {
-           const d = doc.data();
-           const isScore = state.rankType === 'score';
-           const val = isScore ? Math.floor(d.score) : fmtTime(d.time);
-           
-           // FIX: Better Numbering Logic & Styling
-           let rankClass = 'rank-def';
-           if(i===1) rankClass = 'rank-1';
-           if(i===2) rankClass = 'rank-2';
-           if(i===3) rankClass = 'rank-3';
-           
-           const row = document.createElement('div');
-           row.className = `rank-row ${rankClass}`;
-           row.innerHTML = `
-             <div class="rank-pos"><div class="rank-circle">${i === 1 ? '🥇' : i === 2 ? '🥈' : i === 3 ? '🥉' : i}</div></div>
-             <div class="user-info">
-               <img src="${d.pic}" class="u-img" onerror="this.src='https://cdn-icons-png.flaticon.com/512/847/847969.png'">
-               <div class="u-name">${d.name}</div>
-             </div>
-             <div class="u-val">${val}</div>
-           `;
-           list.appendChild(row);
-           i++;
+        if(snap.empty) {
+            list.innerHTML = '<div style="text-align:center; padding:30px; opacity:0.6;">No records yet</div>';
+            return;
+        }
+
+        snap.forEach((doc, idx) => {
+          const d = doc.data();
+          const rank = idx + 1;
+          
+          let rankClass = "rank-cell";
+          let rankContent = rank;
+          if(rank === 1) { rankClass += " rank-1"; rankContent = "1"; } // Medal icon via css or just color
+          if(rank === 2) { rankClass += " rank-2"; rankContent = "2"; }
+          if(rank === 3) { rankClass += " rank-3"; rankContent = "3"; }
+
+          const row = document.createElement('div');
+          row.className = 'rank-row';
+          
+          // Fixed structure for better alignment
+          row.innerHTML = `
+            <div class="${rankClass}">${rankContent}</div>
+            <img src="${d.avatar || 'https://cdn-icons-png.flaticon.com/512/847/847969.png'}" style="width:36px; height:36px; border-radius:50%; border:1px solid rgba(255,255,255,0.2);">
+            <div class="player-info">
+              <div class="player-name">${d.username || 'Unknown'}</div>
+            </div>
+            <div class="player-score">${currentRatingType === 'score' ? Math.floor(d.score) : formatTime(d.time)}</div>
+          `;
+          list.appendChild(row);
         });
-      } catch(e) { console.error(e); list.innerHTML = 'Error loading'; }
-    };
+      } catch(e) { list.textContent = "Error loading data"; console.error(e); }
+    }
 
-    /* EVENT BINDING */
-    el('btn-undo').onclick = undo;
-    el('btn-hint').onclick = hint;
-    el('btn-check').onclick = check;
-    
-    document.querySelectorAll('.rank-tab').forEach(b => {
-      b.onclick = () => {
-        state.rankType = b.dataset.t;
-        document.querySelectorAll('.rank-tab').forEach(x => { x.classList.remove('active'); x.style.background='transparent'; });
-        b.classList.add('active'); b.style.background='rgba(255,255,255,0.15)';
-        el('diff-tabs').classList.toggle('hidden', state.rankType !== 'time');
-        loadRanks();
-      }
+    // --- INIT ---
+    document.addEventListener('DOMContentLoaded', () => {
+      elements.newGameBtn.onclick = startGame;
+      elements.checkBtn.onclick = checkGame;
+      elements.hintBtn.onclick = getHint;
+      elements.undoBtn.onclick = undo;
+      el('settings-button').onclick = () => toggleModal('settings-modal', true);
+      el('rating-button').onclick = () => { toggleModal('rating-modal', true); loadLeaderboard(); };
+      el('win-modal-close-btn').onclick = () => toggleModal('win-modal', false);
+      
+      document.querySelectorAll('.close-btn').forEach(b => {
+        b.onclick = () => toggleModal(b.dataset.target, false);
+      });
+      document.querySelectorAll('.modal-overlay').forEach(o => {
+        o.onclick = (e) => { if(e.target === o) toggleModal(o.id, false); };
+      });
+
+      el('sound-toggle').onclick = (e) => { 
+        isSoundEnabled = !isSoundEnabled; 
+        e.target.textContent = isSoundEnabled ? "ON" : "OFF"; 
+      };
+      el('highlightToggle').onclick = (e) => { 
+        highlightEnabled = !highlightEnabled; 
+        e.target.textContent = highlightEnabled ? "ON" : "OFF"; 
+        if(!highlightEnabled) clearHighlights();
+      };
+      
+      document.querySelectorAll('.rating-tab').forEach(t => {
+         t.onclick = () => {
+           currentRatingType = t.dataset.type;
+           document.querySelectorAll('.rating-tab').forEach(x => { x.classList.remove('active'); x.style.background='transparent'; x.style.color='var(--text-muted)'; });
+           t.classList.add('active');
+           t.style.background = 'rgba(255,255,255,0.1)';
+           t.style.color = 'white';
+           el('difficulty-tabs').classList.toggle('hidden', currentRatingType !== 'time');
+           loadLeaderboard();
+         }
+      });
+      document.querySelectorAll('.diff-tab').forEach(t => {
+         t.onclick = () => {
+           currentRatingDifficulty = t.dataset.d;
+           document.querySelectorAll('.diff-tab').forEach(x => { x.classList.remove('active'); x.style.background='rgba(255,255,255,0.05)'; });
+           t.classList.add('active');
+           t.style.background = 'var(--accent-color)';
+           loadLeaderboard();
+         }
+      });
+
+      // Default active tab styles
+      document.querySelector('.rating-tab.active').style.background = 'rgba(255,255,255,0.1)';
+      document.querySelector('.rating-tab.active').style.color = 'white';
+      
+      initUser();
+      startGame();
     });
-    
-    document.querySelectorAll('.d-tab').forEach(b => {
-      b.onclick = () => {
-        state.rankDiff = b.dataset.d;
-        document.querySelectorAll('.d-tab').forEach(x => { x.classList.remove('active'); x.style.background='transparent'; });
-        b.classList.add('active'); b.style.background='var(--accent)';
-        loadRanks();
-      }
-    });
-
-    el('toggle-sound').onclick = (e) => { state.sound = !state.sound; e.target.innerText = state.sound?"ON":"OFF"; };
-    el('toggle-hl').onclick = (e) => { state.highlight = !state.highlight; e.target.innerText = state.highlight?"ON":"OFF"; drawHighlights(); };
-
-    window.onload = initApp;
   </script>
 </body>
 </html>
