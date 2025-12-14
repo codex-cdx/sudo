@@ -3,133 +3,120 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Sudoku Premium Glass</title>
+  <title>Sudoku Sky Premium</title>
   
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   
   <style>
-    /* =========================================
-       CORE STYLES & VARIABLES
-       =========================================
-    */
+    /* --- Шрифты и База --- */
     :root {
-      --font-stack: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      --safe-area-top: env(safe-area-inset-top, 20px);
-      --safe-area-bottom: env(safe-area-inset-bottom, 20px);
-      --app-height: 100vh;
+      --font-stack: "SF Pro Text", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+      --safe-area-top: env(safe-area-inset-top);
+      --safe-area-bottom: env(safe-area-inset-bottom);
     }
 
     body {
       font-family: var(--font-stack);
       margin: 0;
       padding: 0;
-      overflow: hidden; /* Prevent body scroll, handle inside app-container */
+      overflow-x: hidden;
       -webkit-user-select: none;
       user-select: none;
       -webkit-tap-highlight-color: transparent;
-      transition: background 0.8s ease;
-      background-attachment: fixed;
+      background-color: #0f172a;
+      transition: background 0.5s ease;
     }
 
-    /* =========================================
-       THEME CONFIGURATION (Sky & Glass)
-       =========================================
-    */
+    /* --- ТЕМЫ --- */
     
-    /* THEME 1: Night Sky (Default) - Глубокое ночное небо */
+    /* 1. Sky Glass (Обновленный Dark/Default) */
     body[data-theme="darkGlass"] {
-      /* Красивый градиент неба */
-      --bg-gradient: linear-gradient(to top, #30cfd0 0%, #330867 100%);
-      
-      /* Настройки стекла */
-      --glass-bg: rgba(20, 20, 35, 0.45);
-      --glass-border: rgba(255, 255, 255, 0.15);
-      --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
-      --glass-blur: blur(20px) saturate(180%);
+      /* Красивое небо (Unsplash) */
+      background: url('https://images.unsplash.com/photo-1519681393798-2f13fbe68ac7?q=80&w=2073&auto=format&fit=crop') no-repeat center center fixed;
+      background-size: cover;
 
-      /* Текст и цвета */
-      --text-main: #ffffff;
-      --text-muted: rgba(255, 255, 255, 0.6);
-      --primary-accent: #00d2ff; /* Cyan Neon */
-      --primary-hover: #3a7bd5;
+      --glass-bg: rgba(20, 25, 40, 0.45); /* Более прозрачный для фона */
+      --glass-border: rgba(255, 255, 255, 0.25);
+      --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+      --glass-highlight: rgba(255, 255, 255, 0.1);
       
-      /* Сетка */
-      --cell-bg: rgba(255, 255, 255, 0.03);
+      --text-main: #ffffff;
+      --text-muted: #94a3b8;
+      --primary-accent: #38bdf8; /* Sky Blue */
+      --primary-hover: #0ea5e9;
+      
+      --cell-bg: rgba(255, 255, 255, 0.07);
       --grid-line: rgba(255, 255, 255, 0.2);
       
-      /* Состояния */
-      --highlight-bg: rgba(0, 210, 255, 0.2);
+      --highlight-bg: rgba(56, 189, 248, 0.25);
       --highlight-text: #ffffff;
-      --active-cell-bg: rgba(0, 210, 255, 0.35);
-      --error-text: #ff6b6b;
-      --given-text: #ffffff;
-      --user-text: #7ee8fa;
-      --area-highlight: rgba(255, 255, 255, 0.08);
-      --modal-bg: rgba(16, 16, 24, 0.85);
-    }
-
-    /* THEME 2: Sunset Sky (Light) - Закатное небо */
-    body[data-theme="lightGlass"] {
-      --bg-gradient: linear-gradient(120deg, #a18cd1 0%, #fbc2eb 100%);
+      --active-cell-bg: rgba(56, 189, 248, 0.45);
       
-      --glass-bg: rgba(255, 255, 255, 0.35);
-      --glass-border: rgba(255, 255, 255, 0.6);
-      --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
-      --glass-blur: blur(25px) saturate(200%);
-
-      --text-main: #2d3436;
-      --text-muted: #636e72;
-      --primary-accent: #6c5ce7;
-      --primary-hover: #5649c0;
-
-      --cell-bg: rgba(255, 255, 255, 0.2);
-      --grid-line: rgba(108, 92, 231, 0.2);
-
-      --highlight-bg: rgba(108, 92, 231, 0.2);
-      --highlight-text: #2d3436;
-      --active-cell-bg: rgba(108, 92, 231, 0.35);
-      --error-text: #d63031;
-      --given-text: #2d3436;
-      --user-text: #6c5ce7;
-      --area-highlight: rgba(255, 255, 255, 0.4);
-      --modal-bg: rgba(255, 255, 255, 0.75);
+      --error-text: #fb7185;
+      --given-text: #ffffff;
+      --user-text: #7dd3fc;
+      --area-highlight: rgba(255, 255, 255, 0.08);
+      --modal-bg: rgba(15, 23, 42, 0.85);
     }
 
-    /* THEME 3: Aurora (Midnight) - Северное сияние */
+    /* 2. Light Glass */
+    body[data-theme="lightGlass"] {
+      background: radial-gradient(circle at 50% 0%, #e0eafc 0%, #cfdef3 100%);
+      
+      --glass-bg: rgba(255, 255, 255, 0.6);
+      --glass-border: rgba(255, 255, 255, 0.6);
+      --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+      --glass-highlight: rgba(255, 255, 255, 0.4);
+
+      --text-main: #1e293b;
+      --text-muted: #64748b;
+      --primary-accent: #2563eb;
+      --primary-hover: #1d4ed8;
+      
+      --cell-bg: rgba(255, 255, 255, 0.45);
+      --grid-line: rgba(0, 0, 0, 0.1);
+      
+      --highlight-bg: rgba(37, 99, 235, 0.2);
+      --highlight-text: #000000;
+      --active-cell-bg: rgba(37, 99, 235, 0.3);
+      
+      --error-text: #ef4444;
+      --given-text: #0f172a;
+      --user-text: #2563eb;
+      --area-highlight: rgba(0, 0, 0, 0.05);
+      --modal-bg: rgba(255, 255, 255, 0.9);
+    }
+
+    /* 3. Midnight (Deep Purple) */
     body[data-theme="midnight"] {
-      --bg-gradient: linear-gradient(to right, #434343 0%, black 100%);
-      /* Добавим псевдо-элемент для сияния в JS/HTML если нужно, но градиент тоже ок */
-      --bg-gradient: radial-gradient(circle at 50% 0%, #4facfe 0%, #00f2fe 100%); /* Переопределил на яркое */
-      --bg-gradient: linear-gradient(to top, #09203f 0%, #537895 100%); /* Deep Ocean */
+      background: radial-gradient(circle at top, #2b1055, #7597de);
+      
+      --glass-bg: rgba(20, 10, 40, 0.5);
+      --glass-border: rgba(255, 255, 255, 0.15);
+      --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+      --glass-highlight: rgba(255, 255, 255, 0.05);
 
-      --glass-bg: rgba(0, 0, 0, 0.5);
-      --glass-border: rgba(255, 255, 255, 0.08);
-      --glass-shadow: 0 10px 40px rgba(0,0,0,0.5);
-      --glass-blur: blur(30px);
-
-      --text-main: #ecf0f1;
-      --text-muted: #bdc3c7;
-      --primary-accent: #ff9ff3;
-      --primary-hover: #f368e0;
-
-      --cell-bg: rgba(0, 0, 0, 0.3);
-      --grid-line: rgba(255, 255, 255, 0.1);
-
-      --highlight-bg: rgba(255, 159, 243, 0.25);
-      --highlight-text: #fff;
-      --active-cell-bg: rgba(255, 159, 243, 0.4);
-      --error-text: #ff4757;
-      --given-text: #ecf0f1;
-      --user-text: #ff9ff3;
-      --area-highlight: rgba(255, 255, 255, 0.05);
-      --modal-bg: rgba(19, 15, 64, 0.9);
+      --text-main: #e2e8f0;
+      --text-muted: #94a3b8;
+      --primary-accent: #d946ef;
+      --primary-hover: #c026d3;
+      
+      --cell-bg: rgba(0, 0, 0, 0.25);
+      --grid-line: rgba(255, 255, 255, 0.15);
+      
+      --highlight-bg: rgba(217, 70, 239, 0.25);
+      --highlight-text: #ffffff;
+      --active-cell-bg: rgba(217, 70, 239, 0.4);
+      
+      --error-text: #f43f5e;
+      --given-text: #ffffff;
+      --user-text: #f0abfc;
+      --area-highlight: rgba(255, 255, 255, 0.06);
+      --modal-bg: rgba(30, 20, 50, 0.9);
     }
 
     body {
-      background: var(--bg-gradient);
-      background-size: 400% 400%;
-      animation: gradientBG 15s ease infinite;
       color: var(--text-main);
       min-height: 100vh;
       display: flex;
@@ -137,78 +124,48 @@
       align-items: center;
     }
 
-    @keyframes gradientBG {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
+    /* --- ENHANCED GLASSMORPHISM --- */
+    .glass-panel, .glass-button, .modal-card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(16px) saturate(180%);
+      -webkit-backdrop-filter: blur(16px) saturate(180%);
+      border: 1px solid var(--glass-border);
+      border-top: 1px solid rgba(255, 255, 255, 0.4); /* Блик сверху */
+      border-left: 1px solid rgba(255, 255, 255, 0.4); /* Блик слева */
+      box-shadow: var(--glass-shadow);
     }
 
-    /* =========================================
-       GLASSMORPHISM CLASSES
-       =========================================
-    */
-    .glass-panel {
-      background: var(--glass-bg);
-      backdrop-filter: var(--glass-blur);
-      -webkit-backdrop-filter: var(--glass-blur);
-      border: 1px solid var(--glass-border);
-      box-shadow: var(--glass-shadow);
-      /* Glossy shine overlay */
+    .glass-button {
+      background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+      color: var(--text-main);
+      transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
       position: relative;
       overflow: hidden;
     }
     
-    /* Add a subtle top shine */
-    .glass-panel::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 1px;
-      background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0) 100%);
-    }
-
-    .glass-button {
-      background: rgba(255, 255, 255, 0.1);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      border: 1px solid var(--glass-border);
-      color: var(--text-main);
-      box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-      transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
-    }
-    
     .glass-button:active {
-      transform: scale(0.95);
-      background: rgba(255, 255, 255, 0.25);
+      transform: scale(0.96);
+      background: rgba(255, 255, 255, 0.15);
     }
 
     .accent-button {
       background: var(--primary-accent);
-      color: #fff; /* Always white text on accent */
+      color: white;
       border: none;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-      position: relative;
-      overflow: hidden;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      text-shadow: 0 1px 2px rgba(0,0,0,0.1);
     }
     
-    .accent-button::after {
-      content: '';
-      position: absolute;
-      top: 0; left: -100%; width: 100%; height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
-      transition: 0.5s;
+    .accent-button:active {
+      background: var(--primary-hover);
+      transform: scale(0.98);
     }
-    .accent-button:hover::after { left: 100%; }
-    .accent-button:active { transform: scale(0.95); opacity: 0.9; }
 
-    /* =========================================
-       LAYOUT STRUCTURE
-       =========================================
-    */
+    /* --- LAYOUT --- */
     #app-container {
       width: 100%;
-      max-width: 480px; /* Optimal mobile width */
-      height: 100vh; 
+      max-width: 500px;
+      height: 100vh;
       height: 100dvh;
       display: flex;
       flex-direction: column;
@@ -216,33 +173,27 @@
       box-sizing: border-box;
       position: relative;
       overflow-y: auto;
-      scrollbar-width: none; /* Hide scrollbar Firefox */
     }
-    #app-container::-webkit-scrollbar { display: none; }
 
     /* Header */
     .header-bar {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 15px;
-      padding: 12px 16px;
+      margin-bottom: 12px;
+      padding: 10px 14px;
       border-radius: 20px;
     }
 
-    .user-pill {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
+    .user-pill { display: flex; align-items: center; gap: 12px; }
     
     .avatar-img {
-      width: 42px;
-      height: 42px;
+      width: 40px;
+      height: 40px;
       border-radius: 50%;
       border: 2px solid var(--primary-accent);
       object-fit: cover;
-      box-shadow: 0 0 10px var(--primary-accent);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
     }
 
     /* Controls */
@@ -251,23 +202,21 @@
       justify-content: space-between;
       align-items: center;
       margin-bottom: 15px;
-      gap: 10px;
+      gap: 8px;
     }
 
     .select-styled {
       appearance: none;
-      background: var(--glass-bg);
+      background: var(--cell-bg);
+      backdrop-filter: blur(10px);
       color: var(--text-main);
       border: 1px solid var(--glass-border);
-      padding: 10px 30px 10px 15px;
+      padding: 8px 16px;
       border-radius: 14px;
       font-size: 15px;
       font-weight: 600;
       outline: none;
-      background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23FFFFFF%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
-      background-repeat: no-repeat;
-      background-position: right 10px top 50%;
-      background-size: 10px auto;
+      text-align: center;
     }
 
     .icon-btn {
@@ -284,19 +233,14 @@
       font-variant-numeric: tabular-nums;
       font-weight: 700;
       font-size: 18px;
-      color: var(--primary-accent);
-      text-shadow: 0 0 10px rgba(0,0,0,0.2);
-      padding: 8px 16px;
-      background: var(--cell-bg);
-      border-radius: 12px;
-      border: 1px solid var(--glass-border);
-      letter-spacing: 1px;
+      color: var(--text-main);
+      text-shadow: 0 1px 4px rgba(0,0,0,0.3);
+      padding: 6px 12px;
+      min-width: 60px;
+      text-align: center;
     }
 
-    /* =========================================
-       GRID STYLES
-       =========================================
-    */
+    /* --- GRID --- */
     .grid-wrapper {
       width: 100%;
       display: flex;
@@ -309,18 +253,17 @@
     .sudoku-grid {
       display: grid;
       grid-template-columns: repeat(9, 1fr);
-      gap: 1px; /* Gap for grid lines */
-      background-color: var(--glass-border); /* Color of gaps */
+      gap: 1px;
+      background-color: var(--grid-line);
       border: 2px solid var(--glass-border);
       border-radius: 16px;
       overflow: hidden;
       width: 100%;
       aspect-ratio: 1 / 1; 
-      max-height: 55vh;
+      max-height: 55vh; /* Чуть меньше для красоты */
       max-width: 55vh;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-      backdrop-filter: blur(5px);
-      position: relative;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 10px 40px -10px rgba(0,0,0,0.3);
     }
 
     .cell {
@@ -328,56 +271,48 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: clamp(16px, 5.5vw, 26px);
+      font-size: clamp(18px, 6vw, 26px);
       position: relative;
       cursor: pointer;
-      transition: background-color 0.15s ease, transform 0.1s;
+      transition: background-color 0.1s ease;
       touch-action: manipulation; 
     }
 
-    /* Grid Thick Lines via CSS classes */
-    .cell:nth-child(3n) { border-right: 1px solid var(--glass-border); }
+    /* Borders for 3x3 blocks */
+    .cell:nth-child(3n) { border-right: 1px solid var(--grid-line); }
     .cell:nth-child(9n) { border-right: none; }
     .cell:nth-child(n+19):nth-child(-n+27),
-    .cell:nth-child(n+46):nth-child(-n+54) { border-bottom: 1px solid var(--glass-border); }
+    .cell:nth-child(n+46):nth-child(-n+54) { border-bottom: 1px solid var(--grid-line); }
     
-    /* Extra separation logic */
-    .sep-v-1 { position: absolute; left: calc(33.33% - 1px); top: 0; bottom: 0; width: 2px; background: rgba(255,255,255,0.3); pointer-events: none; z-index: 10; }
-    .sep-v-2 { position: absolute; left: calc(66.66% - 1px); top: 0; bottom: 0; width: 2px; background: rgba(255,255,255,0.3); pointer-events: none; z-index: 10; }
-    .sep-h-1 { position: absolute; top: calc(33.33% - 1px); left: 0; right: 0; height: 2px; background: rgba(255,255,255,0.3); pointer-events: none; z-index: 10; }
-    .sep-h-2 { position: absolute; top: calc(66.66% - 1px); left: 0; right: 0; height: 2px; background: rgba(255,255,255,0.3); pointer-events: none; z-index: 10; }
-
-    /* Cell Content & States */
-    .cell-content { font-weight: 500; z-index: 2; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
+    .cell-content { font-weight: 500; z-index: 2; }
     .cell.given { color: var(--given-text); font-weight: 800; }
-    .cell.user-input { color: var(--user-text); font-weight: 600; text-shadow: 0 0 8px var(--primary-accent); }
+    .cell.user-input { color: var(--user-text); text-shadow: 0 0 10px var(--user-text); }
     .cell.error { color: var(--error-text) !important; animation: shake 0.4s; }
-    
     .cell.highlight { background-color: var(--highlight-bg); }
     .cell.area-highlight { background-color: var(--area-highlight); }
     .cell.active-cell { 
       background-color: var(--active-cell-bg); 
       box-shadow: inset 0 0 0 2px var(--primary-accent); 
-      transform: scale(1.05); /* Slight pop */
-      z-index: 5;
-      border-radius: 4px;
     }
-    .cell.hinted { background-color: rgba(255, 215, 0, 0.3); animation: flash 0.8s; }
+    .cell.hinted { background-color: rgba(255, 215, 0, 0.3); animation: flash 0.6s; }
 
-    /* =========================================
-       KEYPAD & ACTIONS
-       =========================================
-    */
+    /* Separators */
+    .sep-v-1 { position: absolute; left: 33.33%; top: 0; bottom: 0; width: 2px; background: var(--primary-accent); opacity: 0.4; pointer-events: none; z-index: 5;}
+    .sep-v-2 { position: absolute; left: 66.66%; top: 0; bottom: 0; width: 2px; background: var(--primary-accent); opacity: 0.4; pointer-events: none; z-index: 5;}
+    .sep-h-1 { position: absolute; top: 33.33%; left: 0; right: 0; height: 2px; background: var(--primary-accent); opacity: 0.4; pointer-events: none; z-index: 5;}
+    .sep-h-2 { position: absolute; top: 66.66%; left: 0; right: 0; height: 2px; background: var(--primary-accent); opacity: 0.4; pointer-events: none; z-index: 5;}
+
+    /* --- KEYPAD --- */
     .keypad-container {
       display: grid;
       grid-template-columns: repeat(10, 1fr);
-      gap: 8px;
+      gap: 6px;
       width: 100%;
-      margin-bottom: 15px;
+      margin-bottom: 12px;
     }
 
     @media (max-width: 380px) {
-      .keypad-container { grid-template-columns: repeat(5, 1fr); gap: 10px; }
+      .keypad-container { grid-template-columns: repeat(5, 1fr); gap: 8px; }
     }
 
     .num-btn {
@@ -389,7 +324,7 @@
       align-items: center;
       justify-content: center;
       padding: 0;
-      position: relative;
+      border: 1px solid var(--glass-border);
     }
 
     .num-btn.selected {
@@ -399,19 +334,20 @@
       box-shadow: 0 0 15px var(--primary-accent);
     }
     
-    .num-btn.disabled { opacity: 0.2; pointer-events: none; filter: grayscale(1); }
+    .num-btn.disabled { opacity: 0.3; pointer-events: none; }
 
+    /* --- BOTTOM ACTIONS --- */
     .actions-bar {
       display: flex;
       justify-content: space-between;
       gap: 12px;
-      margin-top: auto; 
+      margin-top: auto;
       padding-top: 10px;
     }
     
     .action-btn {
       flex: 1;
-      height: 54px;
+      height: 52px;
       border-radius: 16px;
       font-size: 15px;
       font-weight: 600;
@@ -419,14 +355,9 @@
       align-items: center;
       justify-content: center;
       gap: 8px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
     }
 
-    /* =========================================
-       MODALS & UTILS
-       =========================================
-    */
+    /* --- MODALS --- */
     .modal-overlay {
       position: fixed; top: 0; left: 0; right: 0; bottom: 0;
       background: rgba(0,0,0,0.6);
@@ -443,85 +374,74 @@
     
     .modal-card {
       background: var(--modal-bg);
-      width: 85%;
-      max-width: 380px;
+      width: 90%;
+      max-width: 400px;
       border-radius: 28px;
-      padding: 28px;
-      border: 1px solid var(--glass-border);
-      box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-      transform: scale(0.9) translateY(20px);
-      transition: transform 0.4s cubic-bezier(0.19, 1, 0.22, 1);
-      max-height: 80vh;
+      padding: 24px;
+      transform: scale(0.9);
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      max-height: 85vh;
       overflow-y: auto;
       color: var(--text-main);
+      box-shadow: 0 20px 50px rgba(0,0,0,0.5);
     }
-    .modal-overlay.active .modal-card { transform: scale(1) translateY(0); }
+    .modal-overlay.active .modal-card { transform: scale(1); }
     
     .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
-    .modal-title { font-size: 24px; font-weight: 700; background: -webkit-linear-gradient(0deg, var(--text-main), var(--primary-accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    .close-btn { font-size: 28px; cursor: pointer; color: var(--text-muted); line-height: 1; }
+    .modal-title { font-size: 24px; font-weight: 700; letter-spacing: -0.5px; }
+    .close-btn { font-size: 28px; cursor: pointer; color: var(--text-muted); line-height: 1; padding: 5px; }
 
-    /* Animations */
-    @keyframes shake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-6px); } 40% { transform: translateX(6px); } 60% { transform: translateX(-3px); } 80% { transform: translateX(3px); } }
-    @keyframes flash { 0% { background: white; } 100% { background: transparent; } }
+    /* Rank Badge Styles */
+    .rank-badge {
+      width: 26px; height: 26px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 50%;
+      font-size: 12px; font-weight: 800;
+      background: rgba(255,255,255,0.1);
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+    .rank-1 { background: linear-gradient(135deg, #FFD700, #FDB931); color: #8a6d07; box-shadow: 0 2px 5px rgba(253, 185, 49, 0.4); text-shadow: 0 1px 0 rgba(255,255,255,0.4); }
+    .rank-2 { background: linear-gradient(135deg, #E0E0E0, #BDBDBD); color: #555; box-shadow: 0 2px 5px rgba(189, 189, 189, 0.4); text-shadow: 0 1px 0 rgba(255,255,255,0.4); }
+    .rank-3 { background: linear-gradient(135deg, #CD7F32, #A0522D); color: #5a2d0c; box-shadow: 0 2px 5px rgba(160, 82, 45, 0.4); text-shadow: 0 1px 0 rgba(255,255,255,0.4); }
 
-    /* Loader */
+    /* Loading */
     #loading-screen {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: linear-gradient(45deg, #1a2a6c, #b21f1f, #fdbb2d);
-      background-size: 400% 400%;
-      animation: gradientBG 10s ease infinite;
+      background: #0f172a;
       z-index: 9999;
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      transition: opacity 0.6s;
+      transition: opacity 0.5s;
     }
     .loader {
-      width: 60px; height: 60px;
+      width: 48px; height: 48px;
       border: 4px solid rgba(255,255,255,0.3);
-      border-top-color: #fff;
+      border-bottom-color: var(--primary-accent);
       border-radius: 50%;
-      animation: rotation 1s cubic-bezier(0.55, 0.055, 0.675, 0.19) infinite;
+      animation: rotation 1s linear infinite;
     }
     @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+    @keyframes flash { 0% { background: var(--primary-accent); } 100% { background: var(--cell-bg); } }
 
-    /* Theme Selectors */
-    .theme-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+    .theme-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
     .theme-option { 
-      height: 50px; border-radius: 12px; border: 2px solid transparent; cursor: pointer; 
-      display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      height: 44px; border-radius: 12px; border: 2px solid transparent; cursor: pointer; 
+      display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     }
-    .theme-option.active-theme { border-color: var(--primary-accent); transform: scale(1.05); }
     
     .hidden { display: none !important; }
-
-    /* --- LEADERBOARD FIXES --- */
-    .leaderboard-row {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 10px;
-      border-bottom: 1px solid var(--grid-line);
-      transition: background 0.2s;
-    }
-    .leaderboard-row:last-child { border-bottom: none; }
-    .rank-num {
-      font-weight: 800;
-      font-size: 16px;
-      min-width: 25px; /* Фиксированная ширина для выравнивания */
-      text-align: center;
-      color: var(--primary-accent);
-    }
   </style>
 </head>
 <body data-theme="darkGlass">
 
   <div id="loading-screen">
     <div class="loader"></div>
-    <div style="margin-top: 25px; font-weight: 700; color: white; font-size: 18px; letter-spacing: 1px;">SUDOKU PREMIUM</div>
+    <div style="margin-top: 20px; font-weight: 600; color: white; letter-spacing: 0.5px;">Sudoku Sky</div>
   </div>
 
   <div id="app-container">
@@ -531,12 +451,12 @@
         <img id="user-avatar" src="" class="avatar-img" alt="Avatar">
         <div>
           <div id="username" style="font-weight: 700; font-size: 15px;">Guest</div>
-          <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Очки: <span id="user-score" style="color: var(--primary-accent); font-weight:700;">0</span></div>
+          <div style="font-size: 12px; color: var(--text-muted);">Очки: <span id="user-score" style="color: var(--primary-accent); font-weight:700;">0</span></div>
         </div>
       </div>
       <div style="text-align: right; font-size: 11px; color: var(--text-muted); font-weight: 500;">
-        <div style="margin-bottom: 2px;">Easy: <span id="easy-record" style="color:var(--text-main)">--:--</span></div>
-        <div style="margin-bottom: 2px;">Med: <span id="medium-record" style="color:var(--text-main)">--:--</span></div>
+        <div style="margin-bottom:2px">Easy: <span id="easy-record" style="color:var(--text-main)">--:--</span></div>
+        <div style="margin-bottom:2px">Med: <span id="medium-record" style="color:var(--text-main)">--:--</span></div>
         <div>Hard: <span id="hard-record" style="color:var(--text-main)">--:--</span></div>
       </div>
     </div>
@@ -548,15 +468,11 @@
         <option value="hard">Сложный</option>
       </select>
 
-      <div class="timer-badge" id="timer">00:00</div>
+      <div class="timer-badge glass-panel" id="timer">00:00</div>
       
       <div style="display:flex; gap: 8px;">
-        <button id="settings-button" class="icon-btn glass-button" aria-label="Settings">
-          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-        </button>
-        <button id="rating-button" class="icon-btn glass-button" aria-label="Leaderboard">
-          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path></svg>
-        </button>
+        <button id="settings-button" class="icon-btn glass-button"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></button>
+        <button id="rating-button" class="icon-btn glass-button"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path></svg></button>
       </div>
     </div>
 
@@ -573,7 +489,7 @@
     <div class="actions-bar">
       <button id="undo-button" class="action-btn glass-button" disabled>
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 14L4 9l5-5"/><path d="M4 9h10c4.418 0 8 3.582 8 8"/></svg>
-        <span>Отмена</span>
+        Отмена
       </button>
       <button id="hint-button" class="action-btn glass-button">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z"/><path d="M9 21h6"/></svg>
@@ -581,11 +497,11 @@
       </button>
       <button id="check" class="action-btn accent-button">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-        <span>Готово</span>
+        Готово
       </button>
     </div>
     
-    <div id="message" style="text-align: center; height: 24px; font-size: 15px; margin-top: 10px; font-weight: 600; color: var(--error-text); text-shadow: 0 0 10px rgba(0,0,0,0.5);"></div>
+    <div id="message" style="text-align: center; height: 20px; font-size: 14px; margin-top: 5px; color: var(--error-text); font-weight:600; text-shadow:0 1px 2px rgba(0,0,0,0.5);"></div>
 
   </div>
 
@@ -596,29 +512,29 @@
         <div class="close-btn" data-target="settings-modal">&times;</div>
       </div>
       
-      <div style="margin-bottom: 25px;">
-        <p style="margin-bottom: 12px; font-weight: 600; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Тема оформления</p>
+      <div style="margin-bottom: 24px;">
+        <p style="margin-bottom: 12px; font-weight: 600; font-size:14px; color:var(--text-muted);">Тема оформления</p>
         <div class="theme-grid">
-          <div class="theme-option" data-theme="darkGlass" style="background: linear-gradient(135deg, #30cfd0, #330867); color:white;">Sky</div>
-          <div class="theme-option" data-theme="lightGlass" style="background: linear-gradient(135deg, #a18cd1, #fbc2eb); color:#2d3436;">Sunset</div>
-          <div class="theme-option" data-theme="midnight" style="background: linear-gradient(135deg, #09203f, #537895); color:#ecf0f1;">Deep</div>
+          <div class="theme-option" data-theme="darkGlass" style="background: linear-gradient(135deg, #1e293b, #0f172a); color:white; border:1px solid rgba(255,255,255,0.2);">Sky</div>
+          <div class="theme-option" data-theme="lightGlass" style="background: #e0eafc; color:#1e293b;">Light</div>
+          <div class="theme-option" data-theme="midnight" style="background: #2b1055; color:#d946ef;">Night</div>
         </div>
       </div>
 
-      <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-top: 1px solid var(--grid-line);">
-        <span style="font-weight: 500;">Звуки кликов</span>
-        <button id="sound-toggle" class="glass-button" style="padding: 6px 18px; border-radius: 20px; font-size: 12px; font-weight: 700;">ВКЛ</button>
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-top: 1px solid var(--grid-line);">
+        <span style="font-weight:500;">Звуковые эффекты</span>
+        <button id="sound-toggle" class="glass-button" style="padding: 6px 16px; border-radius: 20px; font-size:13px;">ВКЛ</button>
       </div>
       
-      <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-top: 1px solid var(--grid-line); margin-bottom: 10px;">
-        <span style="font-weight: 500;">Подсветка чисел</span>
-        <button id="highlightToggle" class="glass-button" style="padding: 6px 18px; border-radius: 20px; font-size: 12px; font-weight: 700;">ВКЛ</button>
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-top: 1px solid var(--grid-line);">
+        <span style="font-weight:500;">Подсветка цифр</span>
+        <button id="highlightToggle" class="glass-button" style="padding: 6px 16px; border-radius: 20px; font-size:13px;">ВКЛ</button>
       </div>
 
-      <div style="margin-top: 25px; gap: 12px; display: flex; flex-direction: column;">
-         <button id="tutorial-button" class="glass-button" style="width:100%; padding: 14px; border-radius: 14px; font-weight: 600;">Как играть?</button>
-         <button id="recent-games-button" class="glass-button" style="width:100%; padding: 14px; border-radius: 14px; font-weight: 600;">История игр</button>
-         <button id="newGame" class="accent-button" style="width:100%; padding: 16px; border-radius: 14px; margin-top: 10px; font-weight: 700;">Новая игра</button>
+      <div style="margin-top: 24px; gap: 12px; display: flex; flex-direction: column;">
+         <button id="tutorial-button" class="glass-button" style="width:100%; padding: 12px; border-radius: 14px; font-weight:600;">Как играть?</button>
+         <button id="recent-games-button" class="glass-button" style="width:100%; padding: 12px; border-radius: 14px; font-weight:600;">История игр</button>
+         <button id="newGame" class="accent-button" style="width:100%; padding: 14px; border-radius: 14px; margin-top: 12px; font-size:16px;">Новая игра</button>
       </div>
     </div>
   </div>
@@ -630,16 +546,15 @@
         <div class="close-btn" data-target="rating-modal">&times;</div>
       </div>
       <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-        <button class="glass-button rating-tab active" data-type="score" style="flex:1; border-radius:10px; padding: 10px; font-weight: 600;">Очки</button>
-        <button class="glass-button rating-tab" data-type="time" style="flex:1; border-radius:10px; padding: 10px; font-weight: 600;">Время</button>
+        <button class="glass-button rating-tab active" data-type="score" style="flex:1; border-radius:12px; padding: 10px;">Очки</button>
+        <button class="glass-button rating-tab" data-type="time" style="flex:1; border-radius:12px; padding: 10px;">Время</button>
       </div>
-      <div id="difficulty-tabs" class="hidden" style="display: flex; gap: 6px; margin-bottom: 15px;">
-        <button class="glass-button diff-tab active" data-d="easy" style="flex:1; font-size: 12px; padding: 6px; border-radius: 8px;">Easy</button>
-        <button class="glass-button diff-tab" data-d="medium" style="flex:1; font-size: 12px; padding: 6px; border-radius: 8px;">Med</button>
-        <button class="glass-button diff-tab" data-d="hard" style="flex:1; font-size: 12px; padding: 6px; border-radius: 8px;">Hard</button>
+      <div id="difficulty-tabs" class="hidden" style="display: flex; gap: 6px; margin-bottom: 20px;">
+        <button class="glass-button diff-tab active" data-d="easy" style="flex:1; font-size: 13px; padding: 6px; border-radius: 8px;">Easy</button>
+        <button class="glass-button diff-tab" data-d="medium" style="flex:1; font-size: 13px; padding: 6px; border-radius: 8px;">Med</button>
+        <button class="glass-button diff-tab" data-d="hard" style="flex:1; font-size: 13px; padding: 6px; border-radius: 8px;">Hard</button>
       </div>
-      <div id="rating-list" style="max-height: 350px; overflow-y: auto; font-size: 14px;">
-        </div>
+      <div id="rating-list" style="max-height: 300px; overflow-y: auto; font-size: 15px;"></div>
     </div>
   </div>
   
@@ -652,22 +567,22 @@
 
   <div id="tutorial-modal" class="modal-overlay">
     <div class="modal-card">
-      <div class="modal-header"><div class="modal-title" id="tutorial-title">Правила</div><div class="close-btn" data-target="tutorial-modal">&times;</div></div>
-      <div id="tutorial-grid" class="sudoku-grid" style="width: 200px; margin: 0 auto; pointer-events: none; border-width: 1px;"></div>
-      <p id="tutorial-text" style="text-align: center; margin: 20px 0; min-height: 50px; line-height: 1.5; color: var(--text-muted);"></p>
+      <div class="modal-header"><div class="modal-title" id="tutorial-title"></div><div class="close-btn" data-target="tutorial-modal">&times;</div></div>
+      <div id="tutorial-grid" class="sudoku-grid" style="width: 200px; margin: 0 auto; pointer-events: none; border-color: rgba(255,255,255,0.4);"></div>
+      <p id="tutorial-text" style="text-align: center; margin: 20px 0; min-height: 40px; line-height: 1.5;"></p>
       <div style="display:flex; justify-content: space-between;">
-        <button id="tutorial-prev" class="glass-button" style="padding: 10px 20px; border-radius: 10px;">Назад</button>
+        <button id="tutorial-prev" class="glass-button" style="padding: 10px 20px; border-radius: 12px;">Назад</button>
         <span id="tutorial-step-indicator" style="font-size: 12px; opacity: 0.7; align-self: center;"></span>
-        <button id="tutorial-next" class="accent-button" style="padding: 10px 20px; border-radius: 10px;">Далее</button>
+        <button id="tutorial-next" class="accent-button" style="padding: 10px 20px; border-radius: 12px;">Далее</button>
       </div>
     </div>
   </div>
 
   <div id="win-modal" class="modal-overlay">
-    <div class="modal-card" style="text-align: center; overflow: hidden;">
-      <h2 style="font-size: 32px; margin: 0 0 15px 0; background: -webkit-linear-gradient(45deg, #00d2ff, #3a7bd5); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Победа!</h2>
-      <p id="win-modal-message" style="margin-bottom: 25px; line-height: 1.6; font-size: 16px; color: var(--text-main);"></p>
-      <button id="win-modal-close-btn" class="accent-button" style="width: 100%; padding: 14px; border-radius: 14px; font-weight: 700;">Супер!</button>
+    <div class="modal-card" style="text-align: center; background: rgba(15, 23, 42, 0.95);">
+      <h2 style="color: var(--primary-accent); font-size: 32px; margin: 0 0 15px 0; text-shadow: 0 0 15px rgba(56, 189, 248, 0.5);">Победа!</h2>
+      <p id="win-modal-message" style="margin-bottom: 25px; line-height: 1.6; font-size: 16px;"></p>
+      <button id="win-modal-close-btn" class="accent-button" style="width: 100%; padding: 14px; border-radius: 16px; font-size: 16px;">Отлично!</button>
     </div>
   </div>
 
@@ -676,27 +591,24 @@
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
 
   <script>
-    /* =========================================
-       LOGIC SECTION
-       =========================================
-    */
+    /* --- LOGIC START --- */
     const firebaseConfig = { apiKey: "AIzaSyBkYQ7tRMrZ-mghBnkJ_EvuzHpjs_p8hOY", authDomain: "sudo-9fbfc.firebaseapp.com", projectId: "sudo-9fbfc", storageBucket: "sudo-9fbfc.appspot.com", messagingSenderId: "927814106972", appId: "1:927814106972:web:71e0773453f9d16f598b99" };
     
-    // Init Firebase
+    // Инициализация
     try { firebase.initializeApp(firebaseConfig); } catch(e){ console.error(e); }
     const db = firebase.firestore();
     const auth = firebase.auth();
     const usersCollection = db.collection('users');
     const recordsCollection = db.collection('timeRecords');
 
-    // State
+    // State Variables
     let grid = [], solution = [], givenCells = new Set(), timerInterval, startTime=0;
     let activeCell = null, activeTool = null, highlightEnabled = true, undoStack = [];
     let hintCount = 0, isGameFinished = false, isSoundEnabled = true;
     let currentUser = { id: null, username: 'Guest', avatar: 'https://t.me/i/userpic/320/default.jpg', score: 0, bestTimes: { easy: null, medium: null, hard: null } };
     let currentRatingType = 'score', currentRatingDifficulty = 'easy';
 
-    // DOM Elements
+    // Elements
     const el = (id) => document.getElementById(id);
     const elements = {
       grid: el('grid'), numberRow: el('number-row'), difficulty: el('difficulty'),
@@ -722,7 +634,6 @@
 
     // --- GRID LOGIC ---
     function createGrid() {
-      // Re-insert separators
       elements.grid.innerHTML = '<div class="sep-v-1"></div><div class="sep-v-2"></div><div class="sep-h-1"></div><div class="sep-h-2"></div>';
       grid = Array(9).fill().map(()=>Array(9).fill(0));
       givenCells.clear();
@@ -750,23 +661,24 @@
       }
       const eraseBtn = document.createElement('button');
       eraseBtn.className = 'num-btn glass-button';
-      // Erase Icon
-      eraseBtn.innerHTML = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 4H8l-7 8 7 8h13v-16z"/><line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/></svg>';
+      eraseBtn.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 4H8l-7 8 7 8h13v-16z"/><line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/></svg>';
       eraseBtn.dataset.val = 'erase';
       eraseBtn.onclick = () => { playSound(); selectTool('erase'); };
       elements.numberRow.appendChild(eraseBtn);
     }
 
-    // --- GAMEPLAY INTERACTIONS ---
+    // --- GAMEPLAY ---
     function handleCellClick(r, c) {
       playSound();
       if(isGameFinished) return;
       if(activeTool) {
+        // Mode: Action (Placement)
         const cellVal = grid[r][c];
         if(givenCells.has(`${r},${c}`)) return; // Immutable
         if(activeTool === 'erase') performAction(0, r, c);
         else performAction(activeTool, r, c);
       } else {
+        // Mode: Selection
         selectCell(r, c);
       }
     }
@@ -777,6 +689,7 @@
       activeCell = [r, c];
       const cells = document.querySelectorAll('.cell');
       
+      // Highlight Area (Row, Col, Box)
       cells.forEach((cell, idx) => {
         const cr = Math.floor(idx/9), cc = idx%9;
         const sameRow = cr === r;
@@ -785,9 +698,11 @@
         if(sameRow || sameCol || sameBox) cell.classList.add('area-highlight');
       });
 
+      // Active Cell
       const target = cells[r*9+c];
       target.classList.add('active-cell');
 
+      // Highlight Similar
       const val = grid[r][c];
       if(val !== 0 && highlightEnabled) highlightSimilar(val);
     }
@@ -797,6 +712,7 @@
       if(activeTool === val) activeTool = null; // Toggle off
       else activeTool = val;
       
+      // UI Update
       document.querySelectorAll('.num-btn').forEach(b => {
         b.classList.toggle('selected', b.dataset.val == activeTool);
       });
@@ -834,11 +750,12 @@
     }
 
     function updateUI() {
+      // Undo Button
       elements.undoBtn.disabled = undoStack.length === 0;
+      // Hint Button
       el('hint-count-display').textContent = `${3-hintCount}/3`;
       el('hint-button').disabled = hintCount >= 3;
-      
-      // Check limits for keypad
+      // Number Pad Limit
       const counts = Array(10).fill(0);
       grid.flat().forEach(v => counts[v]++);
       document.querySelectorAll('.num-btn').forEach(btn => {
@@ -865,7 +782,7 @@
       selectCell(last.r, last.c);
     }
 
-    // --- GENERATOR ---
+    // --- SUDOKU GENERATOR ---
     function generatePuzzle(diff) {
       function shuffle(a) { for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]} }
       function solve(b) {
@@ -895,7 +812,7 @@
       solution = base.map(r=>[...r]);
 
       grid = base.map(r=>[...r]);
-      const attempts = {easy:35, medium:45, hard:55}[diff] || 35; // Slightly reduced removed cells for better mobile experience
+      const attempts = {easy:40, medium:50, hard:60}[diff] || 40;
       let removed = 0;
       while(removed < attempts) {
         let r=Math.floor(Math.random()*9), c=Math.floor(Math.random()*9);
@@ -907,7 +824,7 @@
       for(let i=0; i<81; i++) {
         const val = grid[Math.floor(i/9)][i%9];
         const cell = cells[i];
-        cell.className = 'cell'; // Reset classes
+        cell.className = 'cell';
         cell.querySelector('.cell-content').textContent = val || '';
         if(val!==0) {
           givenCells.add(`${Math.floor(i/9)},${i%9}`);
@@ -929,7 +846,7 @@
       }, 1000);
       
       elements.checkBtn.disabled = false;
-      elements.checkBtn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg><span>Готово</span>';
+      elements.checkBtn.textContent = 'Готово';
       elements.message.textContent = '';
       
       createGrid();
@@ -959,6 +876,7 @@
       if(error) elements.message.textContent = "Найдена ошибка!";
       else if(!full) elements.message.textContent = "Поле не заполнено.";
       else {
+        // Win!
         isGameFinished = true;
         clearInterval(timerInterval);
         const time = Math.floor((Date.now()-startTime)/1000);
@@ -990,7 +908,7 @@
       return Math.max(10, base - (time/2) - (hints*50));
     }
 
-    // --- DATA & USERS ---
+    // --- DATABASE & USER ---
     async function initUser() {
       try {
         await auth.signInAnonymously();
@@ -1061,7 +979,7 @@
         });
       }
       
-      el('win-modal-message').innerHTML = `Сложность: <b>${diff.toUpperCase()}</b><br>Время: ${formatTime(time)}<br>Очки: +${Math.floor(pts)}${newRecord ? '<br><br>🏆 <b>НОВЫЙ РЕКОРД!</b>' : ''}`;
+      el('win-modal-message').innerHTML = `Сложность: <b>${diff}</b><br>Время: ${formatTime(time)}<br>Очки: +${Math.floor(pts)}${newRecord ? '<br><br>🏆 <b>Новый рекорд!</b>' : ''}`;
       toggleModal('win-modal', true);
     }
 
@@ -1071,10 +989,10 @@
       el('hard-record').textContent = formatTime(currentUser.bestTimes.hard);
     }
     
-    // --- LEADERBOARD LOGIC FIXED ---
+    // --- LEADERBOARDS (FIXED) ---
     async function loadLeaderboard() {
       const list = el('rating-list');
-      list.innerHTML = '<div style="text-align:center; padding:30px; opacity:0.6;">Загрузка...</div>';
+      list.innerHTML = '<div style="text-align:center; padding:30px; opacity:0.7;">Загрузка...</div>';
       
       let query;
       if(currentRatingType === 'score') {
@@ -1088,23 +1006,32 @@
         list.innerHTML = '';
         snap.forEach((doc, idx) => {
           const d = doc.data();
-          // Создаем элемент с фиксированной шириной номера
+          
+          let rankClass = 'rank-badge';
+          if(idx === 0) rankClass += ' rank-1';
+          else if(idx === 1) rankClass += ' rank-2';
+          else if(idx === 2) rankClass += ' rank-3';
+          
           const row = document.createElement('div');
-          row.className = 'leaderboard-row';
+          row.style.cssText = "display:flex; align-items:center; gap:12px; padding:10px 4px; border-bottom:1px solid var(--grid-line); animation: popIn 0.3s forwards;";
+          row.style.animationDelay = `${idx * 0.05}s`;
+          row.style.opacity = '0';
+          
           row.innerHTML = `
-            <div class="rank-num">${idx+1}</div>
+            <div class="${rankClass}">${idx+1}</div>
             <img src="${d.avatar}" style="width:36px; height:36px; border-radius:50%; border:1px solid var(--glass-border);">
-            <div style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:500;">${d.username}</div>
-            <div style="font-weight:700; color:var(--text-main);">${currentRatingType === 'score' ? Math.floor(d.score) : formatTime(d.time)}</div>
+            <div style="flex:1; overflow:hidden; text-overflow:ellipsis; font-weight:500;">${d.username}</div>
+            <div style="font-weight:700; color:var(--primary-accent);">${currentRatingType === 'score' ? Math.floor(d.score) : formatTime(d.time)}</div>
           `;
           list.appendChild(row);
         });
-        if(snap.empty) list.innerHTML = '<div style="text-align:center; padding:30px; opacity:0.6;">Пока пусто</div>';
-      } catch(e) { list.innerHTML = '<div style="text-align:center; padding:20px; color:var(--error-text);">Ошибка загрузки</div>'; console.error(e); }
+        if(snap.empty) list.innerHTML = '<div style="text-align:center; padding:30px; opacity:0.5;">Пока пусто</div>';
+      } catch(e) { list.innerHTML = `<div style="text-align:center; color:var(--error-text); padding:20px;">Ошибка загрузки</div>`; console.error(e); }
     }
 
-    // --- EVENTS ---
+    // --- EVENTS & INIT ---
     document.addEventListener('DOMContentLoaded', () => {
+      // Buttons
       elements.newGameBtn.onclick = startGame;
       elements.checkBtn.onclick = checkGame;
       elements.hintBtn.onclick = getHint;
@@ -1115,6 +1042,7 @@
       el('tutorial-button').onclick = () => { toggleModal('tutorial-modal', true); };
       el('win-modal-close-btn').onclick = () => toggleModal('win-modal', false);
       
+      // Close Modals
       document.querySelectorAll('.close-btn').forEach(b => {
         b.onclick = () => toggleModal(b.dataset.target, false);
       });
@@ -1122,27 +1050,22 @@
         o.onclick = (e) => { if(e.target === o) toggleModal(o.id, false); };
       });
 
-      // Settings Logic
+      // Settings
       el('sound-toggle').onclick = (e) => { 
         isSoundEnabled = !isSoundEnabled; 
         e.target.textContent = isSoundEnabled ? "ВКЛ" : "ВЫКЛ"; 
-        e.target.style.opacity = isSoundEnabled ? 1 : 0.5;
       };
       el('highlightToggle').onclick = (e) => { 
         highlightEnabled = !highlightEnabled; 
         e.target.textContent = highlightEnabled ? "ВКЛ" : "ВЫКЛ"; 
-        e.target.style.opacity = highlightEnabled ? 1 : 0.5;
         if(!highlightEnabled) clearHighlights();
       };
       
-      // Theme
+      // Theme Switcher
       document.querySelectorAll('.theme-option').forEach(opt => {
         opt.onclick = () => {
           document.body.dataset.theme = opt.dataset.theme;
           localStorage.setItem('sudo-theme', opt.dataset.theme);
-          // Highlight active theme
-          document.querySelectorAll('.theme-option').forEach(x => x.classList.remove('active-theme'));
-          opt.classList.add('active-theme');
         };
       });
       
@@ -1165,10 +1088,9 @@
          }
       });
 
-      // Init Theme
-      const savedTheme = localStorage.getItem('sudo-theme') || 'darkGlass';
-      document.body.dataset.theme = savedTheme;
-      document.querySelector(`.theme-option[data-theme="${savedTheme}"]`)?.classList.add('active-theme');
+      // Restore Theme
+      const savedTheme = localStorage.getItem('sudo-theme');
+      if(savedTheme) document.body.dataset.theme = savedTheme;
 
       // Start
       initUser();
