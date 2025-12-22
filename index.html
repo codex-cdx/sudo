@@ -1,24 +1,26 @@
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Sudoku Premium Sky</title>
-  
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
-  
+
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  
+
   <style>
     /* --- БАЗОВЫЕ НАСТРОЙКИ --- */
     :root {
       --font-stack: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
       --safe-area-top: env(safe-area-inset-top);
       --safe-area-bottom: env(safe-area-inset-bottom);
-      
+
       /* Цветовая палитра */
       --glass-base: rgba(18, 20, 40, 0.65);
       --glass-border: rgba(255, 255, 255, 0.12);
@@ -26,18 +28,24 @@
       --primary-glow: rgba(56, 189, 248, 0.6);
       --text-main: #ffffff;
       --text-muted: rgba(255, 255, 255, 0.6);
-      --accent-color: #38bdf8; /* Sky Blue */
-      
+      --accent-color: #38bdf8;
+      /* Sky Blue */
+
       --cell-border: rgba(255, 255, 255, 0.08);
       --cell-active-bg: rgba(56, 189, 248, 0.25);
     }
 
-    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
 
     body {
       font-family: var(--font-stack);
-      margin: 0; padding: 0;
-      overflow: hidden; /* Чтобы фон не скроллился */
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      /* Чтобы фон не скроллился */
       background-color: #0f172a;
       color: var(--text-main);
       height: 100vh;
@@ -45,15 +53,29 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      /* Красивое фоновое изображение неба */
-      background: url('https://images.unsplash.com/photo-1519681393784-d120267933ba?q=80&w=2070&auto=format&fit=crop') no-repeat center center fixed;
+    }
+
+    /* Beautiful B&W Sky Background */
+    .bg-sky {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -2;
+      background: url('https://images.unsplash.com/photo-1536514498073-50e69d39c6cf?q=80&w=2071&auto=format&fit=crop') no-repeat center center;
       background-size: cover;
+      filter: grayscale(100%) contrast(1.1) brightness(1.1);
     }
 
     /* Затемняющий слой поверх фото для читаемости */
     body::before {
       content: '';
-      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
       background: linear-gradient(180deg, rgba(15, 23, 42, 0.4) 0%, rgba(15, 23, 42, 0.8) 100%);
       z-index: -1;
       backdrop-filter: blur(2px);
@@ -81,7 +103,7 @@
       border-radius: 16px;
       backdrop-filter: blur(10px);
     }
-    
+
     .glass-button:active {
       transform: scale(0.95);
       background: rgba(255, 255, 255, 0.15);
@@ -94,205 +116,625 @@
       box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
       font-weight: 700;
     }
-    .accent-button:active { transform: scale(0.96); box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3); }
+
+    .accent-button:active {
+      transform: scale(0.96);
+      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+    }
 
     /* --- LAYOUT --- */
     #app-container {
-      width: 100%; max-width: 450px; height: 100dvh;
-      display: flex; flex-direction: column;
+      width: 100%;
+      max-width: 450px;
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
       padding: max(16px, var(--safe-area-top)) 20px max(24px, var(--safe-area-bottom)) 20px;
-      position: relative; z-index: 1;
+      position: relative;
+      z-index: 1;
     }
 
     /* Header */
     .header-bar {
-      display: flex; justify-content: space-between; align-items: center;
-      margin-bottom: 20px; padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding: 12px 16px;
     }
 
-    .user-pill { display: flex; align-items: center; gap: 12px; }
+    .user-pill {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
     .avatar-img {
-      width: 44px; height: 44px; border-radius: 50%;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
       border: 2px solid var(--accent-color);
       box-shadow: 0 0 15px var(--primary-glow);
       object-fit: cover;
     }
-    .user-info div { line-height: 1.2; }
-    #username { font-weight: 800; font-size: 16px; letter-spacing: 0.5px; }
-    .stats-text { font-size: 11px; color: var(--text-muted); font-weight: 600; text-align: right; line-height: 1.5; }
+
+    .user-info div {
+      line-height: 1.2;
+    }
+
+    #username {
+      font-weight: 800;
+      font-size: 16px;
+      letter-spacing: 0.5px;
+    }
+
+    .stats-text {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 600;
+      text-align: right;
+      line-height: 1.5;
+    }
 
     /* Controls */
-    .controls-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; gap: 8px; }
-    
-    .select-wrapper { position: relative; }
+    .controls-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+      gap: 8px;
+    }
+
+    .select-wrapper {
+      position: relative;
+    }
+
     .select-styled {
-      appearance: none; background: rgba(0,0,0,0.2); border: 1px solid var(--glass-border);
-      color: white; padding: 8px 32px 8px 16px; border-radius: 12px; font-family: var(--font-stack); font-weight: 600; font-size: 14px;
+      appearance: none;
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid var(--glass-border);
+      color: white;
+      padding: 8px 32px 8px 16px;
+      border-radius: 12px;
+      font-family: var(--font-stack);
+      font-weight: 600;
+      font-size: 14px;
     }
 
     .timer-badge {
-      font-family: 'Outfit', monospace; font-variant-numeric: tabular-nums;
-      font-weight: 700; font-size: 20px; color: #fff;
+      font-family: 'Outfit', monospace;
+      font-variant-numeric: tabular-nums;
+      font-weight: 700;
+      font-size: 20px;
+      color: #fff;
       text-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
     }
 
-    .icon-btn { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 12px; cursor: pointer; }
+    .icon-btn {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 12px;
+      cursor: pointer;
+    }
 
     /* --- GRID (Центральный элемент) --- */
-    .grid-wrapper { display: flex; justify-content: center; margin-bottom: 24px; flex-shrink: 0; }
-    
+    .grid-wrapper {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 24px;
+      flex-shrink: 0;
+    }
+
     .sudoku-grid {
-      display: grid; grid-template-columns: repeat(9, 1fr);
-      background-color: rgba(0,0,0,0.2); /* Темная подложка */
-      border: 2px solid rgba(255,255,255,0.15);
-      border-radius: 20px; overflow: hidden;
-      width: 100%; aspect-ratio: 1/1; max-height: 50vh;
-      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+      display: grid;
+      grid-template-columns: repeat(9, 1fr);
+      background-color: rgba(0, 0, 0, 0.2);
+      /* Темная подложка */
+      border: 2px solid rgba(255, 255, 255, 0.15);
+      border-radius: 20px;
+      overflow: hidden;
+      width: 100%;
+      aspect-ratio: 1/1;
+      max-height: 50vh;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
     }
 
     .cell {
-      display: flex; align-items: center; justify-content: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       font-size: clamp(20px, 6vw, 28px);
-      position: relative; cursor: pointer;
+      position: relative;
+      cursor: pointer;
       border-right: 1px solid var(--cell-border);
       border-bottom: 1px solid var(--cell-border);
       transition: background 0.15s ease;
     }
 
     /* Убираем внешние границы ячеек */
-    .cell:nth-child(9n) { border-right: none; }
-    .cell:nth-child(n+73) { border-bottom: none; }
+    .cell:nth-child(9n) {
+      border-right: none;
+    }
+
+    .cell:nth-child(n+73) {
+      border-bottom: none;
+    }
 
     /* Жирные линии 3x3 (Светящиеся) */
-    .cell:nth-child(3n) { border-right: 1px solid rgba(255,255,255,0.3); } 
-    .cell:nth-child(9n) { border-right: none; }
+    .cell:nth-child(3n) {
+      border-right: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .cell:nth-child(9n) {
+      border-right: none;
+    }
+
     .cell:nth-child(n+19):nth-child(-n+27),
-    .cell:nth-child(n+46):nth-child(-n+54) { border-bottom: 1px solid rgba(255,255,255,0.3); }
+    .cell:nth-child(n+46):nth-child(-n+54) {
+      border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+    }
 
     /* Состояния ячеек */
-    .cell-content { z-index: 2; pointer-events: none; }
-    .cell.given { color: #fff; font-weight: 800; }
-    .cell.user-input { color: #7dd3fc; font-weight: 500; text-shadow: 0 0 8px rgba(125, 211, 252, 0.6); }
-    .cell.error { color: #fb7185 !important; background: rgba(251, 113, 133, 0.15); animation: shake 0.4s; }
-    .cell.highlight { background-color: rgba(56, 189, 248, 0.15); }
-    .cell.area-highlight { background-color: rgba(255, 255, 255, 0.03); }
-    
-    .cell.active-cell { 
-      background-color: var(--cell-active-bg); 
+    .cell-content {
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .cell.given {
+      color: #fff;
+      font-weight: 800;
+    }
+
+    .cell.user-input {
+      color: #7dd3fc;
+      font-weight: 500;
+      text-shadow: 0 0 8px rgba(125, 211, 252, 0.6);
+    }
+
+    .cell.error {
+      color: #fb7185 !important;
+      background: rgba(251, 113, 133, 0.15);
+      animation: shake 0.4s;
+    }
+
+    .cell.highlight {
+      background-color: rgba(56, 189, 248, 0.15);
+    }
+
+    .cell.area-highlight {
+      background-color: rgba(255, 255, 255, 0.03);
+    }
+
+    .cell.active-cell {
+      background-color: var(--cell-active-bg);
       box-shadow: inset 0 0 0 2px var(--accent-color);
     }
-    .cell.hinted { background-color: rgba(255, 215, 0, 0.25); animation: flash 0.6s; }
+
+    .cell.hinted {
+      background-color: rgba(255, 215, 0, 0.25);
+      animation: flash 0.6s;
+    }
 
     /* --- KEYPAD --- */
     .keypad-container {
-      display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px;
-      width: 100%; margin-bottom: auto;
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+      width: 100%;
+      margin-bottom: auto;
     }
-    
+
     @media (min-width: 380px) {
-      .keypad-container { grid-template-columns: repeat(10, 1fr); gap: 8px; }
+      .keypad-container {
+        grid-template-columns: repeat(10, 1fr);
+        gap: 8px;
+      }
     }
 
     .num-btn {
-      aspect-ratio: 1/1; border-radius: 14px;
-      font-size: 20px; font-weight: 600;
-      display: flex; align-items: center; justify-content: center;
-      color: rgba(255,255,255,0.9);
-      background: rgba(255,255,255,0.03);
+      aspect-ratio: 1/1;
+      border-radius: 14px;
+      font-size: 20px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: rgba(255, 255, 255, 0.9);
+      background: rgba(255, 255, 255, 0.03);
     }
 
     .num-btn.selected {
-      background: var(--accent-color); color: #000;
-      box-shadow: 0 0 15px var(--primary-glow); border-color: transparent;
+      background: var(--accent-color);
+      color: #000;
+      box-shadow: 0 0 15px var(--primary-glow);
+      border-color: transparent;
     }
-    .num-btn.disabled { opacity: 0.15; pointer-events: none; }
+
+    .num-btn.disabled {
+      opacity: 0.15;
+      pointer-events: none;
+    }
 
     /* --- BOTTOM ACTIONS --- */
     .actions-bar {
-      display: flex; justify-content: space-between; gap: 12px; margin-top: 20px;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 20px;
     }
+
     .action-btn {
-      flex: 1; height: 56px; border-radius: 18px;
-      font-size: 16px; font-weight: 600;
-      display: flex; align-items: center; justify-content: center; gap: 8px;
+      flex: 1;
+      height: 56px;
+      border-radius: 18px;
+      font-size: 16px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
     }
 
     /* --- MODALS & OVERLAYS --- */
     .modal-overlay {
-      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.6);
-      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-      z-index: 100; opacity: 0; pointer-events: none;
-      display: flex; align-items: center; justify-content: center;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       transition: opacity 0.3s ease;
     }
-    .modal-overlay.active { opacity: 1; pointer-events: auto; }
-    
+
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
     .modal-card {
       background: rgba(15, 23, 42, 0.95);
-      width: 90%; max-width: 400px; border-radius: 32px;
+      width: 90%;
+      max-width: 400px;
+      border-radius: 32px;
       padding: 30px;
-      border: 1px solid rgba(255,255,255,0.1);
-      box-shadow: 0 25px 80px rgba(0,0,0,0.6);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 25px 80px rgba(0, 0, 0, 0.6);
       transform: scale(0.9) translateY(20px);
       transition: transform 0.4s cubic-bezier(0.19, 1, 0.22, 1);
-      max-height: 85vh; overflow-y: auto;
+      max-height: 85vh;
+      overflow-y: auto;
     }
-    .modal-overlay.active .modal-card { transform: scale(1) translateY(0); }
-    
-    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
-    .modal-title { font-size: 26px; font-weight: 800; color: white; }
-    .close-btn { font-size: 32px; cursor: pointer; color: var(--text-muted); line-height: 0.8; transition: color 0.2s; }
-    .close-btn:hover { color: white; }
+
+    .modal-overlay.active .modal-card {
+      transform: scale(1) translateY(0);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
+    .modal-title {
+      font-size: 26px;
+      font-weight: 800;
+      color: white;
+    }
+
+    .close-btn {
+      font-size: 32px;
+      cursor: pointer;
+      color: var(--text-muted);
+      line-height: 0.8;
+      transition: color 0.2s;
+    }
+
+    .close-btn:hover {
+      color: white;
+    }
 
     /* --- LEADERBOARD FIX --- */
-    .rank-row { 
-      display: flex; align-items: center; gap: 12px; padding: 14px 0; 
-      border-bottom: 1px solid rgba(255,255,255,0.05); 
+    .rank-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     }
-    .rank-row:last-child { border-bottom: none; }
-    
-    .rank-cell { 
-      width: 36px; height: 36px; flex-shrink: 0;
-      display: flex; align-items: center; justify-content: center;
-      font-weight: 700; border-radius: 10px; background: rgba(255,255,255,0.05);
-      color: var(--text-muted); font-size: 14px;
-    }
-    /* Medals */
-    .rank-1 { background: linear-gradient(135deg, #FFD700 0%, #FDB931 100%); color: #4a3b00; box-shadow: 0 0 10px rgba(255, 215, 0, 0.4); font-size: 16px; }
-    .rank-2 { background: linear-gradient(135deg, #E0E0E0 0%, #BDBDBD 100%); color: #3d3d3d; box-shadow: 0 0 10px rgba(192, 192, 192, 0.4); font-size: 16px; }
-    .rank-3 { background: linear-gradient(135deg, #CD7F32 0%, #A0522D 100%); color: #3d220b; box-shadow: 0 0 10px rgba(205, 127, 50, 0.4); font-size: 16px; }
 
-    .player-info { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-    .player-name { font-weight: 600; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .player-date { font-size: 11px; color: var(--text-muted); }
-    .player-score { font-weight: 800; color: var(--accent-color); font-feature-settings: 'tnum'; }
+    .rank-row:last-child {
+      border-bottom: none;
+    }
+
+    .rank-cell {
+      width: 36px;
+      height: 36px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    /* Medals */
+    .rank-1 {
+      background: linear-gradient(135deg, #FFD700 0%, #FDB931 100%);
+      color: #4a3b00;
+      box-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
+      font-size: 16px;
+    }
+
+    .rank-2 {
+      background: linear-gradient(135deg, #E0E0E0 0%, #BDBDBD 100%);
+      color: #3d3d3d;
+      box-shadow: 0 0 10px rgba(192, 192, 192, 0.4);
+      font-size: 16px;
+    }
+
+    .rank-3 {
+      background: linear-gradient(135deg, #CD7F32 0%, #A0522D 100%);
+      color: #3d220b;
+      box-shadow: 0 0 10px rgba(205, 127, 50, 0.4);
+      font-size: 16px;
+    }
+
+    .player-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .player-name {
+      font-weight: 600;
+      color: white;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .player-date {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .player-score {
+      font-weight: 800;
+      color: var(--accent-color);
+      font-feature-settings: 'tnum';
+    }
 
     /* Loader */
     #loading-screen {
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: #0f172a; z-index: 9999;
-      display: flex; flex-direction: column; justify-content: center; align-items: center;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #0f172a;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
       transition: opacity 0.6s ease;
     }
+
     .loader {
-      width: 50px; height: 50px;
-      border: 4px solid rgba(255,255,255,0.1);
+      width: 50px;
+      height: 50px;
+      border: 4px solid rgba(255, 255, 255, 0.1);
       border-left-color: var(--accent-color);
       border-radius: 50%;
       animation: rotation 1s linear infinite;
     }
 
     /* Animations */
-    @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
-    @keyframes flash { 0% { background: var(--accent-color); } 100% { background: transparent; } }
-    
-    .hidden { display: none !important; }
+    @keyframes rotation {
+      0% {
+        transform: rotate(0deg);
+      }
 
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    @keyframes shake {
+
+      0%,
+      100% {
+        transform: translateX(0);
+      }
+
+      25% {
+        transform: translateX(-4px);
+      }
+
+      75% {
+        transform: translateX(4px);
+      }
+    }
+
+    @keyframes flash {
+      0% {
+        background: var(--accent-color);
+      }
+
+      100% {
+        background: transparent;
+      }
+    }
+
+    /* === COMPACT MOBILE STYLES (375x667 and similar) === */
+    @media (max-height: 700px) {
+      #app-container {
+        padding: 8px 12px 12px 12px;
+      }
+
+      .header-bar {
+        margin-bottom: 8px;
+        padding: 8px 12px;
+        border-radius: 16px;
+      }
+
+      .avatar-img {
+        width: 36px;
+        height: 36px;
+      }
+
+      #username {
+        font-size: 14px;
+      }
+
+      .user-info>div:last-child {
+        font-size: 11px;
+      }
+
+      .stats-text {
+        font-size: 10px;
+        line-height: 1.3;
+      }
+
+      .controls-bar {
+        margin-bottom: 8px;
+      }
+
+      .select-styled {
+        padding: 6px 24px 6px 12px;
+        font-size: 12px;
+        border-radius: 10px;
+      }
+
+      .timer-badge {
+        font-size: 16px;
+      }
+
+      .icon-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: 10px;
+      }
+
+      .icon-btn svg {
+        width: 18px;
+        height: 18px;
+      }
+
+      .grid-wrapper {
+        margin-bottom: 10px;
+      }
+
+      .sudoku-grid {
+        max-height: 52vh;
+        border-radius: 14px;
+      }
+
+      .cell {
+        font-size: clamp(18px, 5.5vw, 24px);
+      }
+
+      /* Compact keypad - square buttons in one row */
+      .keypad-container {
+        gap: 4px;
+        grid-template-columns: repeat(10, 1fr);
+      }
+
+      .num-btn {
+        aspect-ratio: 1/1;
+        border-radius: 8px;
+        font-size: 14px;
+      }
+
+      .actions-bar {
+        margin-top: 8px;
+        gap: 8px;
+      }
+
+      .action-btn {
+        height: 42px;
+        border-radius: 14px;
+        font-size: 14px;
+      }
+
+      #message {
+        height: 16px;
+        font-size: 12px;
+        margin-top: 6px;
+      }
+    }
+
+    /* Extra compact for very small screens */
+    @media (max-height: 600px) {
+      #app-container {
+        padding: 6px 10px 10px 10px;
+      }
+
+      .header-bar {
+        margin-bottom: 6px;
+        padding: 6px 10px;
+      }
+
+      .avatar-img {
+        width: 30px;
+        height: 30px;
+      }
+
+      .controls-bar {
+        margin-bottom: 6px;
+      }
+
+      .grid-wrapper {
+        margin-bottom: 6px;
+      }
+
+      .sudoku-grid {
+        max-height: 48vh;
+      }
+
+      .num-btn {
+        font-size: 12px;
+      }
+
+      .actions-bar {
+        margin-top: 6px;
+      }
+
+      .action-btn {
+        height: 38px;
+      }
+
+      #message {
+        height: 14px;
+        font-size: 11px;
+        margin-top: 4px;
+      }
+    }
+
+    .hidden {
+      display: none !important;
+    }
   </style>
 </head>
+
 <body>
+  <div class="bg-sky"></div>
 
   <div id="loading-screen">
     <div class="loader"></div>
@@ -300,13 +742,14 @@
   </div>
 
   <div id="app-container">
-    
+
     <div class="header-bar glass-panel">
       <div class="user-pill">
         <img id="user-avatar" src="" class="avatar-img" alt="User">
         <div class="user-info">
           <div id="username">Guest</div>
-          <div style="font-size: 12px; color: var(--text-muted);">Score: <span id="user-score" style="color: var(--accent-color); font-weight: 700;">0</span></div>
+          <div style="font-size: 12px; color: var(--text-muted);">Score: <span id="user-score"
+              style="color: var(--accent-color); font-weight: 700;">0</span></div>
         </div>
       </div>
       <div class="stats-text">
@@ -326,10 +769,26 @@
       </div>
 
       <div class="timer-badge" id="timer">00:00</div>
-      
+
       <div style="display:flex; gap: 8px;">
-        <button id="rating-button" class="icon-btn glass-button"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path></svg></button>
-        <button id="settings-button" class="icon-btn glass-button"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></button>
+        <button id="rating-button" class="icon-btn glass-button"><svg xmlns="http://www.w3.org/2000/svg" width="22"
+            height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round">
+            <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
+            <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path>
+            <path d="M4 22h16"></path>
+            <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path>
+            <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path>
+            <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path>
+          </svg></button>
+        <button id="settings-button" class="icon-btn glass-button"><svg xmlns="http://www.w3.org/2000/svg" width="22"
+            height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path
+              d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+            </path>
+          </svg></button>
       </div>
     </div>
 
@@ -341,18 +800,27 @@
 
     <div class="actions-bar">
       <button id="undo-button" class="action-btn glass-button" disabled>
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 14L4 9l5-5"/><path d="M4 9h10c4.418 0 8 3.582 8 8"/></svg>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 14L4 9l5-5" />
+          <path d="M4 9h10c4.418 0 8 3.582 8 8" />
+        </svg>
       </button>
       <button id="hint-button" class="action-btn glass-button">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z"/><path d="M9 21h6"/></svg>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path
+            d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z" />
+          <path d="M9 21h6" />
+        </svg>
         <span id="hint-count-display">3/3</span>
       </button>
       <button id="check" class="action-btn accent-button">
         Done
       </button>
     </div>
-    
-    <div id="message" style="text-align: center; height: 24px; font-size: 15px; margin-top: 15px; font-weight: 600; color: #fb7185;"></div>
+
+    <div id="message"
+      style="text-align: center; height: 24px; font-size: 15px; margin-top: 15px; font-weight: 600; color: #fb7185;">
+    </div>
 
   </div>
 
@@ -363,18 +831,37 @@
         <div class="close-btn" data-target="settings-modal">&times;</div>
       </div>
 
-      <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 0; border-bottom: 1px solid rgba(255,255,255,0.1);">
+      <div
+        style="display: flex; justify-content: space-between; align-items: center; padding: 16px 0; border-bottom: 1px solid rgba(255,255,255,0.1);">
         <span style="font-weight: 500; color: white;">Sound Effects</span>
-        <button id="sound-toggle" class="glass-button" style="padding: 8px 20px; border-radius: 20px; font-size: 13px; font-weight: 700;">ON</button>
+        <button id="sound-toggle" class="glass-button"
+          style="padding: 8px 20px; border-radius: 20px; font-size: 13px; font-weight: 700;">OFF</button>
       </div>
-      
-      <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 0; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 24px;">
+
+      <!-- Custom Sound Recording -->
+      <div style="padding: 16px 0; border-bottom: 1px solid rgba(255,255,255,0.1);">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-weight: 500; color: white;">Custom Sound</span>
+          <div style="display: flex; gap: 8px;">
+            <button id="record-sound-btn" class="glass-button"
+              style="padding: 8px 14px; border-radius: 16px; font-size: 12px; font-weight: 600;">🎤 Record</button>
+            <button id="clear-sound-btn" class="glass-button hidden"
+              style="padding: 8px 12px; border-radius: 16px; font-size: 12px; font-weight: 600;">✕</button>
+          </div>
+        </div>
+        <div id="recording-status" style="font-size: 11px; color: var(--text-muted); margin-top: 8px;"></div>
+      </div>
+
+      <div
+        style="display: flex; justify-content: space-between; align-items: center; padding: 16px 0; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 24px;">
         <span style="font-weight: 500; color: white;">Highlight Digits</span>
-        <button id="highlightToggle" class="glass-button" style="padding: 8px 20px; border-radius: 20px; font-size: 13px; font-weight: 700;">ON</button>
+        <button id="highlightToggle" class="glass-button"
+          style="padding: 8px 20px; border-radius: 20px; font-size: 13px; font-weight: 700;">ON</button>
       </div>
 
       <div style="display: flex; flex-direction: column; gap: 12px;">
-         <button id="newGame" class="accent-button" style="width:100%; padding: 18px; border-radius: 20px; font-size: 16px;">New Game</button>
+        <button id="newGame" class="accent-button"
+          style="width:100%; padding: 18px; border-radius: 20px; font-size: 16px;">New Game</button>
       </div>
     </div>
   </div>
@@ -385,16 +872,22 @@
         <div class="modal-title">Leaderboard</div>
         <div class="close-btn" data-target="rating-modal">&times;</div>
       </div>
-      <div style="display: flex; gap: 8px; margin-bottom: 20px; padding: 4px; background: rgba(0,0,0,0.3); border-radius: 16px;">
-        <button class="glass-button rating-tab active" data-type="score" style="flex:1; border-radius:12px; padding: 10px; border:none; background:transparent; font-weight:600;">Score</button>
-        <button class="glass-button rating-tab" data-type="time" style="flex:1; border-radius:12px; padding: 10px; border:none; background:transparent; font-weight:600;">Time</button>
+      <div
+        style="display: flex; gap: 8px; margin-bottom: 20px; padding: 4px; background: rgba(0,0,0,0.3); border-radius: 16px;">
+        <button class="glass-button rating-tab active" data-type="score"
+          style="flex:1; border-radius:12px; padding: 10px; border:none; background:transparent; font-weight:600;">Score</button>
+        <button class="glass-button rating-tab" data-type="time"
+          style="flex:1; border-radius:12px; padding: 10px; border:none; background:transparent; font-weight:600;">Time</button>
       </div>
       <div id="difficulty-tabs" class="hidden" style="display: flex; gap: 8px; margin-bottom: 15px;">
-        <button class="glass-button diff-tab active" data-d="easy" style="flex:1; font-size: 12px; padding: 8px; border-radius: 10px;">Easy</button>
-        <button class="glass-button diff-tab" data-d="medium" style="flex:1; font-size: 12px; padding: 8px; border-radius: 10px;">Med</button>
-        <button class="glass-button diff-tab" data-d="hard" style="flex:1; font-size: 12px; padding: 8px; border-radius: 10px;">Hard</button>
+        <button class="glass-button diff-tab active" data-d="easy"
+          style="flex:1; font-size: 12px; padding: 8px; border-radius: 10px;">Easy</button>
+        <button class="glass-button diff-tab" data-d="medium"
+          style="flex:1; font-size: 12px; padding: 8px; border-radius: 10px;">Med</button>
+        <button class="glass-button diff-tab" data-d="hard"
+          style="flex:1; font-size: 12px; padding: 8px; border-radius: 10px;">Hard</button>
       </div>
-      
+
       <div id="rating-list" style="min-height: 200px;"></div>
     </div>
   </div>
@@ -402,9 +895,13 @@
   <div id="win-modal" class="modal-overlay">
     <div class="modal-card" style="text-align: center; padding-top: 40px; background: rgba(20, 30, 50, 0.98);">
       <div style="font-size: 70px; margin-bottom: 10px; text-shadow: 0 0 30px rgba(255,215,0,0.5);">🏆</div>
-      <h2 style="background: linear-gradient(to right, #38bdf8, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 36px; margin: 0 0 10px 0; font-weight: 800;">Victory!</h2>
-      <p id="win-modal-message" style="margin-bottom: 30px; line-height: 1.6; font-size: 16px; color: var(--text-muted);"></p>
-      <button id="win-modal-close-btn" class="accent-button" style="width: 100%; padding: 16px; border-radius: 18px; font-size: 18px;">Awesome!</button>
+      <h2
+        style="background: linear-gradient(to right, #38bdf8, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 36px; margin: 0 0 10px 0; font-weight: 800;">
+        Victory!</h2>
+      <p id="win-modal-message"
+        style="margin-bottom: 30px; line-height: 1.6; font-size: 16px; color: var(--text-muted);"></p>
+      <button id="win-modal-close-btn" class="accent-button"
+        style="width: 100%; padding: 16px; border-radius: 18px; font-size: 18px;">Awesome!</button>
     </div>
   </div>
 
@@ -415,15 +912,15 @@
   <script>
     /* --- LOGIC PRESERVED & UI ENHANCED --- */
     const firebaseConfig = { apiKey: "AIzaSyBkYQ7tRMrZ-mghBnkJ_EvuzHpjs_p8hOY", authDomain: "sudo-9fbfc.firebaseapp.com", projectId: "sudo-9fbfc", storageBucket: "sudo-9fbfc.appspot.com", messagingSenderId: "927814106972", appId: "1:927814106972:web:71e0773453f9d16f598b99" };
-    try { firebase.initializeApp(firebaseConfig); } catch(e){ console.error(e); }
+    try { firebase.initializeApp(firebaseConfig); } catch (e) { console.error(e); }
     const db = firebase.firestore();
     const auth = firebase.auth();
     const usersCollection = db.collection('users');
     const recordsCollection = db.collection('timeRecords');
 
-    let grid = [], solution = [], givenCells = new Set(), timerInterval, startTime=0;
+    let grid = [], solution = [], givenCells = new Set(), timerInterval, startTime = 0;
     let activeCell = null, activeTool = null, highlightEnabled = true, undoStack = [];
-    let hintCount = 0, isGameFinished = false, isSoundEnabled = true;
+    let hintCount = 0, isGameFinished = false, isSoundEnabled = false;
     let currentUser = { id: null, username: 'Guest', avatar: 'https://t.me/i/userpic/320/default.jpg', score: 0, bestTimes: { easy: null, medium: null, hard: null } };
     let currentRatingType = 'score', currentRatingDifficulty = 'easy';
 
@@ -437,36 +934,114 @@
       settingsModal: el('settings-modal'), ratingModal: el('rating-modal')
     };
 
-    const clickSound = new Audio('https://github.com/codex-cdx/sudo/raw/refs/heads/main/%D0%9F%D0%BB%D0%B0%D0%BC%D0%B1.mp3');
-    function playSound() { if(isSoundEnabled) { clickSound.currentTime = 0; clickSound.play().catch(()=>{}); } }
+    // --- SOUND SYSTEM ---
+    const DEFAULT_SOUND_URL = 'https://github.com/codex-cdx/sudo/raw/refs/heads/main/%D0%9F%D0%BB%D0%B0%D0%BC%D0%B1.mp3';
+    let clickSound = new Audio(DEFAULT_SOUND_URL);
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let isRecording = false;
 
-    function formatTime(s) { if(s==null) return '--:--'; return `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`; }
-    
-    function toggleModal(modalId, show) { 
-      const m = el(modalId); 
-      if(show) { m.classList.remove('hidden'); requestAnimationFrame(()=>m.classList.add('active')); }
-      else { m.classList.remove('active'); setTimeout(()=>m.classList.add('hidden'), 300); }
+    // Load custom sound from localStorage if exists
+    function loadCustomSound() {
+      const customSoundData = localStorage.getItem('sudoku_custom_sound');
+      if (customSoundData) {
+        clickSound.src = customSoundData;
+        el('clear-sound-btn').classList.remove('hidden');
+        el('recording-status').textContent = '✓ Custom sound loaded';
+      }
+    }
+
+    function playSound() {
+      if (isSoundEnabled) {
+        clickSound.currentTime = 0;
+        clickSound.play().catch(() => { });
+      }
+    }
+
+    async function startRecording() {
+      if (isRecording) return;
+
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+        audioChunks = [];
+        isRecording = true;
+
+        el('record-sound-btn').textContent = '🔴 Recording...';
+        el('record-sound-btn').style.background = 'rgba(239, 68, 68, 0.3)';
+        el('recording-status').textContent = 'Recording... (max 2 sec)';
+
+        mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
+
+        mediaRecorder.onstop = () => {
+          stream.getTracks().forEach(track => track.stop());
+          isRecording = false;
+
+          const blob = new Blob(audioChunks, { type: 'audio/webm' });
+          const reader = new FileReader();
+
+          reader.onloadend = () => {
+            localStorage.setItem('sudoku_custom_sound', reader.result);
+            clickSound.src = reader.result;
+            el('clear-sound-btn').classList.remove('hidden');
+            el('record-sound-btn').textContent = '🎤 Record';
+            el('record-sound-btn').style.background = '';
+            el('recording-status').textContent = '✓ Custom sound saved!';
+            el('recording-status').style.color = '#22c55e';
+            setTimeout(() => { el('recording-status').style.color = ''; }, 2000);
+          };
+
+          reader.readAsDataURL(blob);
+        };
+
+        mediaRecorder.start();
+        setTimeout(() => {
+          if (mediaRecorder && mediaRecorder.state === 'recording') {
+            mediaRecorder.stop();
+          }
+        }, 2000);
+
+      } catch (err) {
+        el('recording-status').textContent = '⚠ Microphone access denied';
+        el('recording-status').style.color = '#fb7185';
+        console.error('Recording error:', err);
+      }
+    }
+
+    function clearCustomSound() {
+      localStorage.removeItem('sudoku_custom_sound');
+      clickSound.src = DEFAULT_SOUND_URL;
+      el('clear-sound-btn').classList.add('hidden');
+      el('recording-status').textContent = 'Default sound restored';
+    }
+
+    function formatTime(s) { if (s == null) return '--:--'; return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`; }
+
+    function toggleModal(modalId, show) {
+      const m = el(modalId);
+      if (show) { m.classList.remove('hidden'); requestAnimationFrame(() => m.classList.add('active')); }
+      else { m.classList.remove('active'); setTimeout(() => m.classList.add('hidden'), 300); }
     }
 
     // --- GRID ---
     function createGrid() {
       elements.grid.innerHTML = '';
-      grid = Array(9).fill().map(()=>Array(9).fill(0));
+      grid = Array(9).fill().map(() => Array(9).fill(0));
       givenCells.clear();
-      for(let i=0; i<81; i++) {
+      for (let i = 0; i < 81; i++) {
         const d = document.createElement('div');
         d.className = 'cell';
         const span = document.createElement('span');
         span.className = 'cell-content';
         d.appendChild(span);
-        d.addEventListener('click', (e) => { e.stopPropagation(); handleCellClick(Math.floor(i/9), i%9); });
+        d.addEventListener('click', (e) => { e.stopPropagation(); handleCellClick(Math.floor(i / 9), i % 9); });
         elements.grid.appendChild(d);
       }
     }
 
     function createKeypad() {
       elements.numberRow.innerHTML = '';
-      for(let i=1; i<=9; i++) {
+      for (let i = 1; i <= 9; i++) {
         const btn = document.createElement('button');
         btn.className = 'num-btn glass-button';
         btn.textContent = i;
@@ -484,10 +1059,10 @@
 
     function handleCellClick(r, c) {
       playSound();
-      if(isGameFinished) return;
-      if(activeTool) {
-        if(givenCells.has(`${r},${c}`)) return; 
-        if(activeTool === 'erase') performAction(0, r, c);
+      if (isGameFinished) return;
+      if (activeTool) {
+        if (givenCells.has(`${r},${c}`)) return;
+        if (activeTool === 'erase') performAction(0, r, c);
         else performAction(activeTool, r, c);
       } else {
         selectCell(r, c);
@@ -495,42 +1070,42 @@
     }
 
     function selectCell(r, c) {
-      if(isGameFinished) return;
+      if (isGameFinished) return;
       clearHighlights();
       activeCell = [r, c];
       const cells = document.querySelectorAll('.cell');
-      
+
       cells.forEach((cell, idx) => {
-        const cr = Math.floor(idx/9), cc = idx%9;
+        const cr = Math.floor(idx / 9), cc = idx % 9;
         const sameRow = cr === r;
         const sameCol = cc === c;
-        const sameBox = Math.floor(cr/3) === Math.floor(r/3) && Math.floor(cc/3) === Math.floor(c/3);
-        if(sameRow || sameCol || sameBox) cell.classList.add('area-highlight');
+        const sameBox = Math.floor(cr / 3) === Math.floor(r / 3) && Math.floor(cc / 3) === Math.floor(c / 3);
+        if (sameRow || sameCol || sameBox) cell.classList.add('area-highlight');
       });
 
-      cells[r*9+c].classList.add('active-cell');
+      cells[r * 9 + c].classList.add('active-cell');
       const val = grid[r][c];
-      if(val !== 0 && highlightEnabled) highlightSimilar(val);
+      if (val !== 0 && highlightEnabled) highlightSimilar(val);
     }
 
     function selectTool(val) {
-      if(isGameFinished) return;
-      if(activeTool === val) activeTool = null; 
+      if (isGameFinished) return;
+      if (activeTool === val) activeTool = null;
       else activeTool = val;
-      
+
       document.querySelectorAll('.num-btn').forEach(b => {
         b.classList.toggle('selected', b.dataset.val == activeTool);
       });
 
       activeCell = null;
       clearHighlights();
-      if(activeTool && activeTool !== 'erase' && highlightEnabled) highlightSimilar(activeTool);
+      if (activeTool && activeTool !== 'erase' && highlightEnabled) highlightSimilar(activeTool);
     }
 
     function highlightSimilar(val) {
       document.querySelectorAll('.cell').forEach((c, idx) => {
-        const r = Math.floor(idx/9), col = idx%9;
-        if(grid[r][col] === val) c.classList.add('highlight');
+        const r = Math.floor(idx / 9), col = idx % 9;
+        if (grid[r][col] === val) c.classList.add('highlight');
       });
     }
 
@@ -540,44 +1115,44 @@
 
     function performAction(val, r, c) {
       const prev = grid[r][c];
-      if(prev === val) return;
-      
-      undoStack.push({r, c, prev, val});
+      if (prev === val) return;
+
+      undoStack.push({ r, c, prev, val });
       grid[r][c] = val;
-      
-      const cell = document.querySelectorAll('.cell')[r*9+c];
+
+      const cell = document.querySelectorAll('.cell')[r * 9 + c];
       cell.querySelector('.cell-content').textContent = val === 0 ? '' : val;
       cell.classList.remove('error', 'hinted');
       cell.classList.toggle('user-input', val !== 0);
-      
+
       updateUI();
-      if(highlightEnabled) { clearHighlights(); if(val!==0) highlightSimilar(val); }
+      if (highlightEnabled) { clearHighlights(); if (val !== 0) highlightSimilar(val); }
     }
 
     function updateUI() {
       elements.undoBtn.disabled = undoStack.length === 0;
-      el('hint-count-display').textContent = `${3-hintCount}/3`;
+      el('hint-count-display').textContent = `${3 - hintCount}/3`;
       el('hint-button').disabled = hintCount >= 3;
-      
+
       const counts = Array(10).fill(0);
       grid.flat().forEach(v => counts[v]++);
       document.querySelectorAll('.num-btn').forEach(btn => {
-         const val = parseInt(btn.dataset.val);
-         if(val && counts[val] >= 9) {
-             btn.classList.add('disabled');
-             if(activeTool === val) selectTool(null);
-         } else {
-             btn.classList.remove('disabled');
-         }
+        const val = parseInt(btn.dataset.val);
+        if (val && counts[val] >= 9) {
+          btn.classList.add('disabled');
+          if (activeTool === val) selectTool(null);
+        } else {
+          btn.classList.remove('disabled');
+        }
       });
     }
 
     function undo() {
       playSound();
-      if(!undoStack.length) return;
+      if (!undoStack.length) return;
       const last = undoStack.pop();
       grid[last.r][last.c] = last.prev;
-      const cell = document.querySelectorAll('.cell')[last.r*9+last.c];
+      const cell = document.querySelectorAll('.cell')[last.r * 9 + last.c];
       cell.querySelector('.cell-content').textContent = last.prev || '';
       cell.classList.remove('error');
       cell.classList.toggle('user-input', last.prev !== 0);
@@ -588,50 +1163,50 @@
     // --- GAME LOGIC ---
     function generatePuzzle(diff) {
       // Simple solver/generator for demo
-      function shuffle(a) { for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]} }
+      function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1));[a[i], a[j]] = [a[j], a[i]] } }
       function solve(b) {
-        for(let i=0;i<81;i++){
-          if(b[Math.floor(i/9)][i%9]===0){
-             for(let n=1;n<=9;n++){
-               if(isValid(b,Math.floor(i/9),i%9,n)){
-                 b[Math.floor(i/9)][i%9]=n;
-                 if(solve(b))return true;
-                 b[Math.floor(i/9)][i%9]=0;
-               }
-             }
-             return false;
+        for (let i = 0; i < 81; i++) {
+          if (b[Math.floor(i / 9)][i % 9] === 0) {
+            for (let n = 1; n <= 9; n++) {
+              if (isValid(b, Math.floor(i / 9), i % 9, n)) {
+                b[Math.floor(i / 9)][i % 9] = n;
+                if (solve(b)) return true;
+                b[Math.floor(i / 9)][i % 9] = 0;
+              }
+            }
+            return false;
           }
         }
         return true;
       }
-      function isValid(b,r,c,n){
-        for(let i=0;i<9;i++) if(b[r][i]===n||b[i][c]===n||b[3*Math.floor(r/3)+Math.floor(i/3)][3*Math.floor(c/3)+i%3]===n)return false;
+      function isValid(b, r, c, n) {
+        for (let i = 0; i < 9; i++) if (b[r][i] === n || b[i][c] === n || b[3 * Math.floor(r / 3) + Math.floor(i / 3)][3 * Math.floor(c / 3) + i % 3] === n) return false;
         return true;
       }
-      
-      const base = Array(9).fill().map(()=>Array(9).fill(0));
-      const firstRow = [1,2,3,4,5,6,7,8,9]; shuffle(firstRow);
+
+      const base = Array(9).fill().map(() => Array(9).fill(0));
+      const firstRow = [1, 2, 3, 4, 5, 6, 7, 8, 9]; shuffle(firstRow);
       base[0] = firstRow;
       solve(base);
-      solution = base.map(r=>[...r]);
+      solution = base.map(r => [...r]);
 
-      grid = base.map(r=>[...r]);
-      const attempts = {easy:30, medium:45, hard:55}[diff] || 30; // removed cells
+      grid = base.map(r => [...r]);
+      const attempts = { easy: 30, medium: 45, hard: 55 }[diff] || 30; // removed cells
       let removed = 0;
-      while(removed < attempts) {
-        let r=Math.floor(Math.random()*9), c=Math.floor(Math.random()*9);
-        if(grid[r][c]!==0) { grid[r][c]=0; removed++; }
+      while (removed < attempts) {
+        let r = Math.floor(Math.random() * 9), c = Math.floor(Math.random() * 9);
+        if (grid[r][c] !== 0) { grid[r][c] = 0; removed++; }
       }
-      
+
       const cells = document.querySelectorAll('.cell');
       givenCells.clear();
-      for(let i=0; i<81; i++) {
-        const val = grid[Math.floor(i/9)][i%9];
+      for (let i = 0; i < 81; i++) {
+        const val = grid[Math.floor(i / 9)][i % 9];
         const cell = cells[i];
         cell.className = 'cell';
         cell.querySelector('.cell-content').textContent = val || '';
-        if(val!==0) {
-          givenCells.add(`${Math.floor(i/9)},${i%9}`);
+        if (val !== 0) {
+          givenCells.add(`${Math.floor(i / 9)},${i % 9}`);
           cell.classList.add('given');
         }
       }
@@ -645,13 +1220,13 @@
       clearInterval(timerInterval);
       startTime = Date.now();
       timerInterval = setInterval(() => {
-        elements.timer.textContent = formatTime(Math.floor((Date.now()-startTime)/1000));
+        elements.timer.textContent = formatTime(Math.floor((Date.now() - startTime) / 1000));
       }, 1000);
-      
+
       elements.checkBtn.disabled = false;
       elements.checkBtn.textContent = 'Done';
       elements.message.textContent = '';
-      
+
       createGrid();
       createKeypad();
       generatePuzzle(elements.difficulty.value);
@@ -660,28 +1235,28 @@
 
     function checkGame() {
       playSound();
-      if(isGameFinished) return;
-      
+      if (isGameFinished) return;
+
       let error = false;
       let full = true;
-      
+
       const cells = document.querySelectorAll('.cell');
       cells.forEach((c, idx) => {
-        const r = Math.floor(idx/9), col = idx%9;
+        const r = Math.floor(idx / 9), col = idx % 9;
         const val = grid[r][col];
-        if(val === 0) full = false;
-        else if(val !== solution[r][col]) {
-           c.classList.add('error');
-           error = true;
+        if (val === 0) full = false;
+        else if (val !== solution[r][col]) {
+          c.classList.add('error');
+          error = true;
         }
       });
 
-      if(error) elements.message.textContent = "Oops! Mistakes found.";
-      else if(!full) elements.message.textContent = "Board not full.";
+      if (error) elements.message.textContent = "Oops! Mistakes found.";
+      else if (!full) elements.message.textContent = "Board not full.";
       else {
         isGameFinished = true;
         clearInterval(timerInterval);
-        const time = Math.floor((Date.now()-startTime)/1000);
+        const time = Math.floor((Date.now() - startTime) / 1000);
         const pts = calculatePoints(time, hintCount);
         saveWin(time, pts);
       }
@@ -689,25 +1264,25 @@
 
     function getHint() {
       playSound();
-      if(hintCount >= 3 || isGameFinished) return;
-      
+      if (hintCount >= 3 || isGameFinished) return;
+
       const candidates = [];
-      for(let r=0;r<9;r++) for(let c=0;c<9;c++) {
-        if(!givenCells.has(`${r},${c}`) && grid[r][c] !== solution[r][c]) candidates.push([r,c]);
+      for (let r = 0; r < 9; r++) for (let c = 0; c < 9; c++) {
+        if (!givenCells.has(`${r},${c}`) && grid[r][c] !== solution[r][c]) candidates.push([r, c]);
       }
-      if(!candidates.length) return;
-      
+      if (!candidates.length) return;
+
       hintCount++;
-      const [r,c] = candidates[Math.floor(Math.random()*candidates.length)];
+      const [r, c] = candidates[Math.floor(Math.random() * candidates.length)];
       performAction(solution[r][c], r, c);
-      const cell = document.querySelectorAll('.cell')[r*9+c];
+      const cell = document.querySelectorAll('.cell')[r * 9 + c];
       cell.classList.add('hinted');
       updateUI();
     }
 
     function calculatePoints(time, hints) {
-      const base = {easy:100, medium:250, hard:500}[elements.difficulty.value];
-      return Math.max(10, base - (time/2) - (hints*50));
+      const base = { easy: 100, medium: 250, hard: 500 }[elements.difficulty.value];
+      return Math.max(10, base - (time / 2) - (hints * 50));
     }
 
     // --- USER & LEADERBOARD ---
@@ -716,37 +1291,37 @@
         await auth.signInAnonymously();
         let uid = auth.currentUser.uid;
         let userData = { username: 'Guest', avatar: 'https://cdn-icons-png.flaticon.com/512/847/847969.png' };
-        
-        if(window.Telegram?.WebApp?.initDataUnsafe?.user) {
+
+        if (window.Telegram?.WebApp?.initDataUnsafe?.user) {
           const tgUser = window.Telegram.WebApp.initDataUnsafe.user;
           uid = String(tgUser.id);
           userData.username = tgUser.username || tgUser.first_name;
-          if(tgUser.photo_url) userData.avatar = tgUser.photo_url;
+          if (tgUser.photo_url) userData.avatar = tgUser.photo_url;
         }
-        
+
         currentUser.id = uid;
         currentUser.username = userData.username;
         currentUser.avatar = userData.avatar;
-        
+
         elements.username.textContent = currentUser.username;
         elements.userAvatar.src = currentUser.avatar;
 
         const doc = await usersCollection.doc(uid).get();
-        if(doc.exists) {
+        if (doc.exists) {
           const data = doc.data();
           currentUser.score = data.score || 0;
-          currentUser.bestTimes = data.bestTimes || {easy:null, medium:null, hard:null};
+          currentUser.bestTimes = data.bestTimes || { easy: null, medium: null, hard: null };
         } else {
-          await usersCollection.doc(uid).set({ ...userData, score:0, bestTimes: {} });
+          await usersCollection.doc(uid).set({ ...userData, score: 0, bestTimes: {} });
         }
-        
+
         elements.userScore.textContent = Math.floor(currentUser.score);
         updateRecordDisplay();
-      } catch(e) { console.error("Auth error", e); }
-      
+      } catch (e) { console.error("Auth error", e); }
+
       setTimeout(() => {
         elements.loadingScreen.style.opacity = '0';
-        setTimeout(()=> elements.loadingScreen.style.display='none', 600);
+        setTimeout(() => elements.loadingScreen.style.display = 'none', 600);
       }, 1000);
     }
 
@@ -754,23 +1329,23 @@
       currentUser.score += pts;
       elements.userScore.textContent = Math.floor(currentUser.score);
       const diff = elements.difficulty.value;
-      
+
       let newRecord = false;
-      if(!currentUser.bestTimes[diff] || time < currentUser.bestTimes[diff]) {
+      if (!currentUser.bestTimes[diff] || time < currentUser.bestTimes[diff]) {
         currentUser.bestTimes[diff] = time;
         newRecord = true;
       }
-      
+
       updateRecordDisplay();
-      
-      if(currentUser.id) {
+
+      if (currentUser.id) {
         usersCollection.doc(currentUser.id).set({
           score: currentUser.score,
           bestTimes: currentUser.bestTimes,
           username: currentUser.username,
           avatar: currentUser.avatar
-        }, {merge:true});
-        
+        }, { merge: true });
+
         recordsCollection.add({
           userId: currentUser.id,
           username: currentUser.username,
@@ -780,7 +1355,7 @@
           date: new Date().toISOString()
         });
       }
-      
+
       el('win-modal-message').innerHTML = `Difficulty: <b style="color:white">${diff}</b><br>Time: <span style="font-feature-settings: 'tnum';">${formatTime(time)}</span><br>Score: <span style="color:var(--accent-color)">+${Math.floor(pts)}</span>${newRecord ? '<br><br>🏆 <b>New Record!</b>' : ''}`;
       toggleModal('win-modal', true);
     }
@@ -795,35 +1370,35 @@
     async function loadLeaderboard() {
       const list = el('rating-list');
       list.innerHTML = '<div style="text-align:center; padding:30px; opacity:0.6;">Loading...</div>';
-      
+
       let query;
-      if(currentRatingType === 'score') {
+      if (currentRatingType === 'score') {
         query = usersCollection.orderBy('score', 'desc').limit(20);
       } else {
         query = recordsCollection.where('difficulty', '==', currentRatingDifficulty).orderBy('time', 'asc').limit(20);
       }
-      
+
       try {
         const snap = await query.get();
         list.innerHTML = '';
-        if(snap.empty) {
-            list.innerHTML = '<div style="text-align:center; padding:30px; opacity:0.6;">No records yet</div>';
-            return;
+        if (snap.empty) {
+          list.innerHTML = '<div style="text-align:center; padding:30px; opacity:0.6;">No records yet</div>';
+          return;
         }
 
         snap.forEach((doc, idx) => {
           const d = doc.data();
           const rank = idx + 1;
-          
+
           let rankClass = "rank-cell";
           let rankContent = rank;
-          if(rank === 1) { rankClass += " rank-1"; rankContent = "1"; } // Medal icon via css or just color
-          if(rank === 2) { rankClass += " rank-2"; rankContent = "2"; }
-          if(rank === 3) { rankClass += " rank-3"; rankContent = "3"; }
+          if (rank === 1) { rankClass += " rank-1"; rankContent = "1"; } // Medal icon via css or just color
+          if (rank === 2) { rankClass += " rank-2"; rankContent = "2"; }
+          if (rank === 3) { rankClass += " rank-3"; rankContent = "3"; }
 
           const row = document.createElement('div');
           row.className = 'rank-row';
-          
+
           // Fixed structure for better alignment
           row.innerHTML = `
             <div class="${rankClass}">${rankContent}</div>
@@ -835,7 +1410,7 @@
           `;
           list.appendChild(row);
         });
-      } catch(e) { list.textContent = "Error loading data"; console.error(e); }
+      } catch (e) { list.textContent = "Error loading data"; console.error(e); }
     }
 
     // --- INIT ---
@@ -847,52 +1422,60 @@
       el('settings-button').onclick = () => toggleModal('settings-modal', true);
       el('rating-button').onclick = () => { toggleModal('rating-modal', true); loadLeaderboard(); };
       el('win-modal-close-btn').onclick = () => toggleModal('win-modal', false);
-      
+
       document.querySelectorAll('.close-btn').forEach(b => {
         b.onclick = () => toggleModal(b.dataset.target, false);
       });
       document.querySelectorAll('.modal-overlay').forEach(o => {
-        o.onclick = (e) => { if(e.target === o) toggleModal(o.id, false); };
+        o.onclick = (e) => { if (e.target === o) toggleModal(o.id, false); };
       });
 
-      el('sound-toggle').onclick = (e) => { 
-        isSoundEnabled = !isSoundEnabled; 
-        e.target.textContent = isSoundEnabled ? "ON" : "OFF"; 
+      el('sound-toggle').onclick = (e) => {
+        isSoundEnabled = !isSoundEnabled;
+        e.target.textContent = isSoundEnabled ? "ON" : "OFF";
       };
-      el('highlightToggle').onclick = (e) => { 
-        highlightEnabled = !highlightEnabled; 
-        e.target.textContent = highlightEnabled ? "ON" : "OFF"; 
-        if(!highlightEnabled) clearHighlights();
+      el('highlightToggle').onclick = (e) => {
+        highlightEnabled = !highlightEnabled;
+        e.target.textContent = highlightEnabled ? "ON" : "OFF";
+        if (!highlightEnabled) clearHighlights();
       };
-      
+
+      // Custom sound recording handlers
+      el('record-sound-btn').onclick = startRecording;
+      el('clear-sound-btn').onclick = clearCustomSound;
+
+      // Load custom sound on startup
+      loadCustomSound();
+
       document.querySelectorAll('.rating-tab').forEach(t => {
-         t.onclick = () => {
-           currentRatingType = t.dataset.type;
-           document.querySelectorAll('.rating-tab').forEach(x => { x.classList.remove('active'); x.style.background='transparent'; x.style.color='var(--text-muted)'; });
-           t.classList.add('active');
-           t.style.background = 'rgba(255,255,255,0.1)';
-           t.style.color = 'white';
-           el('difficulty-tabs').classList.toggle('hidden', currentRatingType !== 'time');
-           loadLeaderboard();
-         }
+        t.onclick = () => {
+          currentRatingType = t.dataset.type;
+          document.querySelectorAll('.rating-tab').forEach(x => { x.classList.remove('active'); x.style.background = 'transparent'; x.style.color = 'var(--text-muted)'; });
+          t.classList.add('active');
+          t.style.background = 'rgba(255,255,255,0.1)';
+          t.style.color = 'white';
+          el('difficulty-tabs').classList.toggle('hidden', currentRatingType !== 'time');
+          loadLeaderboard();
+        }
       });
       document.querySelectorAll('.diff-tab').forEach(t => {
-         t.onclick = () => {
-           currentRatingDifficulty = t.dataset.d;
-           document.querySelectorAll('.diff-tab').forEach(x => { x.classList.remove('active'); x.style.background='rgba(255,255,255,0.05)'; });
-           t.classList.add('active');
-           t.style.background = 'var(--accent-color)';
-           loadLeaderboard();
-         }
+        t.onclick = () => {
+          currentRatingDifficulty = t.dataset.d;
+          document.querySelectorAll('.diff-tab').forEach(x => { x.classList.remove('active'); x.style.background = 'rgba(255,255,255,0.05)'; });
+          t.classList.add('active');
+          t.style.background = 'var(--accent-color)';
+          loadLeaderboard();
+        }
       });
 
       // Default active tab styles
       document.querySelector('.rating-tab.active').style.background = 'rgba(255,255,255,0.1)';
       document.querySelector('.rating-tab.active').style.color = 'white';
-      
+
       initUser();
       startGame();
     });
   </script>
 </body>
+
 </html>
