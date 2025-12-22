@@ -228,23 +228,25 @@
     .grid-wrapper {
       display: flex;
       justify-content: center;
-      margin-bottom: 24px;
-      flex-shrink: 0;
+      align-items: center;
+      flex: 1;
+      min-height: 0;
+      /* Important for flex shrinking */
+      margin-bottom: 12px;
     }
 
     .sudoku-grid {
       display: grid;
       grid-template-columns: repeat(9, 1fr);
+      grid-template-rows: repeat(9, 1fr);
       background-color: rgba(0, 0, 0, 0.2);
-      /* Темная подложка */
       border: 2px solid rgba(255, 255, 255, 0.15);
       border-radius: 20px;
       overflow: hidden;
-      width: 100%;
+      /* Square grid - height determines size */
+      height: 100%;
       aspect-ratio: 1/1;
-      max-height: 50vh;
-      max-height: 50dvh;
-      /* Dynamic viewport for mobile browsers */
+      max-width: 100%;
       box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
     }
 
@@ -252,12 +254,14 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: clamp(20px, 6vw, 28px);
+      font-size: clamp(8px, 3.5vmin, 24px);
       position: relative;
       cursor: pointer;
       border-right: 1px solid var(--cell-border);
       border-bottom: 1px solid var(--cell-border);
       transition: background 0.15s ease;
+      min-height: 0;
+      overflow: hidden;
     }
 
     /* Убираем внешние границы ячеек */
@@ -648,9 +652,6 @@
       }
 
       .sudoku-grid {
-        max-height: 52vh;
-        max-height: 52dvh;
-        /* Dynamic viewport height - better for mobile */
         border-radius: 14px;
       }
 
@@ -710,11 +711,6 @@
 
       .grid-wrapper {
         margin-bottom: 6px;
-      }
-
-      .sudoku-grid {
-        max-height: 48vh;
-        max-height: 48dvh;
       }
 
       .num-btn {
