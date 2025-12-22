@@ -736,69 +736,6 @@
     .hidden {
       display: none !important;
     }
-
-    /* --- TRIMMING SLIDER --- */
-    .trim-container {
-      margin-top: 16px;
-      padding: 12px;
-      background: rgba(0, 0, 0, 0.2);
-      border-radius: 16px;
-      position: relative;
-    }
-
-    .waveform-visual {
-      height: 30px;
-      background: rgba(255, 255, 255, 0.05);
-      border-radius: 8px;
-      margin-bottom: 24px;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .waveform-visual .progress {
-      position: absolute;
-      top: 0;
-      bottom: 0;
-      background: var(--accent-color);
-      opacity: 0.3;
-    }
-
-    .range-slider {
-      position: absolute;
-      width: calc(100% - 24px);
-      height: 0;
-      top: 42px;
-    }
-
-    .range-slider input[type="range"] {
-      position: absolute;
-      width: 100%;
-      height: 6px;
-      -webkit-appearance: none;
-      background: none;
-      pointer-events: none;
-      margin: 0;
-    }
-
-    .range-slider input[type="range"]::-webkit-slider-thumb {
-      height: 20px;
-      width: 20px;
-      border-radius: 50%;
-      background: var(--accent-color);
-      box-shadow: 0 0 10px var(--primary-glow);
-      cursor: pointer;
-      -webkit-appearance: none;
-      pointer-events: auto;
-      border: 2px solid white;
-    }
-
-    .trim-labels {
-      display: flex;
-      justify-content: space-between;
-      font-size: 10px;
-      color: var(--text-muted);
-      margin-top: 10px;
-    }
   </style>
 </head>
 
@@ -922,23 +859,44 @@
         </div>
         <div id="recording-status" style="font-size: 11px; color: var(--text-muted); margin-top: 8px;"></div>
 
-        <!-- Trimming Editor -->
-        <div id="trim-editor" class="trim-container hidden">
-          <div
-            style="font-size: 12px; margin-bottom: 8px; color: white; display: flex; justify-content: space-between;">
-            <span>Trim Audio</span>
-            <span id="trim-values">0.0s - 1.0s</span>
+        <!-- Trim Editor (Hidden by default) -->
+        <div id="trim-editor" class="hidden"
+          style="margin-top: 15px; background: rgba(0,0,0,0.2); border-radius: 16px; padding: 12px; border: 1px solid rgba(255,255,255,0.05);">
+          <div style="font-size: 11px; color: white; margin-bottom: 8px; font-weight: 600;">Trim Noise:</div>
+          <canvas id="waveform" width="300" height="40"
+            style="width: 100%; height: 40px; background: rgba(56, 189, 248, 0.05); border-radius: 4px;"></canvas>
+          <div style="position: relative; height: 30px; margin-top: 10px;">
+            <input type="range" id="trim-start" min="0" max="100" value="0"
+              style="position: absolute; width: 100%; height: 4px; -webkit-appearance: none; appearance: none; background: rgba(255,255,255,0.1); border-radius: 2px;">
+            <input type="range" id="trim-end" min="0" max="100" value="100"
+              style="position: absolute; width: 100%; height: 4px; -webkit-appearance: none; appearance: none; background: transparent; pointer-events: none;">
           </div>
-          <div class="waveform-visual">
-            <div id="trim-progress" class="progress"></div>
-          </div>
-          <div class="range-slider">
-            <input type="range" id="trim-start" min="0" max="100" value="0">
-            <input type="range" id="trim-end" min="0" max="100" value="100">
-          </div>
-          <div class="trim-labels">
-            <span>Start</span>
-            <span>End</span>
+          <style>
+            #trim-start::-webkit-slider-thumb {
+              -webkit-appearance: none;
+              width: 12px;
+              height: 12px;
+              background: #38bdf8;
+              border-radius: 50%;
+              cursor: pointer;
+              pointer-events: auto;
+            }
+
+            #trim-end::-webkit-slider-thumb {
+              -webkit-appearance: none;
+              width: 12px;
+              height: 12px;
+              background: #fb7185;
+              border-radius: 50%;
+              cursor: pointer;
+              pointer-events: auto;
+            }
+          </style>
+          <div style="display: flex; justify-content: space-between; margin-top: 8px;">
+            <button id="save-trim-btn" class="glass-button"
+              style="padding: 6px 12px; font-size: 11px; border-radius: 8px; color: #38bdf8;">Save Trimmed</button>
+            <button id="cancel-trim-btn" class="glass-button"
+              style="padding: 6px 12px; font-size: 11px; border-radius: 8px;">Discard</button>
           </div>
         </div>
       </div>
@@ -987,7 +945,7 @@
     <div class="modal-card" style="text-align: center; padding-top: 40px; background: rgba(20, 30, 50, 0.98);">
       <div style="font-size: 70px; margin-bottom: 10px; text-shadow: 0 0 30px rgba(255,215,0,0.5);">🏆</div>
       <h2
-        style="background: linear-gradient(to right, #38bdf8, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 36px; margin: 0 0 10px 0; font-weight: 800;">
+        style="background: linear-gradient(to right, #38bdf8, #818cf8); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; font-size: 36px; margin: 0 0 10px 0; font-weight: 800;">
         Victory!</h2>
       <p id="win-modal-message"
         style="margin-bottom: 30px; line-height: 1.6; font-size: 16px; color: var(--text-muted);"></p>
@@ -1028,148 +986,69 @@
     // --- SOUND SYSTEM ---
     const DEFAULT_SOUND_URL = 'https://github.com/codex-cdx/sudo/raw/refs/heads/main/%D0%9F%D0%BB%D0%B0%D0%BC%D0%B1.mp3';
     let clickSound = new Audio(DEFAULT_SOUND_URL);
-    let mediaRecorder = null;
-    let audioChunks = [];
-    let isRecording = false;
-
-    // Web Audio API for custom sound
-    let audioCtx = null;
-    let customSoundBuffer = null;
-    let trimStart = 0;
-    let trimEnd = 1.0;
-
-    function initAudioContext() {
-      if (!audioCtx) {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      }
-    }
-
-    async function decodeAudio(dataUrl) {
-      initAudioContext();
-      try {
-        const response = await fetch(dataUrl);
-        const arrayBuffer = await response.arrayBuffer();
-        customSoundBuffer = await audioCtx.decodeAudioData(arrayBuffer);
-        return true;
-      } catch (e) {
-        console.error("Decode error", e);
-        return false;
-      }
-    }
+    let mediaRecorder = null, audioChunks = [], isRecording = false;
+    let originalAudioBuffer = null;
+    let audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
     // Load custom sound from localStorage if exists
-    async function loadCustomSound() {
+    function loadCustomSound() {
       const customSoundData = localStorage.getItem('sudoku_custom_sound');
-      const savedTrim = localStorage.getItem('sudoku_custom_trim');
-
       if (customSoundData) {
-        if (await decodeAudio(customSoundData)) {
-          el('clear-sound-btn').classList.remove('hidden');
-          el('test-sound-btn').classList.remove('hidden');
-          el('trim-editor').classList.remove('hidden');
-          el('recording-status').textContent = '✓ Custom sound loaded';
-
-          if (savedTrim) {
-            const [s, e] = savedTrim.split(':').map(Number);
-            trimStart = s;
-            trimEnd = e;
-            updateTrimUI();
-          } else {
-            trimStart = 0;
-            trimEnd = customSoundBuffer.duration;
-            updateTrimUI();
-          }
-        }
+        clickSound.src = customSoundData;
+        clickSound.load();
+        el('clear-sound-btn').classList.remove('hidden');
+        el('test-sound-btn').classList.remove('hidden');
+        el('recording-status').textContent = '✓ Custom sound loaded';
       }
-    }
-
-    function updateTrimUI() {
-      if (!customSoundBuffer) return;
-      const dur = customSoundBuffer.duration;
-      el('trim-start').value = (trimStart / dur) * 100;
-      el('trim-end').value = (trimEnd / dur) * 100;
-      el('trim-values').textContent = `${trimStart.toFixed(2)}s - ${trimEnd.toFixed(2)}s`;
-
-      // Highlight the active part in the waveform
-      const startP = (trimStart / dur) * 100;
-      const endP = (trimEnd / dur) * 100;
-      el('trim-progress').style.left = startP + '%';
-      el('trim-progress').style.width = (endP - startP) + '%';
     }
 
     function playSound() {
-      if (!isSoundEnabled) return;
-
-      if (customSoundBuffer) {
-        initAudioContext();
-        if (audioCtx.state === 'suspended') audioCtx.resume();
-        const source = audioCtx.createBufferSource();
-        source.buffer = customSoundBuffer;
-        source.connect(audioCtx.destination);
-        source.start(0, trimStart, Math.max(0, trimEnd - trimStart));
-      } else {
+      if (isSoundEnabled) {
         clickSound.currentTime = 0;
         clickSound.play().catch(() => { });
       }
     }
 
     async function startRecording() {
-      if (isRecording) {
-        if (mediaRecorder && mediaRecorder.state === 'recording') {
-          mediaRecorder.stop();
-        }
-        return;
-      }
-
-      initAudioContext();
-      if (audioCtx.state === 'suspended') audioCtx.resume();
+      if (isRecording) return;
 
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+        // Check for supported mime types (audio/mp4 is better for iOS)
         const mimeType = MediaRecorder.isTypeSupported('audio/mp4') ? 'audio/mp4' : 'audio/webm';
         mediaRecorder = new MediaRecorder(stream, { mimeType });
         audioChunks = [];
         isRecording = true;
 
-        el('record-sound-btn').textContent = '⏹ Stop';
-        el('record-sound-btn').style.background = 'rgba(239, 68, 68, 0.4)';
-        el('recording-status').textContent = 'Recording... Click Stop when done';
+        el('record-sound-btn').textContent = '🔴 Recording...';
+        el('record-sound-btn').style.background = 'rgba(239, 68, 68, 0.3)';
+        el('recording-status').textContent = 'Recording... (max 2 sec)';
 
         mediaRecorder.ondataavailable = (e) => {
           if (e.data.size > 0) audioChunks.push(e.data);
         };
 
-        mediaRecorder.onstop = async () => {
+        mediaRecorder.onstop = () => {
           stream.getTracks().forEach(track => track.stop());
           isRecording = false;
 
           const blob = new Blob(audioChunks, { type: mimeType });
           const reader = new FileReader();
 
-          reader.onloadend = async () => {
-            const dataUrl = reader.result;
-            localStorage.setItem('sudoku_custom_sound', dataUrl);
+          reader.onloadend = () => {
+            const result = reader.result;
+            // Don't save yet, show trim editor first
+            showTrimEditor(blob);
 
-            if (await decodeAudio(dataUrl)) {
-              trimStart = 0;
-              trimEnd = customSoundBuffer.duration;
-              localStorage.setItem('sudoku_custom_trim', `${trimStart}:${trimEnd}`);
+            el('record-sound-btn').textContent = '🎤 Record';
+            el('record-sound-btn').style.background = '';
+            el('recording-status').textContent = 'Recording complete. Trim it below:';
 
-              el('clear-sound-btn').classList.remove('hidden');
-              el('test-sound-btn').classList.remove('hidden');
-              el('trim-editor').classList.remove('hidden');
-              updateTrimUI();
-
-              el('record-sound-btn').textContent = '🎤 Record';
-              el('record-sound-btn').style.background = '';
-              el('recording-status').textContent = '✓ Saved! Adjust start/end below.';
-              el('recording-status').style.color = '#22c55e';
-
-              if (!isSoundEnabled) {
-                isSoundEnabled = true;
-                el('sound-toggle').textContent = "ON";
-              }
-              setTimeout(() => { el('recording-status').style.color = ''; }, 2000);
+            // Auto-enable sound if off
+            if (!isSoundEnabled) {
+              isSoundEnabled = true;
+              el('sound-toggle').textContent = "ON";
             }
           };
 
@@ -1178,25 +1057,134 @@
 
         mediaRecorder.start();
         setTimeout(() => {
-          if (isRecording && mediaRecorder && mediaRecorder.state === 'recording') {
+          if (mediaRecorder && mediaRecorder.state === 'recording') {
             mediaRecorder.stop();
           }
-        }, 5000); // 5s safety limit
+        }, 2000);
 
       } catch (err) {
         el('recording-status').textContent = '⚠ Microphone access denied';
         el('recording-status').style.color = '#fb7185';
+        console.error('Recording error:', err);
       }
     }
 
     function clearCustomSound() {
       localStorage.removeItem('sudoku_custom_sound');
-      localStorage.removeItem('sudoku_custom_trim');
-      customSoundBuffer = null;
+      clickSound.src = DEFAULT_SOUND_URL;
+      clickSound.load();
       el('clear-sound-btn').classList.add('hidden');
       el('test-sound-btn').classList.add('hidden');
       el('trim-editor').classList.add('hidden');
       el('recording-status').textContent = 'Default sound restored';
+    }
+
+    // --- WAVEFORM & TRIMMING ---
+    async function showTrimEditor(blob) {
+      const arrayBuffer = await blob.arrayBuffer();
+      originalAudioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+
+      el('trim-editor').classList.remove('hidden');
+      drawWaveform(originalAudioBuffer);
+
+      el('trim-start').value = 0;
+      el('trim-end').value = 100;
+    }
+
+    function drawWaveform(buffer) {
+      const canvas = el('waveform');
+      const ctx = canvas.getContext('2d');
+      const data = buffer.getChannelData(0);
+      const step = Math.ceil(data.length / canvas.width);
+      const amp = canvas.height / 2;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#38bdf8';
+
+      for (let i = 0; i < canvas.width; i++) {
+        let min = 1.0, max = -1.0;
+        for (let j = 0; j < step; j++) {
+          const datum = data[(i * step) + j];
+          if (datum < min) min = datum;
+          if (datum > max) max = datum;
+        }
+        ctx.fillRect(i, (1 + min) * amp, 1, Math.max(1, (max - min) * amp));
+      }
+    }
+
+    async function saveTrimmedAudio() {
+      if (!originalAudioBuffer) return;
+
+      const startPct = parseInt(el('trim-start').value) / 100;
+      const endPct = parseInt(el('trim-end').value) / 100;
+
+      const startOffset = Math.floor(startPct * originalAudioBuffer.length);
+      const endOffset = Math.floor(endPct * originalAudioBuffer.length);
+      const frameCount = Math.max(1, endOffset - startOffset);
+
+      const trimmedBuffer = audioContext.createBuffer(
+        originalAudioBuffer.numberOfChannels,
+        frameCount,
+        originalAudioBuffer.sampleRate
+      );
+
+      for (let i = 0; i < originalAudioBuffer.numberOfChannels; i++) {
+        const data = originalAudioBuffer.getChannelData(i).slice(startOffset, endOffset);
+        trimmedBuffer.copyToChannel(data, i);
+      }
+
+      const wavBlob = audioBufferToWav(trimmedBuffer);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const result = reader.result;
+        localStorage.setItem('sudoku_custom_sound', result);
+        clickSound.src = result;
+        clickSound.load();
+        el('trim-editor').classList.add('hidden');
+        el('clear-sound-btn').classList.remove('hidden');
+        el('test-sound-btn').classList.remove('hidden');
+        el('recording-status').textContent = '✓ Trimmed sound saved!';
+        el('recording-status').style.color = '#22c55e';
+      };
+      reader.readAsDataURL(wavBlob);
+    }
+
+    function audioBufferToWav(buffer) {
+      const numOfChan = buffer.numberOfChannels,
+        length = buffer.length * numOfChan * 2 + 44,
+        bufferArr = new ArrayBuffer(length),
+        view = new DataView(bufferArr);
+      let channels = [], i, sample, offset = 0, pos = 0;
+
+      function setUint16(data) { view.setUint16(pos, data, true); pos += 2; }
+      function setUint32(data) { view.setUint32(pos, data, true); pos += 4; }
+
+      setUint32(0x46464952); // "RIFF"
+      setUint32(length - 8); // file length - 8
+      setUint32(0x45564157); // "WAVE"
+      setUint32(0x20746d66); // "fmt " chunk
+      setUint32(16); // length = 16
+      setUint16(1); // PCM (uncompressed)
+      setUint16(numOfChan);
+      setUint32(buffer.sampleRate);
+      setUint32(buffer.sampleRate * 2 * numOfChan); // avg. bytes/sec
+      setUint16(numOfChan * 2); // block-align
+      setUint16(16); // 16-bit
+      setUint32(0x61746164); // "data" - chunk
+      setUint32(length - pos - 4); // chunk length
+
+      for (i = 0; i < buffer.numberOfChannels; i++) channels.push(buffer.getChannelData(i));
+
+      while (pos < length) {
+        for (i = 0; i < numOfChan; i++) {
+          sample = Math.max(-1, Math.min(1, channels[i][offset]));
+          sample = (sample < 0 ? sample * 0x8000 : sample * 0x7FFF);
+          view.setInt16(pos, sample, true);
+          pos += 2;
+        }
+        offset++;
+      }
+      return new Blob([bufferArr], { type: 'audio/wav' });
     }
 
     function formatTime(s) { if (s == null) return '--:--'; return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`; }
@@ -1627,33 +1615,33 @@
       // Custom sound recording handlers
       el('record-sound-btn').onclick = startRecording;
       el('clear-sound-btn').onclick = clearCustomSound;
-      el('test-sound-btn').onclick = () => {
-        playSound();
+      el('save-trim-btn').onclick = saveTrimmedAudio;
+
+      const sSlider = el('trim-start');
+      const eSlider = el('trim-end');
+      sSlider.oninput = () => { if (parseInt(sSlider.value) >= parseInt(eSlider.value)) sSlider.value = eSlider.value - 1; };
+      eSlider.oninput = () => { if (parseInt(eSlider.value) <= parseInt(sSlider.value)) eSlider.value = parseInt(sSlider.value) + 1; };
+
+      el('cancel-trim-btn').onclick = () => {
+        el('trim-editor').classList.add('hidden');
+        el('recording-status').textContent = 'Trim cancelled.';
       };
+      el('test-sound-btn').onclick = async () => {
+        if (el('trim-editor').classList.contains('hidden')) {
+          clickSound.currentTime = 0;
+          clickSound.play().catch(() => { });
+        } else {
+          // Play preview of trimmed section
+          const startPct = parseInt(el('trim-start').value) / 100;
+          const endPct = parseInt(el('trim-end').value) / 100;
+          const duration = originalAudioBuffer.duration;
 
-      // Trimming event listeners
-      const onTrimChange = () => {
-        if (!customSoundBuffer) return;
-        const dur = customSoundBuffer.duration;
-        const startV = parseFloat(el('trim-start').value);
-        const endV = parseFloat(el('trim-end').value);
-
-        if (startV >= endV) {
-          el('trim-start').value = endV - 1;
-          return;
+          const source = audioContext.createBufferSource();
+          source.buffer = originalAudioBuffer;
+          source.connect(audioContext.destination);
+          source.start(0, startPct * duration, (endPct - startPct) * duration);
         }
-
-        trimStart = (startV / 100) * dur;
-        trimEnd = (endV / 100) * dur;
-        updateTrimUI();
-        localStorage.setItem('sudoku_custom_trim', `${trimStart}:${trimEnd}`);
-
-        // Preview on change
-        playSound();
       };
-
-      el('trim-start').oninput = onTrimChange;
-      el('trim-end').oninput = onTrimChange;
 
       // Load custom sound on startup
       loadCustomSound();
