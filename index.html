@@ -620,7 +620,7 @@
       left: -10%;
       width: 80vw;
       height: 80vw;
-      background: radial-gradient(circle, #2a2a2a 0%, transparent 60%);
+      background: radial-gradient(circle, rgba(56, 189, 248, 0.2) 0%, transparent 60%);
       animation-duration: 20s;
     }
 
@@ -629,7 +629,7 @@
       right: -20%;
       width: 90vw;
       height: 90vw;
-      background: radial-gradient(circle, #1a1a1a 0%, transparent 60%);
+      background: radial-gradient(circle, rgba(37, 99, 235, 0.15) 0%, transparent 60%);
       animation-duration: 25s;
       animation-delay: -5s;
     }
@@ -640,7 +640,7 @@
       transform: translate(-50%, -50%);
       width: 40vw;
       height: 40vw;
-      background: radial-gradient(circle, #333 0%, transparent 70%);
+      background: radial-gradient(circle, rgba(56, 189, 248, 0.1) 0%, transparent 70%);
       animation-duration: 18s;
       animation-delay: -10s;
     }
@@ -711,12 +711,12 @@
     }
 
     .sudoku-loading-cell.active {
-      background: #fff;
+      background: var(--accent-color);
       color: #000;
-      border-color: #fff;
+      border-color: var(--accent-color);
       box-shadow:
-        0 0 40px rgba(255, 255, 255, 0.5),
-        0 0 10px rgba(255, 255, 255, 0.8);
+        0 0 40px rgba(56, 189, 248, 0.5),
+        0 0 10px rgba(56, 189, 248, 0.8);
       transform: scale(1.05) translateZ(10px);
       z-index: 10;
     }
@@ -755,14 +755,14 @@
     }
 
     .loader-bar {
-      background: #fff;
+      background: var(--accent-color);
       border-radius: 999px;
       position: absolute;
       top: 0;
       left: 0;
       height: 100%;
       width: 0%;
-      box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+      box-shadow: 0 0 20px rgba(56, 189, 248, 0.5);
       transition: width 0.1s linear;
     }
 
@@ -841,7 +841,7 @@
       left: 0;
       width: 100vw;
       height: 100dvh;
-      background-color: #000;
+      background-color: #0f172a;
       z-index: 9999;
       display: flex;
       flex-direction: column;
@@ -1092,7 +1092,7 @@
             Sudo<span
               class="font-medium bg-clip-text text-transparent bg-gradient-to-b from-white to-white/40">Koo</span>
           </h1>
-          <p class="text-[10px] font-medium text-white/30 tracking-[0.4em] uppercase">Neural Engine v30.2</p>
+          <p class="text-[10px] font-medium text-white/30 tracking-[0.4em] uppercase">Sudoku Premium Sky</p>
         </div>
       </div>
 
@@ -1101,8 +1101,8 @@
       <!-- Loading State -->
       <div id="loading-interface" class="w-full space-y-5 fade-in-up" style="animation-delay: 0.4s;">
         <div class="flex justify-between items-end px-1">
-          <span id="loading-text" class="text-xs text-white/50 font-light shimmer-text tracking-wide">Initializing
-            Core...</span>
+          <span id="loading-text" class="text-xs text-white/50 font-light shimmer-text tracking-wide">Подготовка
+            неба...</span>
           <span id="percentage" class="text-3xl font-thin text-white tabular-nums tracking-tighter">0%</span>
         </div>
 
@@ -1467,14 +1467,15 @@
     });
 
     function startLoadingSequence() {
+      loadingProgress = 5 + Math.random() * 5; // Start with some progress
       const interval = setInterval(() => {
         loadingProgress += Math.random() * 2;
         if (loadingProgress > 100) loadingProgress = 100;
         elements.loaderBar.style.width = `${loadingProgress}%`;
         elements.percentageText.innerText = `${Math.floor(loadingProgress)}%`;
-        if (loadingProgress > 20 && loadingProgress < 25) elements.loadingText.innerText = "Handshaking Neural Net...";
-        else if (loadingProgress > 50 && loadingProgress < 55) elements.loadingText.innerText = "Decrypting User Profile...";
-        else if (loadingProgress > 80 && loadingProgress < 85) elements.loadingText.innerText = "Finalizing Environment...";
+        if (loadingProgress > 20 && loadingProgress < 25) elements.loadingText.innerText = "Синхронизация с облаком...";
+        else if (loadingProgress > 50 && loadingProgress < 55) elements.loadingText.innerText = "Загрузка профиля...";
+        else if (loadingProgress > 80 && loadingProgress < 85) elements.loadingText.innerText = "Почти готово...";
         if (loadingProgress >= 100) {
           clearInterval(interval);
           completeLoading();
@@ -2027,6 +2028,11 @@
 
     // --- USER & LEADERBOARD ---
     async function initUser() {
+      // Start loading visual immediately
+      initLoadingGrid();
+      animateLoadingGrid();
+      setTimeout(startLoadingSequence, 300);
+
       try {
         await auth.signInAnonymously();
         let uid = auth.currentUser.uid;
@@ -2057,11 +2063,9 @@
 
         elements.userScore.textContent = Math.floor(currentUser.score);
         updateRecordDisplay();
-      } catch (e) { console.error("Auth error", e); }
-
-      initLoadingGrid();
-      animateLoadingGrid();
-      setTimeout(startLoadingSequence, 500);
+      } catch (e) {
+        console.error("Auth error", e);
+      }
     }
 
     async function saveWin(time, pts) {
