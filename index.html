@@ -9,9 +9,11 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Inter:wght@100;200;300;400;500;600&display=swap"
+    rel="stylesheet">
 
-  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
   <style>
@@ -33,6 +35,7 @@
 
       --cell-border: rgba(255, 255, 255, 0.08);
       --cell-active-bg: rgba(56, 189, 248, 0.25);
+      --easing: cubic-bezier(0.2, 0.8, 0.2, 1);
     }
 
     * {
@@ -200,6 +203,9 @@
       align-items: center;
       margin-bottom: 20px;
       padding: 12px 16px;
+      background: rgba(255, 255, 255, 0.05) !important;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
     }
 
     .user-pill {
@@ -589,39 +595,286 @@
       font-feature-settings: 'tnum';
     }
 
-    /* Loader */
+    /* --- NEW LOADING SCREEN STYLES --- */
+    .noise-overlay {
+      position: absolute;
+      inset: 0;
+      opacity: 0.05;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 5;
+      mix-blend-mode: overlay;
+    }
+
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(100px);
+      opacity: 0.5;
+      animation: float 15s infinite ease-in-out;
+      will-change: transform;
+    }
+
+    .orb-1 {
+      top: -20%;
+      left: -10%;
+      width: 80vw;
+      height: 80vw;
+      background: radial-gradient(circle, #2a2a2a 0%, transparent 60%);
+      animation-duration: 20s;
+    }
+
+    .orb-2 {
+      bottom: -30%;
+      right: -20%;
+      width: 90vw;
+      height: 90vw;
+      background: radial-gradient(circle, #1a1a1a 0%, transparent 60%);
+      animation-duration: 25s;
+      animation-delay: -5s;
+    }
+
+    .orb-3 {
+      top: 40%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 40vw;
+      height: 40vw;
+      background: radial-gradient(circle, #333 0%, transparent 70%);
+      animation-duration: 18s;
+      animation-delay: -10s;
+    }
+
+    @keyframes float {
+
+      0%,
+      100% {
+        transform: translate(0, 0) scale(1);
+      }
+
+      33% {
+        transform: translate(30px, -50px) scale(1.05);
+      }
+
+      66% {
+        transform: translate(-20px, 20px) scale(0.95);
+      }
+    }
+
+    .loading-glass-panel {
+      background: rgba(10, 10, 10, 0.4);
+      backdrop-filter: blur(40px);
+      -webkit-backdrop-filter: blur(40px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow:
+        0 0 0 1px rgba(0, 0, 0, 0.5),
+        0 20px 60px -10px rgba(0, 0, 0, 0.8),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      border-radius: 24px;
+      transform-style: preserve-3d;
+    }
+
+    .logo-container {
+      perspective: 2000px;
+      transform-style: preserve-3d;
+    }
+
+    .logo-inner {
+      transform-style: preserve-3d;
+      transition: transform 0.1s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+
+    .sudoku-loading-cell {
+      position: relative;
+      background: linear-gradient(145deg, rgba(255, 255, 255, 0.02) 0%, rgba(255, 255, 255, 0.005) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.03);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Inter', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 400;
+      color: rgba(255, 255, 255, 0.3);
+      transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+      transform-style: preserve-3d;
+    }
+
+    .sudoku-loading-cell::before {
+      content: '';
+      position: absolute;
+      inset: 4px;
+      border-radius: 4px;
+      border: 1px dashed rgba(255, 255, 255, 0.05);
+      opacity: 0.5;
+      transition: all 0.3s;
+    }
+
+    .sudoku-loading-cell.active {
+      background: #fff;
+      color: #000;
+      border-color: #fff;
+      box-shadow:
+        0 0 40px rgba(255, 255, 255, 0.5),
+        0 0 10px rgba(255, 255, 255, 0.8);
+      transform: scale(1.05) translateZ(10px);
+      z-index: 10;
+    }
+
+    .sudoku-loading-cell.active::before {
+      border-style: solid;
+      border-color: rgba(0, 0, 0, 0.1);
+      inset: 2px;
+    }
+
+    .text-glow {
+      text-shadow: 0 0 40px rgba(255, 255, 255, 0.3);
+    }
+
+    .shimmer-text {
+      background: linear-gradient(90deg, #666 0%, #fff 50%, #666 100%);
+      background-size: 200% auto;
+      color: transparent;
+      -webkit-background-clip: text;
+      background-clip: text;
+      animation: textShimmer 4s linear infinite;
+    }
+
+    @keyframes textShimmer {
+      to {
+        background-position: 200% center;
+      }
+    }
+
+    .loader-track {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 999px;
+      overflow: hidden;
+      position: relative;
+      height: 4px;
+    }
+
+    .loader-bar {
+      background: #fff;
+      border-radius: 999px;
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 0%;
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+      transition: width 0.1s linear;
+    }
+
+    .fade-in-up {
+      animation: fadeInUp 1s var(--easing) forwards;
+      opacity: 0;
+      transform: translateY(30px);
+    }
+
+    @keyframes fadeInUp {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .spotlight-btn {
+      position: relative;
+      overflow: hidden;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(20px);
+      transition: transform 0.2s var(--easing);
+    }
+
+    .spotlight-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: radial-gradient(circle at var(--x, 50%) var(--y, 50%), rgba(255, 255, 255, 0.15), transparent 50%);
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+    }
+
+    .spotlight-btn:hover::before {
+      opacity: 1;
+    }
+
+    .spotlight-btn:active {
+      transform: scale(0.96);
+    }
+
+    .particle {
+      position: absolute;
+      background: white;
+      border-radius: 50%;
+      pointer-events: none;
+      opacity: 0;
+      animation: floatParticle 2s ease-out forwards;
+    }
+
+    @keyframes floatParticle {
+      0% {
+        transform: translate(0, 0) scale(0);
+        opacity: 0;
+      }
+
+      20% {
+        opacity: 0.6;
+      }
+
+      100% {
+        transform: translate(var(--mx), var(--my)) scale(0);
+        opacity: 0;
+      }
+    }
+
+    /* Transitioning loader screen */
     #loading-screen {
       position: fixed;
       top: 0;
       left: 0;
-      width: 100%;
-      height: 100%;
-      background: #0f172a;
+      width: 100vw;
+      height: 100dvh;
+      background-color: #000;
       z-index: 9999;
       display: flex;
       flex-direction: column;
-      justify-content: center;
       align-items: center;
-      transition: opacity 0.6s ease;
+      justify-content: center;
+      transition: all 1.2s cubic-bezier(0.7, 0, 0.3, 1);
+      overflow: hidden;
     }
 
-    .loader {
-      width: 50px;
-      height: 50px;
-      border: 4px solid rgba(255, 255, 255, 0.1);
-      border-left-color: var(--accent-color);
-      border-radius: 50%;
-      animation: rotation 1s linear infinite;
+    .flash-overlay {
+      position: absolute;
+      inset: 0;
+      background: white;
+      opacity: 0;
+      z-index: 100;
+      pointer-events: none;
     }
 
-    /* Animations */
-    @keyframes rotation {
+    .flash-active {
+      animation: flash-animation 1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    }
+
+    @keyframes flash-animation {
       0% {
-        transform: rotate(0deg);
+        opacity: 0;
+      }
+
+      10% {
+        opacity: 1;
       }
 
       100% {
-        transform: rotate(360deg);
+        opacity: 0;
       }
     }
 
@@ -801,9 +1054,85 @@
   <div class="bg-sky"></div>
 
   <div id="loading-screen">
-    <div class="loader"></div>
-    <div style="margin-top: 24px; font-weight: 800; font-size: 20px; letter-spacing: 1px; color:white;">СУДОКУ НЕБО
+    <!-- Flash Layer -->
+    <div id="flash-overlay" class="flash-overlay"></div>
+
+    <!-- Texture Layer -->
+    <div class="noise-overlay"></div>
+
+    <!-- Background Ambience -->
+    <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+      <div class="orb orb-1"></div>
+      <div class="orb orb-2"></div>
+      <div class="orb orb-3"></div>
     </div>
+
+    <!-- Content -->
+    <main class="relative z-10 w-full max-w-sm p-8 flex flex-col items-center justify-between h-[85vh]">
+      <div class="flex-1"></div>
+
+      <!-- Hero Section -->
+      <div class="logo-container w-full flex flex-col items-center gap-10 fade-in-up" style="animation-delay: 0.2s;">
+        <!-- Interactive 3D Logo -->
+        <div id="logo-wrapper" class="logo-inner relative group cursor-pointer">
+          <!-- Glow Reflection -->
+          <div
+            class="absolute -inset-10 bg-gradient-to-tr from-gray-700/20 to-transparent rounded-full blur-2xl opacity-0 group-hover:opacity-50 transition duration-1000">
+          </div>
+
+          <div id="grid-logo"
+            class="loading-glass-panel w-36 h-36 rounded-2xl p-3 grid grid-cols-3 gap-2 transition-transform duration-500">
+            <!-- Cells injected by JS -->
+          </div>
+        </div>
+
+        <!-- Title -->
+        <div class="text-center space-y-2 pointer-events-none">
+          <h1 class="text-5xl font-extralight tracking-tighter text-white text-glow mix-blend-screen">
+            Sudo<span
+              class="font-medium bg-clip-text text-transparent bg-gradient-to-b from-white to-white/40">Koo</span>
+          </h1>
+          <p class="text-[10px] font-medium text-white/30 tracking-[0.4em] uppercase">Neural Engine v30.2</p>
+        </div>
+      </div>
+
+      <div class="flex-1"></div>
+
+      <!-- Loading State -->
+      <div id="loading-interface" class="w-full space-y-5 fade-in-up" style="animation-delay: 0.4s;">
+        <div class="flex justify-between items-end px-1">
+          <span id="loading-text" class="text-xs text-white/50 font-light shimmer-text tracking-wide">Initializing
+            Core...</span>
+          <span id="percentage" class="text-3xl font-thin text-white tabular-nums tracking-tighter">0%</span>
+        </div>
+
+        <div class="loader-track">
+          <div id="loader-bar" class="loader-bar"></div>
+        </div>
+
+        <div class="text-center pt-4">
+          <p class="text-[9px] text-white/10 font-mono">ENCRYPTED CONNECTION • SECURE</p>
+        </div>
+      </div>
+
+      <!-- Login State (Hidden) -->
+      <div id="login-interface" class="hidden w-full fade-in-up flex-col items-center gap-6">
+        <button id="login-btn"
+          class="spotlight-btn group relative w-full h-14 rounded-full flex items-center justify-center gap-3 cursor-pointer">
+          <span id="btn-text"
+            class="text-white text-sm font-semibold tracking-[0.2em] uppercase opacity-90 group-hover:opacity-100 transition-opacity">Войти</span>
+          <svg id="btn-icon" class="w-4 h-4 text-white/70 group-hover:translate-x-1 transition-transform duration-300"
+            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+          </svg>
+        </button>
+
+        <div class="flex gap-8 text-[10px] text-white/20 font-mono tracking-widest">
+          <button class="hover:text-white transition-colors uppercase">Troubleshoot</button>
+          <button class="hover:text-white transition-colors uppercase">Restore ID</button>
+        </div>
+      </div>
+    </main>
   </div>
 
   <div id="app-container">
@@ -1058,8 +1387,147 @@
       hintBtn: el('hint-button'), timer: el('timer'), message: el('message'),
       userAvatar: el('user-avatar'), username: el('username'), userScore: el('user-score'),
       loadingScreen: el('loading-screen'), winModal: el('win-modal'),
-      settingsModal: el('settings-modal'), ratingModal: el('rating-modal')
+      settingsModal: el('settings-modal'), ratingModal: el('rating-modal'),
+      gridLogo: el('grid-logo'), logoWrapper: el('logo-wrapper'),
+      flashOverlay: el('flash-overlay'),
+      loaderBar: el('loader-bar'), percentageText: el('percentage'),
+      loadingText: el('loading-text'), loadingInterface: el('loading-interface'),
+      loginInterface: el('login-interface'), loginBtn: el('login-btn')
     };
+
+    // --- NEW LOADING SCREEN STATE & LOGIC ---
+    let loadingProgress = 0, isLoaded = false, gridAnimationInterval;
+
+    function initLoadingGrid() {
+      for (let i = 0; i < 9; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'sudoku-loading-cell w-full h-full rounded-[4px]';
+        elements.gridLogo.appendChild(cell);
+      }
+    }
+
+    function animateLoadingGrid() {
+      const cells = document.querySelectorAll('.sudoku-loading-cell');
+      let sequenceIndex = 0;
+      const path = [0, 3, 6, 1, 4, 7, 2, 5, 8];
+      gridAnimationInterval = setInterval(() => {
+        const cellIdx = path[sequenceIndex];
+        const cell = cells[cellIdx];
+        if (cell) {
+          activateLoadingCell(cell, sequenceIndex + 1);
+        }
+        sequenceIndex = (sequenceIndex + 1) % path.length;
+      }, 150);
+    }
+
+    function activateLoadingCell(cell, number) {
+      cell.classList.add('active');
+      cell.innerText = number;
+      spawnParticle(cell);
+      setTimeout(() => {
+        cell.classList.remove('active');
+        setTimeout(() => { cell.innerText = ''; }, 200);
+      }, 400);
+    }
+
+    function spawnParticle(element) {
+      const rect = element.getBoundingClientRect();
+      const particle = document.createElement('div');
+      const size = Math.random() * 2 + 1;
+      particle.style.width = size + 'px';
+      particle.style.height = size + 'px';
+      particle.className = 'particle';
+      const startX = rect.left + rect.width / 2;
+      const startY = rect.top + rect.height / 2;
+      particle.style.left = startX + 'px';
+      particle.style.top = startY + 'px';
+      const angle = Math.random() * Math.PI * 2;
+      const distance = 40 + Math.random() * 40;
+      const mx = Math.cos(angle) * distance + 'px';
+      const my = Math.sin(angle) * distance + 'px';
+      particle.style.setProperty('--mx', mx);
+      particle.style.setProperty('--my', my);
+      document.body.appendChild(particle);
+      setTimeout(() => particle.remove(), 2000);
+    }
+
+    document.addEventListener('mousemove', (e) => {
+      if (isLoaded) return;
+      const x = (window.innerWidth / 2 - e.clientX) / 140;
+      const y = (window.innerHeight / 2 - e.clientY) / 140;
+      elements.logoWrapper.style.transform = `rotateY(${x}deg) rotateX(${-y}deg)`;
+    });
+
+    elements.loginBtn.addEventListener('mousemove', (e) => {
+      const rect = elements.loginBtn.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      elements.loginBtn.style.setProperty('--x', x + 'px');
+      elements.loginBtn.style.setProperty('--y', y + 'px');
+    });
+
+    function startLoadingSequence() {
+      const interval = setInterval(() => {
+        loadingProgress += Math.random() * 2;
+        if (loadingProgress > 100) loadingProgress = 100;
+        elements.loaderBar.style.width = `${loadingProgress}%`;
+        elements.percentageText.innerText = `${Math.floor(loadingProgress)}%`;
+        if (loadingProgress > 20 && loadingProgress < 25) elements.loadingText.innerText = "Handshaking Neural Net...";
+        else if (loadingProgress > 50 && loadingProgress < 55) elements.loadingText.innerText = "Decrypting User Profile...";
+        else if (loadingProgress > 80 && loadingProgress < 85) elements.loadingText.innerText = "Finalizing Environment...";
+        if (loadingProgress >= 100) {
+          clearInterval(interval);
+          completeLoading();
+        }
+      }, 30);
+    }
+
+    function completeLoading() {
+      isLoaded = true;
+      if (gridAnimationInterval) clearInterval(gridAnimationInterval);
+
+      // Trigger Flash
+      elements.flashOverlay.classList.add('flash-active');
+
+      elements.loadingText.innerText = "Ready.";
+      setTimeout(() => {
+        elements.loadingInterface.style.transform = 'translateY(-20px)';
+        elements.loadingInterface.style.opacity = '0';
+        elements.loadingInterface.style.transition = 'all 0.6s cubic-bezier(0.2, 0.8, 0.2, 1)';
+        setTimeout(() => {
+          elements.loadingInterface.classList.add('hidden');
+          elements.loginInterface.classList.remove('hidden');
+          elements.loginInterface.classList.add('flex');
+          elements.loginInterface.style.animation = 'none';
+          elements.loginInterface.offsetHeight;
+          elements.loginInterface.style.animation = 'fadeInUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards';
+          elements.logoWrapper.style.transform = 'rotateY(0deg) rotateX(0deg)';
+        }, 500);
+      }, 300);
+    }
+
+    elements.loginBtn.addEventListener('click', () => {
+      const btnText = el('btn-text');
+      const btnIcon = el('btn-icon');
+      btnText.innerText = "Authenticating...";
+      btnIcon.style.display = 'none';
+      const spinner = document.createElement('div');
+      spinner.innerHTML = `<svg class="animate-spin h-4 w-4 text-white mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>`;
+      spinner.style.display = 'inline-block';
+      elements.loginBtn.insertBefore(spinner, btnText);
+      setTimeout(() => {
+        elements.loadingScreen.style.opacity = '0';
+        elements.loadingScreen.style.transform = 'scale(1.1)';
+        elements.loadingScreen.style.filter = 'blur(20px)';
+        setTimeout(() => {
+          elements.loadingScreen.style.display = 'none';
+          startGame();
+        }, 1200);
+      }, 1500);
+    });
 
     // --- SOUND SYSTEM ---
     const DEFAULT_SOUND_URL = 'https://github.com/codex-cdx/sudo/raw/refs/heads/main/%D0%9F%D0%BB%D0%B0%D0%BC%D0%B1.mp3';
@@ -1591,10 +2059,9 @@
         updateRecordDisplay();
       } catch (e) { console.error("Auth error", e); }
 
-      setTimeout(() => {
-        elements.loadingScreen.style.opacity = '0';
-        setTimeout(() => elements.loadingScreen.style.display = 'none', 600);
-      }, 1000);
+      initLoadingGrid();
+      animateLoadingGrid();
+      setTimeout(startLoadingSequence, 500);
     }
 
     async function saveWin(time, pts) {
@@ -1807,7 +2274,7 @@
       document.querySelector('.rating-tab.active').style.color = 'white';
 
       initUser();
-      startGame();
+      // Game starts after login button click
     });
   </script>
 </body>
