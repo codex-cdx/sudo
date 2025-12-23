@@ -138,6 +138,46 @@
       position: relative;
       z-index: 1;
       margin: 0 auto;
+      transition: max-width 0.3s ease;
+    }
+
+    /* Side-by-side layout for Landscape/Wide screens */
+    @media (min-aspect-ratio: 1.1/1) and (min-width: 700px) {
+      #app-container {
+        max-width: min(95vw, 1200px);
+        flex-direction: row;
+        align-items: stretch;
+        gap: 40px;
+        padding-top: max(20px, var(--safe-area-top));
+      }
+
+      .sidebar {
+        flex: 0 0 350px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 20px;
+      }
+
+      .grid-wrapper {
+        flex: 1;
+        margin-bottom: 0;
+      }
+
+      .sudoku-grid {
+        max-height: 85vh;
+        max-width: 85vh;
+      }
+
+      .controls-bar,
+      .header-bar,
+      .actions-bar {
+        margin-bottom: 0;
+      }
+
+      .keypad-container {
+        grid-template-columns: repeat(5, 1fr) !important;
+      }
     }
 
     /* Header */
@@ -248,10 +288,10 @@
       overflow: hidden;
       /* Square grid - responsive on all screens */
       width: 100%;
-      max-width: 100%;
       height: auto;
       aspect-ratio: 1/1;
       max-height: 100%;
+      max-width: 100%;
       box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
       margin: auto;
     }
@@ -755,83 +795,85 @@
 
   <div id="app-container">
 
-    <div class="header-bar glass-panel">
-      <div class="user-pill">
-        <img id="user-avatar" src="" class="avatar-img" alt="User">
-        <div class="user-info">
-          <div id="username">Гость</div>
-          <div style="font-size: 12px; color: var(--text-muted);">Счет: <span id="user-score"
-              style="color: var(--accent-color); font-weight: 700;">0</span></div>
-        </div>
-      </div>
-      <div class="stats-text">
-        <div>Легко: <span id="easy-record" style="color:white">--:--</span></div>
-        <div>Сред.: <span id="medium-record" style="color:white">--:--</span></div>
-        <div>Слож.: <span id="hard-record" style="color:white">--:--</span></div>
-      </div>
-    </div>
-
-    <div class="controls-bar">
-      <div class="select-wrapper">
-        <select id="difficulty" class="select-styled glass-button">
-          <option value="easy">Легко</option>
-          <option value="medium">Средне</option>
-          <option value="hard">Сложно</option>
-        </select>
-      </div>
-
-      <div class="timer-badge" id="timer">00:00</div>
-
-      <div style="display:flex; gap: 8px;">
-        <button id="rating-button" class="icon-btn glass-button"><svg xmlns="http://www.w3.org/2000/svg" width="22"
-            height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-            stroke-linejoin="round">
-            <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
-            <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path>
-            <path d="M4 22h16"></path>
-            <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path>
-            <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path>
-            <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path>
-          </svg></button>
-        <button id="settings-button" class="icon-btn glass-button"><svg xmlns="http://www.w3.org/2000/svg" width="22"
-            height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-            stroke-linejoin="round">
-            <circle cx="12" cy="12" r="3"></circle>
-            <path
-              d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
-            </path>
-          </svg></button>
-      </div>
-    </div>
-
     <div class="grid-wrapper">
       <div id="grid" class="sudoku-grid glass-panel"></div>
     </div>
 
-    <div id="number-row" class="keypad-container"></div>
+    <div class="sidebar">
+      <div class="header-bar glass-panel">
+        <div class="user-pill">
+          <img id="user-avatar" src="" class="avatar-img" alt="User">
+          <div class="user-info">
+            <div id="username">Гость</div>
+            <div style="font-size: 12px; color: var(--text-muted);">Счет: <span id="user-score"
+                style="color: var(--accent-color); font-weight: 700;">0</span></div>
+          </div>
+        </div>
+        <div class="stats-text">
+          <div>Легко: <span id="easy-record" style="color:white">--:--</span></div>
+          <div>Сред.: <span id="medium-record" style="color:white">--:--</span></div>
+          <div>Слож.: <span id="hard-record" style="color:white">--:--</span></div>
+        </div>
+      </div>
 
-    <div class="actions-bar">
-      <button id="undo-button" class="action-btn glass-button" disabled>
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M9 14L4 9l5-5" />
-          <path d="M4 9h10c4.418 0 8 3.582 8 8" />
-        </svg>
-      </button>
-      <button id="hint-button" class="action-btn glass-button">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path
-            d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z" />
-          <path d="M9 21h6" />
-        </svg>
-        <span id="hint-count-display">3/3</span>
-      </button>
-      <button id="check" class="action-btn accent-button">
-        Готово
-      </button>
-    </div>
+      <div class="controls-bar">
+        <div class="select-wrapper">
+          <select id="difficulty" class="select-styled glass-button">
+            <option value="easy">Легко</option>
+            <option value="medium">Средне</option>
+            <option value="hard">Сложно</option>
+          </select>
+        </div>
 
-    <div id="message"
-      style="text-align: center; height: 24px; font-size: 15px; margin-top: 15px; font-weight: 600; color: #fb7185;">
+        <div class="timer-badge" id="timer">00:00</div>
+
+        <div style="display:flex; gap: 8px;">
+          <button id="rating-button" class="icon-btn glass-button"><svg xmlns="http://www.w3.org/2000/svg" width="22"
+              height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round">
+              <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
+              <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path>
+              <path d="M4 22h16"></path>
+              <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path>
+              <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path>
+              <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path>
+            </svg></button>
+          <button id="settings-button" class="icon-btn glass-button"><svg xmlns="http://www.w3.org/2000/svg" width="22"
+              height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path
+                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+              </path>
+            </svg></button>
+        </div>
+      </div>
+
+      <div id="number-row" class="keypad-container"></div>
+
+      <div class="actions-bar">
+        <button id="undo-button" class="action-btn glass-button" disabled>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 14L4 9l5-5" />
+            <path d="M4 9h10c4.418 0 8 3.582 8 8" />
+          </svg>
+        </button>
+        <button id="hint-button" class="action-btn glass-button">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path
+              d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z" />
+            <path d="M9 21h6" />
+          </svg>
+          <span id="hint-count-display">3/3</span>
+        </button>
+        <button id="check" class="action-btn accent-button">
+          Готово
+        </button>
+      </div>
+
+      <div id="message"
+        style="text-align: center; height: 24px; font-size: 15px; margin-top: 15px; font-weight: 600; color: #fb7185;">
+      </div>
     </div>
 
   </div>
