@@ -910,6 +910,9 @@
           <div style="display: flex; gap: 8px;">
             <button id="test-sound-btn" class="glass-button hidden"
               style="padding: 8px 14px; border-radius: 16px; font-size: 12px; font-weight: 600;">▶ Тест</button>
+            <button id="upload-sound-btn" class="glass-button"
+              style="padding: 8px 14px; border-radius: 16px; font-size: 12px; font-weight: 600;">📁 Файл</button>
+            <input type="file" id="audio-upload" accept="audio/*" class="hidden">
             <button id="record-sound-btn" class="glass-button"
               style="padding: 8px 14px; border-radius: 16px; font-size: 12px; font-weight: 600;">🎤 Запись</button>
             <button id="clear-sound-btn" class="glass-button hidden"
@@ -921,15 +924,19 @@
         <!-- Trim Editor (Hidden by default) -->
         <div id="trim-editor" class="hidden"
           style="margin-top: 15px; background: rgba(255,255,255,0.03); border-radius: 16px; padding: 12px; border: 1px solid rgba(255,255,255,0.05);">
-          <div
-            style="font-size: 11px; color: white; margin-bottom: 8px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.8;">
-            Редактор звука</div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <div
+              style="font-size: 11px; color: white; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.8;">
+              Редактор звука</div>
+            <div id="trim-duration" style="font-size: 11px; color: var(--accent-color); font-weight: 700;">0.00 сек
+            </div>
+          </div>
           <canvas id="waveform" width="300" height="40"
             style="width: 100%; height: 40px; background: rgba(0, 0, 0, 0.3); border-radius: 6px;"></canvas>
           <div style="position: relative; height: 30px; margin-top: 10px;">
-            <input type="range" id="trim-start" min="0" max="100" value="0"
+            <input type="range" id="trim-start" min="0" max="1000" value="0"
               style="position: absolute; width: 100%; height: 4px; -webkit-appearance: none; appearance: none; background: rgba(255,255,255,0.08); border-radius: 2px;">
-            <input type="range" id="trim-end" min="0" max="100" value="100"
+            <input type="range" id="trim-end" min="0" max="1000" value="1000"
               style="position: absolute; width: 100%; height: 4px; -webkit-appearance: none; appearance: none; background: transparent; pointer-events: none;">
           </div>
           <style>
@@ -959,11 +966,14 @@
               box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
             }
           </style>
-          <div style="display: flex; justify-content: space-between; margin-top: 8px;">
+          <div style="display: flex; justify-content: space-between; gap: 8px; margin-top: 12px;">
             <button id="save-trim-btn" class="glass-button"
-              style="padding: 10px 16px; font-size: 11px; border-radius: 12px; background: #fff; color: #000; font-weight: 800; border: none;">Сохранить</button>
+              style="padding: 10px 14px; font-size: 11px; border-radius: 12px; background: #fff; color: #000; font-weight: 800; border: none; flex: 1;">Сохранить</button>
+            <button id="preview-trim-btn" class="glass-button"
+              style="padding: 10px 14px; font-size: 11px; border-radius: 12px; font-weight: 600; flex: 1.2;">▶
+              Прослушать</button>
             <button id="cancel-trim-btn" class="glass-button"
-              style="padding: 10px 16px; font-size: 11px; border-radius: 12px; font-weight: 600;">Отмена</button>
+              style="padding: 10px 14px; font-size: 11px; border-radius: 12px; font-weight: 600; flex: 1;">Отмена</button>
           </div>
         </div>
       </div>
@@ -1057,6 +1067,7 @@
     let mediaRecorder = null, audioChunks = [], isRecording = false;
     let originalAudioBuffer = null;
     let audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    let previewSource = null;
 
     // Load custom sound from localStorage if exists
     function loadCustomSound() {
@@ -1149,26 +1160,37 @@
 
     // --- WAVEFORM & TRIMMING ---
     async function showTrimEditor(blob) {
+      if (previewSource) { try { previewSource.stop(); } catch (e) { } previewSource = null; }
       const arrayBuffer = await blob.arrayBuffer();
       originalAudioBuffer = await audioContext.decodeAudioData(arrayBuffer);
 
       el('trim-editor').classList.remove('hidden');
       el('trim-start').value = 0;
-      el('trim-end').value = 100;
+      el('trim-end').value = 1000;
       drawWaveform(originalAudioBuffer);
     }
 
+    function updateTrimDuration() {
+      if (!originalAudioBuffer) return;
+      const s = parseInt(el('trim-start').value) / 1000;
+      const e = parseInt(el('trim-end').value) / 1000;
+      const dur = (e - s) * originalAudioBuffer.duration;
+      el('trim-duration').textContent = dur.toFixed(2) + ' сек';
+    }
+
     function drawWaveform(buffer) {
+      if (!buffer) return;
       const canvas = el('waveform');
       const ctx = canvas.getContext('2d');
       const data = buffer.getChannelData(0);
       const step = Math.ceil(data.length / canvas.width);
       const amp = canvas.height / 2;
 
-      const sPct = parseInt(el('trim-start').value);
-      const ePct = parseInt(el('trim-end').value);
+      const sPct = parseInt(el('trim-start').value) / 10;
+      const ePct = parseInt(el('trim-end').value) / 10;
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+      updateTrimDuration();
 
       for (let i = 0; i < canvas.width; i++) {
         const curPct = (i / canvas.width) * 100;
@@ -1189,10 +1211,11 @@
     }
 
     async function saveTrimmedAudio() {
+      if (previewSource) { try { previewSource.stop(); } catch (e) { } previewSource = null; }
       if (!originalAudioBuffer) return;
 
-      const startPct = parseInt(el('trim-start').value) / 100;
-      const endPct = parseInt(el('trim-end').value) / 100;
+      const startPct = parseInt(el('trim-start').value) / 1000;
+      const endPct = parseInt(el('trim-end').value) / 1000;
 
       const startOffset = Math.floor(startPct * originalAudioBuffer.length);
       const endOffset = Math.floor(endPct * originalAudioBuffer.length);
@@ -1699,6 +1722,20 @@
 
       // Custom sound recording handlers
       el('record-sound-btn').onclick = startRecording;
+      el('upload-sound-btn').onclick = () => el('audio-upload').click();
+      el('audio-upload').onchange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          showTrimEditor(file);
+          el('recording-status').textContent = 'Файл загружен. Обрежьте его ниже:';
+
+          // Auto-enable sound if off
+          if (!isSoundEnabled) {
+            isSoundEnabled = true;
+            el('sound-toggle').textContent = "ВКЛ";
+          }
+        }
+      };
       el('clear-sound-btn').onclick = clearCustomSound;
       el('save-trim-btn').onclick = saveTrimmedAudio;
 
@@ -1714,24 +1751,31 @@
       };
 
       el('cancel-trim-btn').onclick = () => {
+        if (previewSource) { try { previewSource.stop(); } catch (e) { } previewSource = null; }
         el('trim-editor').classList.add('hidden');
         el('recording-status').textContent = 'Обрезка отменена.';
       };
-      el('test-sound-btn').onclick = async () => {
-        if (el('trim-editor').classList.contains('hidden')) {
-          clickSound.currentTime = 0;
-          clickSound.play().catch(() => { });
-        } else {
-          // Play preview of trimmed section
-          const startPct = parseInt(el('trim-start').value) / 100;
-          const endPct = parseInt(el('trim-end').value) / 100;
-          const duration = originalAudioBuffer.duration;
+      el('test-sound-btn').onclick = () => {
+        clickSound.currentTime = 0;
+        clickSound.play().catch(() => { });
+      };
 
-          const source = audioContext.createBufferSource();
-          source.buffer = originalAudioBuffer;
-          source.connect(audioContext.destination);
-          source.start(0, startPct * duration, (endPct - startPct) * duration);
+      el('preview-trim-btn').onclick = () => {
+        if (!originalAudioBuffer) return;
+
+        if (previewSource) {
+          try { previewSource.stop(); } catch (e) { }
         }
+
+        const startPct = parseInt(el('trim-start').value) / 1000;
+        const endPct = parseInt(el('trim-end').value) / 1000;
+        const duration = originalAudioBuffer.duration;
+
+        previewSource = audioContext.createBufferSource();
+        previewSource.buffer = originalAudioBuffer;
+        previewSource.connect(audioContext.destination);
+        previewSource.start(0, startPct * duration, (endPct - startPct) * duration);
+        previewSource.onended = () => { previewSource = null; };
       };
 
       // Load custom sound on startup
