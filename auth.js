@@ -34,17 +34,27 @@ async function initUser() {
     animateLoadingGrid();
     setTimeout(startLoadingSequence, 300);
 
+    // Watchdog: If stuck for more than 5s, force finish
+    const watchdog = setTimeout(() => {
+        if (!isLoaded) {
+            console.warn("Watchdog triggered: Initialization taking too long.");
+            updateLoadingProgress(100, "Готово (авто)");
+        }
+    }, 6000);
+
     const isFirebaseOK = initFirebase();
 
     try {
         if (!isFirebaseOK) throw new Error("Firebase unavailable");
 
         updateLoadingProgress(30, "Вход в систему...");
+        console.log("Signing in anonymously...");
         await auth.signInAnonymously();
         let uid = auth.currentUser.uid;
         let userData = { username: 'Гость', avatar: 'https://cdn-icons-png.flaticon.com/512/847/847969.png' };
 
         updateLoadingProgress(50, "Проверка Telegram...");
+        console.log("Checking Telegram user...");
         if (window.Telegram?.WebApp?.initDataUnsafe?.user) {
             const tgUser = window.Telegram.WebApp.initDataUnsafe.user;
             uid = String(tgUser.id);
@@ -60,23 +70,27 @@ async function initUser() {
         elements.userAvatar.src = currentUser.avatar;
 
         updateLoadingProgress(70, "Загрузка профиля...");
+        console.log("Fetching user profile...");
         const doc = await usersCollection.doc(uid).get();
         if (doc.exists) {
             const data = doc.data();
             currentUser.score = data.score || 0;
             currentUser.bestTimes = data.bestTimes || { easy: null, medium: null, hard: null };
-        } else {
-            await usersCollection.doc(uid).set({ ...userData, score: 0, bestTimes: {} });
         }
+        // Note: New users use defaults from core.js
 
         updateLoadingProgress(90, "Подготовка неба...");
-        elements.userScore.textContent = Math.floor(currentUser.score);
-        updateRecordDisplay();
+        try {
+            elements.userScore.textContent = Math.floor(currentUser.score || 0);
+            updateRecordDisplay();
+        } catch (err) { console.error("UI Update Error:", err); }
 
+        clearTimeout(watchdog);
         updateLoadingProgress(100, "Готово!");
     } catch (e) {
         console.warn("Init in Guest Mode:", e.message);
-        // Fallback for Guest mode if Firebase fails
+        clearTimeout(watchdog);
+        // Fallback for Guest mode
         if (window.Telegram?.WebApp?.initDataUnsafe?.user) {
             const tgUser = window.Telegram.WebApp.initDataUnsafe.user;
             currentUser.username = tgUser.username || tgUser.first_name;

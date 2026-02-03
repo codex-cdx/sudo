@@ -68,14 +68,22 @@ function updateLoadingProgress(target, text, duration = 500) {
     function animate(currentTime) {
         const elapsed = currentTime - startTime;
         const progress = Math.min(elapsed / duration, 1);
-        loadingProgress = start + (target - start) * progress;
+        const currentVal = start + (target - start) * progress;
 
-        elements.loaderBar.style.width = `${loadingProgress}%`;
-        elements.percentageText.innerText = `${Math.floor(loadingProgress)}%`;
+        // Only update global if it's an increase (poor man's concurrency control)
+        if (currentVal > loadingProgress) {
+            loadingProgress = currentVal;
+            elements.loaderBar.style.width = `${loadingProgress}%`;
+            elements.percentageText.innerText = `${Math.floor(loadingProgress)}%`;
+        }
 
         if (progress < 1) {
             requestAnimationFrame(animate);
-        } else if (loadingProgress >= 100) {
+        } else if (target >= 100 && !isLoaded) {
+            // Force 100% and finish if this specific anim was targeting 100
+            loadingProgress = 100;
+            elements.loaderBar.style.width = `100%`;
+            elements.percentageText.innerText = `100%`;
             completeLoading();
         }
     }
