@@ -114,7 +114,7 @@ function completeLoading() {
 
             setTimeout(() => {
                 elements.loadingScreen.style.display = 'none';
-                startGame();
+                startGame(false);
             }, 800);
         } else {
             elements.loadingInterface.style.transform = 'translateY(-20px)';
@@ -565,14 +565,14 @@ function initGameAssets() {
     generatePuzzle(elements.difficulty.value);
 }
 
-function startGame() {
+function startGame(needsInit = true) {
+    console.log("startGame called, needsInit:", needsInit);
     isGameFinished = false;
     undoStack = [];
     hintCount = 0;
     clearInterval(timerInterval);
 
-    // If grid hasn't been pre-rendered, do it now
-    if (elements.grid.children.length === 0) {
+    if (needsInit) {
         initGameAssets();
     }
 

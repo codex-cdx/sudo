@@ -30,8 +30,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Basic UI Events
-    elements.newGameBtn.onclick = startGame;
-    elements.difficulty.onchange = startGame;
+    elements.newGameBtn.onclick = () => {
+        console.log("New Game requested");
+        startGame(true);
+    };
+    elements.difficulty.onchange = () => {
+        console.log("Difficulty change requested:", elements.difficulty.value);
+        startGame(true);
+    };
     elements.checkBtn.onclick = checkGame;
     elements.hintBtn.onclick = getHint;
     elements.undoBtn.onclick = undo;
