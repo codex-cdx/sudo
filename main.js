@@ -20,9 +20,13 @@ document.addEventListener('DOMContentLoaded', () => {
             updateHeight();
         }, 500);
 
-        tg.disableVerticalSwiping();
+        if (typeof tg.disableVerticalSwiping === 'function') {
+            tg.disableVerticalSwiping();
+        }
         // Match header to theme
-        if (tg.setHeaderColor) tg.setHeaderColor('secondary_bg_color');
+        if (typeof tg.setHeaderColor === 'function') {
+            tg.setHeaderColor('secondary_bg_color');
+        }
     }
 
     // Basic UI Events
