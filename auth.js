@@ -1,14 +1,32 @@
 /* --- FIREBASE & USER LOGIC --- */
-// firebaseConfig is loaded from external config.js (which is gitaligned)
-if (typeof firebaseConfig === 'undefined') {
-    console.error("Firebase Configuration is missing! Ensure config.js is present and included in index.html.");
-}
+let db, auth, usersCollection, recordsCollection;
 
-try { firebase.initializeApp(firebaseConfig); } catch (e) { console.error(e); }
-const db = firebase.firestore();
-const auth = firebase.auth();
-const usersCollection = db.collection('users');
-const recordsCollection = db.collection('timeRecords');
+function initFirebase() {
+    try {
+        if (typeof firebase === 'undefined') {
+            console.error("Firebase SDK not loaded!");
+            return false;
+        }
+        if (typeof firebaseConfig === 'undefined' || !firebaseConfig.apiKey) {
+            console.warn("Firebase Config missing, using mock/guest mode.");
+            return false;
+        }
+
+        // Check if already initialized to avoid errors
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+
+        db = firebase.firestore();
+        auth = firebase.auth();
+        usersCollection = db.collection('users');
+        recordsCollection = db.collection('timeRecords');
+        return true;
+    } catch (e) {
+        console.error("Firebase Init Failed:", e);
+        return false;
+    }
+}
 
 async function initUser() {
     // Start loading visual immediately
@@ -16,7 +34,11 @@ async function initUser() {
     animateLoadingGrid();
     setTimeout(startLoadingSequence, 300);
 
+    const isFirebaseOK = initFirebase();
+
     try {
+        if (!isFirebaseOK) throw new Error("Firebase unavailable");
+
         updateLoadingProgress(30, "Вход в систему...");
         await auth.signInAnonymously();
         let uid = auth.currentUser.uid;
@@ -53,8 +75,16 @@ async function initUser() {
 
         updateLoadingProgress(100, "Готово!");
     } catch (e) {
-        console.error("Auth error", e);
-        updateLoadingProgress(100, "Ошибка (продолжаем...)");
+        console.warn("Init in Guest Mode:", e.message);
+        // Fallback for Guest mode if Firebase fails
+        if (window.Telegram?.WebApp?.initDataUnsafe?.user) {
+            const tgUser = window.Telegram.WebApp.initDataUnsafe.user;
+            currentUser.username = tgUser.username || tgUser.first_name;
+            if (tgUser.photo_url) currentUser.avatar = tgUser.photo_url;
+            elements.username.textContent = currentUser.username;
+            elements.userAvatar.src = currentUser.avatar;
+        }
+        updateLoadingProgress(100, "Готово (Гостевой режим)");
     }
 }
 
@@ -71,13 +101,13 @@ async function saveWin(time, pts) {
 
     updateRecordDisplay();
 
-    if (currentUser.id) {
+    if (currentUser.id && usersCollection && recordsCollection) {
         usersCollection.doc(currentUser.id).set({
             score: currentUser.score,
             bestTimes: currentUser.bestTimes,
             username: currentUser.username,
             avatar: currentUser.avatar
-        }, { merge: true });
+        }, { merge: true }).catch(console.error);
 
         recordsCollection.add({
             userId: currentUser.id,
@@ -86,7 +116,7 @@ async function saveWin(time, pts) {
             difficulty: diff,
             time: time,
             date: new Date().toISOString()
-        });
+        }).catch(console.error);
     }
 
     el('win-modal-message').innerHTML = `Сложность: <b style="color:white">${getDiffName(diff)}</b><br>Время: <span style="font-feature-settings: 'tnum';">${formatTime(time)}</span><br>Счет: <span style="color:var(--accent-color)">+${Math.floor(pts)}</span>${newRecord ? '<br><br>🏆 <b>Новый рекорд!</b>' : ''}`;
