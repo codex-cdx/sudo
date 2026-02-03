@@ -265,7 +265,24 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.key.toLowerCase() === 'p') elements.pencilBtn.click();
     });
 
-    // Startup
+    // Startup Sequence - UI First
     loadCustomSound();
+
+    // Start UI Loading animation (Parallel to Auth)
+    console.log("Starting UI Loading sequence...");
+    initLoadingGrid();
+    animateLoadingGrid();
+    startLoadingSequence();
+
+    // Auth starts in background
+    console.log("Initiating Background Auth...");
     initUser();
+
+    // Guaranteed Finish: Force 100% after 4 seconds regardless of anything
+    setTimeout(() => {
+        if (!isLoaded) {
+            console.log("UI Force-Completion triggered.");
+            updateLoadingProgress(100, "Готово");
+        }
+    }, 4500);
 });

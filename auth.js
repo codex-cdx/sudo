@@ -29,37 +29,40 @@ function initFirebase() {
 }
 
 async function initUser() {
+    console.log("initUser starting...");
     // Start loading visual immediately
-    initLoadingGrid();
-    animateLoadingGrid();
-    setTimeout(startLoadingSequence, 300);
+    // initLoadingGrid(); // Removed
+    // animateLoadingGrid(); // Removed
+    // setTimeout(startLoadingSequence, 300); // Removed
 
-    // Watchdog: If stuck for more than 5s, force finish
-    const watchdog = setTimeout(() => {
-        if (!isLoaded) {
-            console.warn("Watchdog triggered: Initialization taking too long.");
-            updateLoadingProgress(100, "Готово (авто)");
-        }
-    }, 6000);
+    // Watchdog: If stuck for more than 5s, force finish // Removed
+    // const watchdog = setTimeout(() => { // Removed
+    //     if (!isLoaded) { // Removed
+    //         console.warn("Watchdog triggered: Initialization taking too long."); // Removed
+    //         updateLoadingProgress(100, "Готово (авто)"); // Removed
+    //     } // Removed
+    // }, 6000); // Removed
 
     const isFirebaseOK = initFirebase();
 
     try {
-        if (!isFirebaseOK) throw new Error("Firebase unavailable");
+        if (!isFirebaseOK) throw new Error("Firebase init returned false");
 
-        updateLoadingProgress(30, "Вход в систему...");
-        console.log("Signing in anonymously...");
+        console.log("Firebase Auth: Signing in...");
+        updateLoadingProgress(30, "Синхронизация...");
         await auth.signInAnonymously();
+
         let uid = auth.currentUser.uid;
         let userData = { username: 'Гость', avatar: 'https://cdn-icons-png.flaticon.com/512/847/847969.png' };
 
-        updateLoadingProgress(50, "Проверка Telegram...");
-        console.log("Checking Telegram user...");
+        console.log("Telegram: Checking WebApp SDK...");
+        updateLoadingProgress(50, "Профиль...");
         if (window.Telegram?.WebApp?.initDataUnsafe?.user) {
             const tgUser = window.Telegram.WebApp.initDataUnsafe.user;
             uid = String(tgUser.id);
             userData.username = tgUser.username || tgUser.first_name;
             if (tgUser.photo_url) userData.avatar = tgUser.photo_url;
+            console.log("Telegram User detected:", userData.username);
         }
 
         currentUser.id = uid;
@@ -69,28 +72,31 @@ async function initUser() {
         elements.username.textContent = currentUser.username;
         elements.userAvatar.src = currentUser.avatar;
 
-        updateLoadingProgress(70, "Загрузка профиля...");
-        console.log("Fetching user profile...");
+        console.log("Firestore: Loading user record...");
+        updateLoadingProgress(70, "Данные...");
         const doc = await usersCollection.doc(uid).get();
         if (doc.exists) {
             const data = doc.data();
             currentUser.score = data.score || 0;
             currentUser.bestTimes = data.bestTimes || { easy: null, medium: null, hard: null };
+            console.log("User data loaded. Score:", currentUser.score);
         }
         // Note: New users use defaults from core.js
 
-        updateLoadingProgress(90, "Подготовка неба...");
+        updateLoadingProgress(90, "Облака...");
         try {
             elements.userScore.textContent = Math.floor(currentUser.score || 0);
             updateRecordDisplay();
         } catch (err) { console.error("UI Update Error:", err); }
 
-        clearTimeout(watchdog);
+        // clearTimeout(watchdog); // Removed
+        console.log("initUser success.");
         updateLoadingProgress(100, "Готово!");
     } catch (e) {
-        console.warn("Init in Guest Mode:", e.message);
-        clearTimeout(watchdog);
+        console.warn("initUser failed, continuing in Offline/Guest mode:", e.message);
+        // clearTimeout(watchdog); // Removed
         // Fallback for Guest mode
+        // Final fallback for UI sync
         if (window.Telegram?.WebApp?.initDataUnsafe?.user) {
             const tgUser = window.Telegram.WebApp.initDataUnsafe.user;
             currentUser.username = tgUser.username || tgUser.first_name;
@@ -98,7 +104,7 @@ async function initUser() {
             elements.username.textContent = currentUser.username;
             elements.userAvatar.src = currentUser.avatar;
         }
-        updateLoadingProgress(100, "Готово (Гостевой режим)");
+        updateLoadingProgress(100, "Оффлайн режим");
     }
 }
 
