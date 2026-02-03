@@ -109,6 +109,9 @@ function completeLoading() {
         if (shouldAutoStart) {
             elements.loadingScreen.style.opacity = '0';
             elements.loadingScreen.style.transition = 'all 0.8s ease';
+            // Pre-render the game in the background before fading out the loader
+            initGameAssets();
+
             setTimeout(() => {
                 elements.loadingScreen.style.display = 'none';
                 startGame();
@@ -556,23 +559,35 @@ function generatePuzzle(diff) {
     updateUI();
 }
 
+function initGameAssets() {
+    createGrid();
+    createKeypad();
+    generatePuzzle(elements.difficulty.value);
+}
+
 function startGame() {
     isGameFinished = false;
     undoStack = [];
     hintCount = 0;
     clearInterval(timerInterval);
+
+    // If grid hasn't been pre-rendered, do it now
+    if (elements.grid.children.length === 0) {
+        initGameAssets();
+    }
+
     startTime = Date.now();
-    timerInterval = setInterval(() => { elements.timer.textContent = formatTime(Math.floor((Date.now() - startTime) / 1000)); }, 1000);
+    timerInterval = setInterval(() => {
+        elements.timer.textContent = formatTime(Math.floor((Date.now() - startTime) / 1000));
+    }, 1000);
+
     elements.checkBtn.disabled = false;
     elements.checkBtn.textContent = 'Готово';
     elements.message.textContent = '';
-    createGrid();
-    createKeypad();
-    generatePuzzle(elements.difficulty.value);
+
     elements.appContainer.style.opacity = '1';
     elements.appContainer.style.visibility = 'visible';
     elements.appContainer.style.pointerEvents = 'auto';
-    elements.appContainer.classList.add('animate-in');
     toggleModal('settings-modal', false);
 }
 
