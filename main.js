@@ -1,6 +1,30 @@
 /* --- MAIN INITIALIZATION & EVENTS --- */
 
 document.addEventListener('DOMContentLoaded', () => {
+    // UI Ready for Telegram
+    if (window.Telegram?.WebApp) {
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+        tg.expand();
+        // Force height for CSS
+        const updateHeight = () => {
+            document.documentElement.style.setProperty('--tg-viewport-height', tg.viewportHeight + 'px');
+            window.dispatchEvent(new Event('resize'));
+        };
+        tg.onEvent('viewportChanged', updateHeight);
+        updateHeight();
+
+        // Final force expand and refresh
+        setTimeout(() => {
+            tg.expand();
+            updateHeight();
+        }, 500);
+
+        tg.disableVerticalSwiping();
+        // Match header to theme
+        if (tg.setHeaderColor) tg.setHeaderColor('secondary_bg_color');
+    }
+
     // Basic UI Events
     elements.newGameBtn.onclick = startGame;
     elements.difficulty.onchange = startGame;
