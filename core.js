@@ -21,7 +21,8 @@ const elements = {
   loaderBar: el('loader-bar'), percentageText: el('percentage'),
   loadingText: el('loading-text'), loadingInterface: el('loading-interface'),
   loginInterface: el('login-interface'), loginBtn: el('login-btn'),
-  themeSelector: el('theme-selector')
+  themeSelector: el('theme-selector'),
+  appContainer: el('app-container')
 };
 
 function formatTime(s) {

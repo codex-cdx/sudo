@@ -569,6 +569,9 @@ function startGame() {
     createGrid();
     createKeypad();
     generatePuzzle(elements.difficulty.value);
+    elements.appContainer.style.opacity = '1';
+    elements.appContainer.style.visibility = 'visible';
+    elements.appContainer.style.pointerEvents = 'auto';
     toggleModal('settings-modal', false);
 }
 

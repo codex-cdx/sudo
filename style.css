@@ -196,6 +196,10 @@ body::before {
   /* Allow expanding on wide screens while staying centered and square */
   max-width: min(95vw, 75vh);
   box-sizing: border-box;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.5s ease;
 }
 
 .header-bar {
