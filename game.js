@@ -101,19 +101,32 @@ function completeLoading() {
     if (gridAnimationInterval) clearInterval(gridAnimationInterval);
     elements.flashOverlay.classList.add('flash-active');
     elements.loadingText.innerText = "Ready.";
+
+    // Auto-skip login screen for Telegram or fast-play
+    const shouldAutoStart = !!(window.Telegram?.WebApp);
+
     setTimeout(() => {
-        elements.loadingInterface.style.transform = 'translateY(-20px)';
-        elements.loadingInterface.style.opacity = '0';
-        elements.loadingInterface.style.transition = 'all 0.6s cubic-bezier(0.2, 0.8, 0.2, 1)';
-        setTimeout(() => {
-            elements.loadingInterface.classList.add('hidden');
-            elements.loginInterface.classList.remove('hidden');
-            elements.loginInterface.classList.add('flex');
-            elements.loginInterface.style.animation = 'none';
-            elements.loginInterface.offsetHeight;
-            elements.loginInterface.style.animation = 'fadeInUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards';
-            elements.logoWrapper.style.transform = 'rotateY(0deg) rotateX(0deg)';
-        }, 500);
+        if (shouldAutoStart) {
+            elements.loadingScreen.style.opacity = '0';
+            elements.loadingScreen.style.transition = 'all 0.8s ease';
+            setTimeout(() => {
+                elements.loadingScreen.style.display = 'none';
+                startGame();
+            }, 800);
+        } else {
+            elements.loadingInterface.style.transform = 'translateY(-20px)';
+            elements.loadingInterface.style.opacity = '0';
+            elements.loadingInterface.style.transition = 'all 0.6s cubic-bezier(0.2, 0.8, 0.2, 1)';
+            setTimeout(() => {
+                elements.loadingInterface.classList.add('hidden');
+                elements.loginInterface.classList.remove('hidden');
+                elements.loginInterface.classList.add('flex');
+                elements.loginInterface.style.animation = 'none';
+                elements.loginInterface.offsetHeight;
+                elements.loginInterface.style.animation = 'fadeInUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards';
+                elements.logoWrapper.style.transform = 'rotateY(0deg) rotateX(0deg)';
+            }, 500);
+        }
     }, 300);
 }
 
