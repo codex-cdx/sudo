@@ -572,6 +572,7 @@ function startGame() {
     elements.appContainer.style.opacity = '1';
     elements.appContainer.style.visibility = 'visible';
     elements.appContainer.style.pointerEvents = 'auto';
+    elements.appContainer.classList.add('animate-in');
     toggleModal('settings-modal', false);
 }
 
