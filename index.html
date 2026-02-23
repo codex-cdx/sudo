@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Sudoku Premium Sky</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Inter:wght@100;200;300;400;500;600&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+
+<body>
+  <div class="bg-sky"></div>
+
+  <div id="loading-screen">
+    <div id="flash-overlay" class="flash-overlay"></div>
+    <div class="noise-overlay"></div>
+    <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+      <div class="orb orb-1"></div>
+      <div class="orb orb-2"></div>
+      <div class="orb orb-3"></div>
+    </div>
+    <main class="relative z-10 w-full max-w-sm p-8 flex flex-col items-center justify-between h-[85vh]">
+      <div class="flex-1"></div>
+      <div class="logo-container w-full flex flex-col items-center gap-10 fade-in-up" style="animation-delay: 0.2s;">
+        <div id="logo-wrapper" class="logo-inner relative group cursor-pointer">
+          <div
+            class="absolute -inset-10 bg-gradient-to-tr from-gray-700/20 to-transparent rounded-full blur-2xl opacity-0 group-hover:opacity-50 transition duration-1000">
+          </div>
+          <div id="grid-logo"
+            class="loading-glass-panel w-36 h-36 rounded-2xl p-3 grid grid-cols-3 gap-2 transition-transform duration-500">
+          </div>
+        </div>
+        <div class="text-center space-y-2 pointer-events-none">
+          <h1 class="text-5xl font-extralight tracking-tighter text-white text-glow mix-blend-screen">
+            Sudo<span
+              class="font-medium bg-clip-text text-transparent bg-gradient-to-b from-white to-white/40">Koo</span>
+          </h1>
+          <p class="text-[10px] font-medium text-white/30 tracking-[0.4em] uppercase">Sudoku Premium Sky</p>
+        </div>
+      </div>
+      <div class="flex-1"></div>
+      <div id="loading-interface" class="w-full space-y-5 fade-in-up" style="animation-delay: 0.4s;">
+        <div class="flex justify-between items-end px-1">
+          <span id="loading-text" class="text-xs text-white/50 font-light shimmer-text tracking-wide">Подготовка
+            неба...</span>
+          <span id="percentage" class="text-3xl font-thin text-white tabular-nums tracking-tighter">0%</span>
+        </div>
+        <div class="loader-track">
+          <div id="loader-bar" class="loader-bar"></div>
+        </div>
+        <div class="text-center pt-4">
+          <p class="text-[9px] text-white/10 font-mono">ENCRYPTED CONNECTION • SECURE</p>
+        </div>
+      </div>
+      <div id="login-interface" class="hidden w-full fade-in-up flex-col items-center gap-6">
+        <button id="login-btn"
+          class="spotlight-btn group relative w-full h-14 rounded-full flex items-center justify-center gap-3 cursor-pointer">
+          <span id="btn-text"
+            class="text-white text-sm font-semibold tracking-[0.2em] uppercase opacity-90 group-hover:opacity-100 transition-opacity">Войти</span>
+          <svg id="btn-icon" class="w-4 h-4 text-white/70 group-hover:translate-x-1 transition-transform duration-300"
+            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+          </svg>
+        </button>
+        <div class="flex gap-8 text-[10px] text-white/20 font-mono tracking-widest">
+          <button class="hover:text-white transition-colors uppercase">Troubleshoot</button>
+          <button class="hover:text-white transition-colors uppercase">Restore ID</button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div id="app-container">
+    <div class="header-bar glass-panel">
+      <div class="user-pill">
+        <img id="user-avatar" src="" class="avatar-img" alt="User">
+        <div class="user-info">
+          <div id="username">Гость</div>
+          <div style="font-size: 12px; color: var(--text-muted);">Счет: <span id="user-score"
+              style="color: var(--accent-color); font-weight: 700;">0</span></div>
+        </div>
+      </div>
+      <div class="stats-text">
+        <div>Легко: <span id="easy-record" style="color:white">--:--</span></div>
+        <div>Сред.: <span id="medium-record" style="color:white">--:--</span></div>
+        <div>Слож.: <span id="hard-record" style="color:white">--:--</span></div>
+      </div>
+    </div>
+
+    <div class="controls-bar">
+      <div class="select-wrapper">
+        <select id="difficulty" class="select-styled glass-button">
+          <option value="easy">Легко</option>
+          <option value="medium">Средне</option>
+          <option value="hard">Сложно</option>
+        </select>
+      </div>
+      <div class="timer-badge" id="timer">00:00</div>
+      <div style="display:flex; gap: 8px;">
+        <button id="rating-button" class="icon-btn glass-button"><svg xmlns="http://www.w3.org/2000/svg" width="22"
+            height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round">
+            <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
+            <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path>
+            <path d="M4 22h16"></path>
+            <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path>
+            <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path>
+            <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path>
+          </svg></button>
+        <button id="settings-button" class="icon-btn glass-button"><svg xmlns="http://www.w3.org/2000/svg" width="22"
+            height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path
+              d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+            </path>
+          </svg></button>
+      </div>
+    </div>
+
+    <div class="grid-wrapper">
+      <div id="grid" class="sudoku-grid glass-panel"></div>
+    </div>
+
+    <div id="number-row" class="keypad-container"></div>
+
+    <div class="actions-bar">
+      <button id="pencil-button" class="action-btn glass-button">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
+        </svg>
+      </button>
+      <button id="undo-button" class="action-btn glass-button" disabled>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 14L4 9l5-5" />
+          <path d="M4 9h10c4.418 0 8 3.582 8 8" />
+        </svg>
+      </button>
+      <button id="hint-button" class="action-btn glass-button">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path
+            d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z" />
+          <path d="M9 21h6" />
+        </svg>
+        <span id="hint-count-display">3/3</span>
+      </button>
+      <button id="check" class="action-btn accent-button">Готово</button>
+    </div>
+
+    <div id="message"
+      style="text-align: center; height: 24px; font-size: 15px; margin-top: 15px; font-weight: 600; color: #fb7185;">
+    </div>
+  </div>
+
+  <div id="settings-modal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title">Настройки</div>
+        <div class="close-btn" data-target="settings-modal">&times;</div>
+      </div>
+      <div
+        style="display: flex; justify-content: space-between; align-items: center; padding: 16px 0; border-bottom: 1px solid rgba(255,255,255,0.1);">
+        <span style="font-weight: 500; color: var(--modal-text);">Звуковые эффекты</span>
+        <button id="sound-toggle" class="glass-button"
+          style="padding: 8px 20px; border-radius: 20px; font-size: 13px; font-weight: 700;">OFF</button>
+      </div>
+      <div style="padding: 16px 0; border-bottom: 1px solid rgba(255,255,255,0.1);">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-weight: 500; color: var(--modal-text);">Свой звук</span>
+          <div style="display: flex; gap: 8px;">
+            <button id="test-sound-btn" class="glass-button hidden"
+              style="padding: 8px 14px; border-radius: 16px; font-size: 12px; font-weight: 600;">▶ Тест</button>
+            <button id="upload-sound-btn" class="glass-button"
+              style="padding: 8px 14px; border-radius: 16px; font-size: 12px; font-weight: 600;">📁 Файл</button>
+            <input type="file" id="audio-upload" accept="audio/*" class="hidden">
+            <button id="record-sound-btn" class="glass-button"
+              style="padding: 8px 14px; border-radius: 16px; font-size: 12px; font-weight: 600;">🎤 Запись</button>
+            <button id="clear-sound-btn" class="glass-button hidden"
+              style="padding: 8px 12px; border-radius: 16px; font-size: 12px; font-weight: 600;">✕</button>
+          </div>
+        </div>
+        <div id="recording-status" style="font-size: 11px; color: var(--text-muted); margin-top: 8px;"></div>
+        <div id="trim-editor" class="hidden"
+          style="margin-top: 15px; background: rgba(255,255,255,0.03); border-radius: 16px; padding: 12px; border: 1px solid rgba(255,255,255,0.05);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <div
+              style="font-size: 11px; color: var(--modal-text); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.8;">
+              Редактор звука</div>
+            <div id="trim-duration" style="font-size: 11px; color: var(--accent-color); font-weight: 700;">0.00 сек
+            </div>
+          </div>
+          <canvas id="waveform" width="300" height="40"
+            style="width: 100%; height: 40px; background: rgba(0, 0, 0, 0.3); border-radius: 6px;"></canvas>
+          <div style="position: relative; height: 30px; margin-top: 10px;">
+            <input type="range" id="trim-start" min="0" max="1000" value="0"
+              style="position: absolute; width: 100%; height: 4px; -webkit-appearance: none; appearance: none; background: rgba(255,255,255,0.08); border-radius: 2px;">
+            <input type="range" id="trim-end" min="0" max="1000" value="1000"
+              style="position: absolute; width: 100%; height: 4px; -webkit-appearance: none; appearance: none; background: transparent; pointer-events: none;">
+          </div>
+          <div style="display: flex; justify-content: space-between; gap: 8px; margin-top: 12px;">
+            <button id="save-trim-btn" class="glass-button"
+              style="padding: 10px 14px; font-size: 11px; border-radius: 12px; font-weight: 800; border: none; flex: 1;">Сохранить</button>
+            <button id="preview-trim-btn" class="glass-button"
+              style="padding: 10px 14px; font-size: 11px; border-radius: 12px; font-weight: 600; flex: 1.2;">▶
+              Прослушать</button>
+            <button id="cancel-trim-btn" class="glass-button"
+              style="padding: 10px 14px; font-size: 11px; border-radius: 12px; font-weight: 600; flex: 1;">Отмена</button>
+          </div>
+        </div>
+      </div>
+      <div
+        style="display: flex; justify-content: space-between; align-items: center; padding: 16px 0; border-bottom: 1px solid rgba(255,255,255,0.1);">
+        <span style="font-weight: 500; color: var(--modal-text);">Подсветка цифр</span>
+        <button id="highlightToggle" class="glass-button"
+          style="padding: 8px 20px; border-radius: 20px; font-size: 13px; font-weight: 700;">ВКЛ</button>
+      </div>
+      <div
+        style="display: flex; justify-content: space-between; align-items: center; padding: 16px 0; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 24px;">
+        <span style="font-weight: 500; color: var(--modal-text);">Тема</span>
+        <select id="theme-selector" class="glass-button"
+          style="padding: 8px 12px; border-radius: 16px; font-size: 13px; font-weight: 600; appearance: none; text-align: center;">
+          <option value="sky">Premium Sky</option>
+          <option value="midnight">Premium Midnight</option>
+          <option value="light">Light Cloud</option>
+        </select>
+      </div>
+      <button id="newGame"
+        style="width:100%; padding: 18px; border-radius: 24px; font-size: 16px; background: var(--text-main); color: var(--bg-color); font-weight: 800; border: none; box-shadow: 0 0 25px rgba(255,255,255,0.1);">Новая
+        игра</button>
+    </div>
+  </div>
+
+  <div id="rating-modal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title">Таблица лидеров</div>
+        <div class="close-btn" data-target="rating-modal">&times;</div>
+      </div>
+      <div
+        style="display: flex; gap: 8px; margin-bottom: 20px; padding: 4px; background: rgba(0,0,0,0.3); border-radius: 16px;">
+        <button class="glass-button rating-tab active" data-type="score"
+          style="flex:1; border-radius:12px; padding: 10px; border:none; background:transparent; font-weight:600;">Счет</button>
+        <button class="glass-button rating-tab" data-type="time"
+          style="flex:1; border-radius:12px; padding: 10px; border:none; background:transparent; font-weight:600;">Время</button>
+      </div>
+      <div id="difficulty-tabs" class="hidden" style="display: flex; gap: 8px; margin-bottom: 15px;">
+        <button class="glass-button diff-tab active" data-d="easy"
+          style="flex:1; font-size: 11px; padding: 8px; border-radius: 10px;">Легко</button>
+        <button class="glass-button diff-tab" data-d="medium"
+          style="flex:1; font-size: 11px; padding: 8px; border-radius: 10px;">Сред.</button>
+        <button class="glass-button diff-tab" data-d="hard"
+          style="flex:1; font-size: 11px; padding: 8px; border-radius: 10px;">Сложно</button>
+      </div>
+      <div id="rating-list" style="min-height: 200px;"></div>
+    </div>
+  </div>
+
+  <div id="win-modal" class="modal-overlay">
+    <div class="modal-card" style="text-align: center; padding-top: 40px; background: rgba(20, 30, 50, 0.98);">
+      <div style="font-size: 70px; margin-bottom: 10px; text-shadow: 0 0 30px rgba(255,215,0,0.5);">🏆</div>
+      <h2
+        style="background: linear-gradient(to right, #38bdf8, #818cf8); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; font-size: 36px; margin: 0 0 10px 0; font-weight: 800;">
+        Победа!</h2>
+      <p id="win-modal-message"
+        style="margin-bottom: 30px; line-height: 1.6; font-size: 16px; color: var(--text-muted);"></p>
+      <button id="win-modal-close-btn" class="accent-button"
+        style="width: 100%; padding: 16px; border-radius: 18px; font-size: 18px;">Круто!</button>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+
+  <script src="/core.js"></script>
+  <script src="/config.js"></script>
+  <script src="/auth.js"></script>
+  <script src="/game.js"></script>
+  <script src="/main.js"></script>
+</body>
+
+</html>
