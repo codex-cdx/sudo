@@ -153,14 +153,7 @@ async function initUser() {
 
         // Generate avatar based on name if none exists
         if (!userData.avatar) {
-            const nameInitial = userData.username.charAt(0).toUpperCase();
-            // Generate a consistent color based on the username string
-            let hash = 0;
-            for (let i = 0; i < userData.username.length; i++) {
-                hash = userData.username.charCodeAt(i) + ((hash << 5) - hash);
-            }
-            const color = Math.abs(hash).toString(16).substring(0, 6).padStart(6, '0');
-            userData.avatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(nameInitial)}&background=${color}&color=fff&size=128&rounded=true&font-size=0.5`;
+            userData.avatar = `https://api.dicebear.com/6.x/bottts/svg?seed=${encodeURIComponent(userData.username)}`;
         }
 
         currentUser.id = uid;
@@ -204,13 +197,7 @@ async function initUser() {
         }
         
         if (!currentUser.avatar) {
-             const nameInitial = currentUser.username.charAt(0).toUpperCase();
-             let hash = 0;
-             for (let i = 0; i < currentUser.username.length; i++) {
-                 hash = currentUser.username.charCodeAt(i) + ((hash << 5) - hash);
-             }
-             const color = Math.abs(hash).toString(16).substring(0, 6).padStart(6, '0');
-             currentUser.avatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(nameInitial)}&background=${color}&color=fff&size=128&rounded=true&font-size=0.5`;
+             currentUser.avatar = `https://api.dicebear.com/6.x/bottts/svg?seed=${encodeURIComponent(currentUser.username)}`;
         }
 
         elements.username.textContent = currentUser.username;
@@ -308,7 +295,7 @@ async function loadLeaderboard() {
 
             row.innerHTML = `
                 <div class="${rankClass}">${rankContent}</div>
-                <img src="${d.avatar || 'https://cdn-icons-png.flaticon.com/512/847/847969.png'}" style="width:36px; height:36px; border-radius:50%; border:1px solid rgba(255,255,255,0.2);">
+                <img src="${d.avatar || `https://api.dicebear.com/6.x/bottts/svg?seed=${encodeURIComponent(username)}`}" style="width:36px; height:36px; border-radius:50%; border:1px solid rgba(255,255,255,0.2);">
                 <div class="player-info">
                   <div class="player-name">${username}</div>
                 </div>
@@ -780,7 +767,12 @@ function performAction(val, r, c) {
 
     const prev = grid[r][c];
     const notes = notesGrid[r][c];
-    if (prev === val && (val !== 0 || notes.size === 0)) return;
+    // Toggle: if same number already in cell, erase it
+    if (prev === val && val !== 0) {
+        val = 0;
+    } else if (prev === val && val === 0 && notes.size === 0) {
+        return;
+    }
     
     // Add haptic for input
     if (val !== 0) haptic.impact('medium');
@@ -1189,7 +1181,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     function applyTheme(t) {
-        document.body.classList.remove('theme-sky', 'theme-solar', 'theme-midnight', 'theme-light');
+        document.body.classList.remove('theme-sky', 'theme-solar', 'theme-midnight', 'theme-light', 'theme-mono');
         if (t !== 'sky') document.body.classList.add(`theme-${t}`);
     }
 

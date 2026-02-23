@@ -84,6 +84,33 @@ body.theme-light {
   --bg-filter: grayscale(0%) brightness(1.2) contrast(0.9);
 }
 
+/* Mono B&W — Minimalist Black */
+body.theme-mono {
+  --glass-base: rgba(0, 0, 0, 0.85);
+  --glass-border: rgba(255, 255, 255, 0.12);
+  --glass-highlight: rgba(255, 255, 255, 0.03);
+  --primary-glow: rgba(255, 255, 255, 0.15);
+  --text-main: #ffffff;
+  --text-muted: rgba(255, 255, 255, 0.5);
+  --accent-color: #ffffff;
+  --accent-gradient: linear-gradient(135deg, #ffffff 0%, #a0a0a0 100%);
+  --accent-shadow: rgba(255, 255, 255, 0.1);
+  --cell-border: rgba(255, 255, 255, 0.08);
+  --cell-border-heavy: rgba(255, 255, 255, 0.35);
+  --cell-active-bg: rgba(255, 255, 255, 0.12);
+  --cell-highlight: rgba(255, 255, 255, 0.06);
+  --area-highlight: rgba(255, 255, 255, 0.02);
+  --cell-given: #ffffff;
+  --cell-user: #f4a261;
+  --btn-bg: rgba(255, 255, 255, 0.06);
+  --btn-text: rgba(255, 255, 255, 0.9);
+  --modal-bg: rgba(0, 0, 0, 0.97);
+  --modal-text: #ffffff;
+  --bg-color: #000000;
+  --bg-overlay: linear-gradient(180deg, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 1) 100%);
+  --bg-filter: grayscale(100%) brightness(0.15) contrast(1.2);
+}
+
 * {
   box-sizing: border-box;
   -webkit-tap-highlight-color: transparent;
