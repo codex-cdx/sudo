@@ -428,43 +428,22 @@ function startLoadingSequence() {
 }
 
 function completeLoading() {
-    if (isLoaded) return; // Prevent double execution
+    if (isLoaded) return;
     isLoaded = true;
     if (gridAnimationInterval) clearInterval(gridAnimationInterval);
     elements.loadingText.innerText = "Готово!";
 
-    const shouldAutoStart = !!(window.Telegram?.WebApp?.initData); // Check for real TG env, not just the injected mock object
+    // Always auto-start — fade out loading screen then launch game
+    setTimeout(() => {
+        elements.loadingScreen.style.transition = 'opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), transform 0.8s cubic-bezier(0.4, 0, 0.2, 1)';
+        elements.loadingScreen.style.opacity = '0';
+        elements.loadingScreen.style.transform = 'scale(1.05)';
 
-    if (shouldAutoStart) {
-        // Smooth fade out, then start game AFTER the screen is gone
         setTimeout(() => {
-            elements.loadingScreen.style.transition = 'opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), transform 0.8s cubic-bezier(0.4, 0, 0.2, 1)';
-            elements.loadingScreen.style.opacity = '0';
-            elements.loadingScreen.style.transform = 'scale(1.05)';
-            
-            setTimeout(() => {
-                elements.loadingScreen.style.display = 'none';
-                startGame(true, true); // Start AFTER loading screen is hidden
-            }, 800);
-        }, 300); // Small delay to let the user see 100%
-    } else {
-        // Show login button for web version
-        elements.flashOverlay.classList.add('flash-active');
-        setTimeout(() => {
-            elements.loadingInterface.style.transform = 'translateY(-20px)';
-            elements.loadingInterface.style.opacity = '0';
-            elements.loadingInterface.style.transition = 'all 0.6s cubic-bezier(0.2, 0.8, 0.2, 1)';
-            setTimeout(() => {
-                elements.loadingInterface.classList.add('hidden');
-                elements.loginInterface.classList.remove('hidden');
-                elements.loginInterface.classList.add('flex');
-                elements.loginInterface.style.animation = 'none';
-                elements.loginInterface.offsetHeight;
-                elements.loginInterface.style.animation = 'fadeInUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards';
-                elements.logoWrapper.style.transform = 'rotateY(0deg) rotateX(0deg)';
-            }, 500);
-        }, 300);
-    }
+            elements.loadingScreen.style.display = 'none';
+            startGame(true, true);
+        }, 800);
+    }, 300);
 }
 
 // --- SOUND SYSTEM ---
