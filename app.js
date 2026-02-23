@@ -1146,7 +1146,7 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.pencilBtn.classList.toggle('selected', isPencilMode);
         playSound();
     };
-    el('settings-button').onclick = () => { haptic.impact('light'); toggleModal('settings-modal', true); };
+    el('settings-button').onclick = () => { haptic.impact('light'); toggleModal('settings-modal', true); syncAvatarPreview(); };
     el('rating-button').onclick = () => { haptic.impact('light'); toggleModal('rating-modal', true); loadLeaderboard(); };
     el('win-modal-close-btn').onclick = () => { haptic.impact('light'); toggleModal('win-modal', false); };
 
@@ -1184,6 +1184,62 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.classList.remove('theme-sky', 'theme-solar', 'theme-midnight', 'theme-light', 'theme-mono');
         if (t !== 'sky') document.body.classList.add(`theme-${t}`);
     }
+
+    // --- Avatar Generator ---
+    const avatarPreview = el('avatar-preview');
+    const avatarSeedInput = el('avatar-seed-input');
+    const avatarGenerateBtn = el('avatar-generate-btn');
+    const avatarResetBtn = el('avatar-reset-btn');
+
+    // Original avatar captured lazily (after auth sets it)
+    let originalAvatar = null;
+
+    function syncAvatarPreview() {
+        // Capture original avatar on first open (auth is done by now)
+        if (!originalAvatar && currentUser.avatar) {
+            const customSaved = localStorage.getItem('sudoku_custom_avatar');
+            // If current avatar IS the custom one, we need the real original
+            // which is the one generated from username
+            if (customSaved && currentUser.avatar === customSaved) {
+                originalAvatar = `https://api.dicebear.com/6.x/bottts/svg?seed=${encodeURIComponent(currentUser.username)}`;
+            } else {
+                originalAvatar = currentUser.avatar;
+            }
+        }
+        if (avatarPreview) avatarPreview.src = currentUser.avatar || '';
+    }
+
+    // Restore custom avatar from localStorage if exists
+    const savedCustomAvatar = localStorage.getItem('sudoku_custom_avatar');
+    if (savedCustomAvatar) {
+        currentUser.avatar = savedCustomAvatar;
+        elements.userAvatar.src = savedCustomAvatar;
+    }
+
+    avatarGenerateBtn.onclick = () => {
+        const seed = avatarSeedInput.value.trim();
+        if (!seed) return;
+        haptic.impact('medium');
+        const newAvatar = `https://api.dicebear.com/6.x/bottts/svg?seed=${encodeURIComponent(seed)}`;
+        currentUser.avatar = newAvatar;
+        elements.userAvatar.src = newAvatar;
+        avatarPreview.src = newAvatar;
+        localStorage.setItem('sudoku_custom_avatar', newAvatar);
+        playSound();
+    };
+
+    avatarResetBtn.onclick = () => {
+        haptic.impact('light');
+        if (!originalAvatar) {
+            originalAvatar = `https://api.dicebear.com/6.x/bottts/svg?seed=${encodeURIComponent(currentUser.username)}`;
+        }
+        currentUser.avatar = originalAvatar;
+        elements.userAvatar.src = originalAvatar;
+        avatarPreview.src = originalAvatar;
+        localStorage.removeItem('sudoku_custom_avatar');
+        avatarSeedInput.value = '';
+        playSound();
+    };
 
     // Sound System Events
     el('record-sound-btn').onclick = startRecording;
