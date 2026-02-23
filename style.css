@@ -2,7 +2,8 @@
 
 /* --- БАЗОВЫЕ НАСТРОЙКИ --- */
 :root {
-  --font-stack: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-stack: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
   --safe-area-top: env(safe-area-inset-top);
   --safe-area-bottom: env(safe-area-inset-bottom);
   --easing: cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -327,7 +328,7 @@ body::before {
 }
 
 .timer-badge {
-  font-family: 'Outfit', monospace;
+  font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
   font-weight: 700;
   font-size: 20px;
@@ -379,6 +380,7 @@ body::before {
   display: flex;
   align-items: center;
   justify-content: center;
+  font-family: var(--font-mono);
   font-size: clamp(14px, 4.5vmin, 28px);
   position: relative;
   cursor: pointer;
@@ -524,6 +526,7 @@ body::before {
 .num-btn {
   aspect-ratio: 1/1;
   border-radius: 14px;
+  font-family: var(--font-mono);
   font-size: 20px;
   font-weight: 600;
   display: flex;
@@ -817,7 +820,7 @@ body::before {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-mono);
   font-size: 1.25rem;
   font-weight: 400;
   color: rgba(255, 255, 255, 0.3);
