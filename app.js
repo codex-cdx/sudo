@@ -1112,6 +1112,26 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // --- FORCE SQUARE GRID ON ALL DEVICES ---
+    const gridWrapper = elements.grid.parentElement;
+    const forceSquare = () => {
+        if (!gridWrapper) return;
+        const rect = gridWrapper.getBoundingClientRect();
+        if (rect.width === 0 || rect.height === 0) return;
+        
+        const size = Math.floor(Math.min(rect.width, rect.height));
+        elements.grid.style.width = size + 'px';
+        elements.grid.style.height = size + 'px';
+    };
+    
+    if (window.ResizeObserver) {
+        new ResizeObserver(() => requestAnimationFrame(forceSquare)).observe(gridWrapper);
+    } else {
+        window.addEventListener('resize', () => requestAnimationFrame(forceSquare));
+    }
+    setTimeout(forceSquare, 100);
+    setTimeout(forceSquare, 500);
+
     // Basic UI Events
     elements.newGameBtn.onclick = () => {
         haptic.impact('heavy');
