@@ -26,6 +26,7 @@ const haptic = {
   }
 };
 
+
 let grid = [], solution = [], givenCells = new Set(), timerInterval, startTime = 0;
 let activeCell = null, activeTool = null, highlightEnabled = true, undoStack = [];
 let isPencilMode = false;
